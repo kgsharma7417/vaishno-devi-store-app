@@ -59,6 +59,10 @@ export default function ProductPage() {
   }, [id, addToast]);
 
   const handleAddToCart = () => {
+    if (product.isOutOfStock) {
+      addToast({ type: "error", message: "This product is currently out of stock." });
+      return;
+    }
     if (!selectedColor) {
       addToast({ type: "warning", message: "Please select a color first." });
       return;
@@ -179,7 +183,12 @@ export default function ProductPage() {
             <div className="p-6 lg:p-12 flex flex-col">
               
               <div className="flex items-start justify-between gap-4 mb-2">
-                <span className="text-xs font-bold text-sage-600 uppercase tracking-widest">{product.category}</span>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-bold text-sage-600 uppercase tracking-widest">{product.category}</span>
+                  {product.isOutOfStock && (
+                    <span className="bg-rose-100 text-rose-700 px-2 py-0.5 rounded text-xs font-bold tracking-wider">SOLD OUT</span>
+                  )}
+                </div>
                 <button onClick={handleShare} className="p-2 text-earth-400 hover:text-earth-700 hover:bg-earth-100 rounded-full transition-colors">
                   <Share2 className="w-5 h-5" />
                 </button>
@@ -300,12 +309,15 @@ export default function ProductPage() {
               {/* Add to Cart CTA */}
               <button 
                 onClick={handleAddToCart}
-                className="w-full relative group overflow-hidden rounded-2xl p-[2px] mb-8"
+                disabled={product.isOutOfStock}
+                className={`w-full relative group overflow-hidden rounded-2xl p-[2px] mb-8 ${product.isOutOfStock ? 'opacity-60 cursor-not-allowed' : ''}`}
               >
-                <span className="absolute inset-0 bg-gradient-to-r from-sage-400 via-gold-400 to-sage-400 rounded-2xl opacity-80 group-hover:opacity-100 animate-shimmer" style={{ backgroundSize: "200% auto" }}></span>
-                <div className="relative flex items-center justify-center gap-3 px-8 py-5 bg-sage-600 text-white rounded-2xl transition-transform duration-300 group-hover:scale-[0.98] shadow-lg">
+                {!product.isOutOfStock && <span className="absolute inset-0 bg-gradient-to-r from-sage-400 via-gold-400 to-sage-400 rounded-2xl opacity-80 group-hover:opacity-100 animate-shimmer" style={{ backgroundSize: "200% auto" }}></span>}
+                <div className={`relative flex items-center justify-center gap-3 px-8 py-5 text-white rounded-2xl transition-transform duration-300 ${product.isOutOfStock ? 'bg-earth-400' : 'bg-sage-600 group-hover:scale-[0.98] shadow-lg'}`}>
                   <ShoppingBag className="w-6 h-6" />
-                  <span className="text-lg font-bold tracking-wide">Add to Cart</span>
+                  <span className="text-lg font-bold tracking-wide">
+                    {product.isOutOfStock ? "Currently Out of Stock" : "Add to Cart"}
+                  </span>
                 </div>
               </button>
 

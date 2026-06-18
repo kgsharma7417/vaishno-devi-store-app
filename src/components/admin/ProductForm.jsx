@@ -1,5 +1,5 @@
-import { useState, useRef } from "react";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { useState, useRef, useEffect } from "react";
+import { collection, addDoc, serverTimestamp, doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import { useToast } from "../shared/Toast";
 import {
@@ -45,13 +45,64 @@ const INITIAL_FORM = {
   isFeatured: false,
 };
 
-export default function ProductForm() {
+export default function ProductForm({ editId }) {
   const [form, setForm] = useState(INITIAL_FORM);
   const [images, setImages] = useState([]); // { file, preview, progress, url }
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [loadingInitial, setLoadingInitial] = useState(!!editId);
   const fileInputRef = useRef(null);
   const { addToast } = useToast();
+
+  useEffect(() => {
+    if (editId) {
+      const fetchProduct = async () => {
+        try {
+          const docSnap = await getDoc(doc(db, "products", editId));
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            
+            // Format sizesAndStock back to array format
+            const sizesArr = data.sizesAndStock 
+              ? Object.entries(data.sizesAndStock).map(([size, stock]) => ({ size: size === "Free Size" ? "" : size, stock: stock.toString() }))
+              : [{ size: "", stock: "" }];
+
+            if (sizesArr.length === 0) sizesArr.push({ size: "", stock: "" });
+
+            setForm({
+              productName: data.productName || "",
+              description: data.description || "",
+              category: data.category || "",
+              colors: data.colors || [],
+              sizesAndStock: sizesArr,
+              mrp: data.mrp?.toString() || "",
+              discountPercentage: data.discountPercentage?.toString() || "",
+              videoUrl: data.videoUrl || "",
+              externalImageUrls: "",
+              isFeatured: data.isFeatured || false,
+            });
+
+            if (data.imageUrls) {
+              setImages(data.imageUrls.map(url => ({
+                file: null,
+                preview: url,
+                url: url,
+                progress: 100
+              })));
+            }
+          } else {
+            addToast({ type: "error", message: "Product not found." });
+          }
+        } catch (error) {
+          console.error("Error fetching product:", error);
+          addToast({ type: "error", message: "Failed to fetch product details." });
+        } finally {
+          setLoadingInitial(false);
+        }
+      };
+      fetchProduct();
+    }
+  }, [editId, addToast]);
 
   const finalPrice = calculateFinalPrice(
     Number(form.mrp),
@@ -269,17 +320,30 @@ export default function ProductForm() {
       };
 
       // 4. Save to Firestore
-      await addDoc(collection(db, "products"), productData);
-
-      addToast({
-        type: "success",
-        title: "Product Added!",
-        message: `"${form.productName}" has been saved successfully.`,
-      });
-
-      // 5. Reset form
-      setForm(INITIAL_FORM);
-      setImages([]);
+      if (editId) {
+        // Update existing product
+        await updateDoc(doc(db, "products", editId), {
+          ...productData,
+          createdAt: undefined, // don't overwrite createdAt
+        });
+        addToast({
+          type: "success",
+          title: "Product Updated!",
+          message: `"${form.productName}" has been updated successfully.`,
+        });
+      } else {
+        // Create new product
+        await addDoc(collection(db, "products"), productData);
+        addToast({
+          type: "success",
+          title: "Product Added!",
+          message: `"${form.productName}" has been saved successfully.`,
+        });
+        
+        // 5. Reset form only if adding new
+        setForm(INITIAL_FORM);
+        setImages([]);
+      }
     } catch (error) {
       console.error("Error saving product:", error);
       addToast({
@@ -297,15 +361,23 @@ export default function ProductForm() {
   const usedSizes = form.sizesAndStock.map((s) => s.size).filter(Boolean);
   const availableSizes = BANGLE_SIZES.filter((s) => !usedSizes.includes(s));
 
+  if (loadingInitial) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-sage-500" />
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto animate-fade-in">
       {/* Page header */}
       <div className="mb-8">
         <h1 className="text-2xl lg:text-3xl font-heading font-bold text-earth-800">
-          Upload Product
+          {editId ? "Edit Product" : "Upload Product"}
         </h1>
         <p className="text-earth-400 mt-1">
-          Add a new bangle or jewellery item to your store
+          {editId ? "Update existing product details" : "Add a new bangle or jewellery item to your store"}
         </p>
       </div>
 
@@ -798,10 +870,7 @@ export default function ProductForm() {
                 {uploading ? "Uploading Images..." : "Saving Product..."}
               </>
             ) : (
-              <>
-                <PackageCheck className="w-5 h-5" />
-                Upload Product
-              </>
+              editId ? "Update Product" : "Publish Product"
             )}
           </button>
         </div>

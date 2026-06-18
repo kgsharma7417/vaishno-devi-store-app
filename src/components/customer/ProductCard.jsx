@@ -9,7 +9,7 @@ export default function ProductCard({ product }) {
 
   return (
     <Link to={`/product/${product.id}`} className="group block">
-      <div className="card h-full flex flex-col overflow-hidden relative transition-all duration-300 hover:-translate-y-1 hover:shadow-medium border-transparent hover:border-earth-200">
+      <div className={`card h-full flex flex-col overflow-hidden relative transition-all duration-300 hover:-translate-y-1 hover:shadow-medium border-transparent hover:border-earth-200 ${product.isOutOfStock ? 'opacity-75 grayscale-[20%]' : ''}`}>
         
         {/* Badges */}
         <div className="absolute top-3 left-3 z-10 flex flex-col gap-2">
@@ -20,6 +20,9 @@ export default function ProductCard({ product }) {
             <span className="badge bg-rose-500 text-white shadow-sm shadow-rose-500/20">
               {product.discountPercentage}% OFF
             </span>
+          )}
+          {product.isOutOfStock && (
+            <span className="badge bg-earth-800 text-white shadow-sm">Sold Out</span>
           )}
         </div>
 
@@ -39,11 +42,15 @@ export default function ProductCard({ product }) {
           />
           
           {/* Quick Add Button overlay */}
-          <div className="absolute bottom-4 left-0 right-0 flex justify-center opacity-0 transform translate-y-4 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0">
-            <div className="bg-white/90 backdrop-blur-sm text-sage-700 font-medium px-6 py-2.5 rounded-full shadow-lg flex items-center gap-2 hover:bg-sage-600 hover:text-white transition-colors">
+          <div className="absolute bottom-4 left-0 right-0 flex justify-center opacity-0 transform translate-y-4 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0 px-4">
+            <button 
+              disabled={product.isOutOfStock}
+              className={`w-full py-2.5 rounded-full font-medium text-sm transition-all duration-300 flex items-center justify-center gap-2 backdrop-blur-sm ${product.isOutOfStock ? "bg-earth-200 text-earth-500 cursor-not-allowed" : "bg-white/90 text-sage-700 hover:bg-sage-600 hover:text-white shadow-lg"}`}
+              onClick={(e) => { if(product.isOutOfStock) e.preventDefault(); }}
+            >
               <ShoppingBag className="w-4 h-4" />
-              <span className="text-sm">View Details</span>
-            </div>
+              {product.isOutOfStock ? "Sold Out" : "View Details"}
+            </button>
           </div>
         </div>
 
