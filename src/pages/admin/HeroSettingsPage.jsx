@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import { useToast } from "../../components/shared/Toast";
-import { Save, Plus, Trash2, Image as ImageIcon, GripVertical, Loader2, QrCode } from "lucide-react";
+import { Save, Plus, Trash2, Image as ImageIcon, GripVertical, Loader2, QrCode, Upload } from "lucide-react";
 
 const INITIAL_SLIDE = {
   id: Date.now(),
@@ -62,6 +62,42 @@ export default function HeroSettingsPage() {
     const updated = [...slides];
     updated[index] = { ...updated[index], [field]: value };
     setSlides(updated);
+  };
+
+  const handleImageUpload = async (index, file) => {
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      addToast({ type: "error", message: "Please select a valid image file." });
+      return;
+    }
+
+    try {
+      addToast({ type: "info", message: "Uploading image..." });
+      
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", "library_upload");
+      formData.append("cloud_name", "dz7vbpney");
+
+      const response = await fetch("https://api.cloudinary.com/v1_1/dz7vbpney/image/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to upload image to Cloudinary");
+      }
+
+      const data = await response.json();
+      
+      updateSlide(index, "image", data.secure_url);
+      addToast({ type: "success", message: "Image uploaded successfully!" });
+
+    } catch (error) {
+      console.error("Cloudinary upload error:", error);
+      addToast({ type: "error", message: "Image upload failed. Please try again." });
+    }
   };
 
   const handleSave = async () => {
@@ -130,11 +166,11 @@ export default function HeroSettingsPage() {
             {/* Slide Editor */}
             <div className="flex-1 space-y-4">
               
-              {/* Image URL */}
+              {/* Image URL & Upload */}
               <div>
-                <label className="input-label">Image URL <span className="text-rose-400">*</span></label>
+                <label className="input-label">Image URL or Upload <span className="text-rose-400">*</span></label>
                 <div className="flex gap-4 items-start">
-                  <div className="flex-1">
+                  <div className="flex-1 space-y-2">
                     <input
                       type="url"
                       value={slide.image}
@@ -142,6 +178,22 @@ export default function HeroSettingsPage() {
                       placeholder="https://example.com/image.jpg"
                       className="input-field text-sm"
                     />
+                    <div className="relative">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleImageUpload(index, e.target.files[0])}
+                        className="hidden"
+                        id={`upload-slide-${index}`}
+                      />
+                      <label 
+                        htmlFor={`upload-slide-${index}`}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-earth-50 border border-earth-200 rounded-lg text-sm font-medium text-earth-700 cursor-pointer hover:bg-earth-100 hover:border-earth-300 transition-colors"
+                      >
+                        <Upload className="w-4 h-4 text-earth-500" />
+                        Upload from Device
+                      </label>
+                    </div>
                   </div>
                   {/* Preview Thumb */}
                   {slide.image && (

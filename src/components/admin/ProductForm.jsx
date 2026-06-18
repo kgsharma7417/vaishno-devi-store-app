@@ -1,7 +1,6 @@
 import { useState, useRef } from "react";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { db, storage } from "../../config/firebase";
+import { db } from "../../config/firebase";
 import { useToast } from "../shared/Toast";
 import {
   CATEGORIES,
@@ -136,49 +135,49 @@ export default function ProductForm() {
     });
   };
 
-  // --- Upload images to Firebase Storage ---
+  // --- Upload images to Cloudinary ---
   const uploadImages = async () => {
     const uploadPromises = images.map((img, index) => {
       if (img.url) return Promise.resolve(img.url); // Already uploaded
 
-      return new Promise((resolve, reject) => {
-        const fileName = generateUniqueFileName(img.file.name);
-        const storageRef = ref(
-          storage,
-          `${STORAGE_PRODUCTS_PATH}/${fileName}`
-        );
-        const uploadTask = uploadBytesResumable(storageRef, img.file);
+      return new Promise(async (resolve, reject) => {
+        try {
+          const formData = new FormData();
+          formData.append("file", img.file);
+          formData.append("upload_preset", "library_upload");
+          formData.append("cloud_name", "dz7vbpney");
 
-        uploadTask.on(
-          "state_changed",
-          (snapshot) => {
-            const progress = Math.round(
-              (snapshot.bytesTransferred / snapshot.totalBytes) * 100
-            );
-            setImages((prev) => {
-              const updated = [...prev];
-              if (updated[index]) {
-                updated[index] = { ...updated[index], progress };
-              }
-              return updated;
-            });
-          },
-          (error) => {
-            console.error("Upload error:", error);
-            reject(error);
-          },
-          async () => {
-            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-            setImages((prev) => {
-              const updated = [...prev];
-              if (updated[index]) {
-                updated[index] = { ...updated[index], url: downloadURL, progress: 100 };
-              }
-              return updated;
-            });
-            resolve(downloadURL);
+          // Simulate starting progress
+          setImages((prev) => {
+            const updated = [...prev];
+            if (updated[index]) updated[index] = { ...updated[index], progress: 50 };
+            return updated;
+          });
+
+          const response = await fetch("https://api.cloudinary.com/v1_1/dz7vbpney/image/upload", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!response.ok) {
+            throw new Error("Failed to upload image to Cloudinary");
           }
-        );
+
+          const data = await response.json();
+          
+          setImages((prev) => {
+            const updated = [...prev];
+            if (updated[index]) {
+              updated[index] = { ...updated[index], url: data.secure_url, progress: 100 };
+            }
+            return updated;
+          });
+          
+          resolve(data.secure_url);
+        } catch (error) {
+          console.error("Cloudinary upload error:", error);
+          reject(error);
+        }
       });
     });
 
