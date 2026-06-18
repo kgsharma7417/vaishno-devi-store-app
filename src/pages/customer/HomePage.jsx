@@ -85,6 +85,29 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeNav, setActiveNav] = useState("home");
 
+  // Countdown timer — loops every 24h (resets at midnight)
+  const [countdown, setCountdown] = useState({ hours: "00", minutes: "00", seconds: "00" });
+
+  useEffect(() => {
+    const calcTimeLeft = () => {
+      const now = new Date();
+      const midnight = new Date();
+      midnight.setHours(24, 0, 0, 0);
+      const diff = midnight - now;
+      const h = Math.floor(diff / (1000 * 60 * 60));
+      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const s = Math.floor((diff % (1000 * 60)) / 1000);
+      setCountdown({
+        hours: String(h).padStart(2, "0"),
+        minutes: String(m).padStart(2, "0"),
+        seconds: String(s).padStart(2, "0"),
+      });
+    };
+    calcTimeLeft();
+    const timer = setInterval(calcTimeLeft, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   // Fetch Slides from Firestore
   useEffect(() => {
     async function fetchSlides() {
@@ -289,10 +312,12 @@ export default function HomePage() {
             <span className="text-white font-bold text-sm md:text-base">Deals of the Day</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="flex gap-1">
-              {["08","45","30"].map((t, i) => (
-                <span key={i} className="bg-white text-fk-blue font-bold text-xs px-1.5 py-0.5 rounded-sm">{t}</span>
-              ))}
+            <div className="flex items-center gap-0.5">
+              <span className="bg-white text-fk-blue font-bold text-xs px-1.5 py-0.5 rounded-sm min-w-[24px] text-center">{countdown.hours}</span>
+              <span className="text-white font-bold text-xs">:</span>
+              <span className="bg-white text-fk-blue font-bold text-xs px-1.5 py-0.5 rounded-sm min-w-[24px] text-center">{countdown.minutes}</span>
+              <span className="text-white font-bold text-xs">:</span>
+              <span className="bg-white text-fk-blue font-bold text-xs px-1.5 py-0.5 rounded-sm min-w-[24px] text-center">{countdown.seconds}</span>
             </div>
             <a href="#shop-section" className="text-white text-xs md:text-sm font-medium flex items-center gap-0.5">
               VIEW ALL <ChevronRight className="w-3 h-3" />
@@ -353,16 +378,53 @@ export default function HomePage() {
               </ul>
             </div>
             <div>
-              <h4 className="text-xs font-bold text-gray-400 uppercase mb-3">Address</h4>
+              <h4 className="text-xs font-bold text-gray-400 uppercase mb-3">Contact Us</h4>
               <p className="text-xs text-gray-300 leading-relaxed">
+                <span className="text-white font-semibold">Mukul Dubey</span><br />
                 Radhe Bangles Store<br />
-                Jewellery Market<br />
-                India
+                Near Bus Stand, Ramnagar<br />
+                Khandauli, Agra
               </p>
+
+              {/* Phone */}
+              <div className="mt-3 flex items-center gap-2">
+                <span className="text-sm">📞</span>
+                <a href="tel:9808861896" className="text-xs text-fk-yellow font-bold hover:text-white transition-colors">
+                  9808861896
+                </a>
+              </div>
+
+              {/* WhatsApp */}
+              <a 
+                href="https://wa.me/919808861896" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="mt-2 inline-flex items-center gap-1.5 text-xs text-green-400 font-medium hover:text-green-300 transition-colors"
+              >
+                <span className="text-sm">💬</span> WhatsApp पर बात करें
+              </a>
+
+              {/* Instagram */}
+              <a 
+                href="https://instagram.com/radhe__bangles" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="mt-2 flex items-center gap-1.5 text-xs text-pink-400 font-medium hover:text-pink-300 transition-colors"
+              >
+                <span className="text-sm">📸</span> @radhe__bangles
+              </a>
+
+              {/* Timings */}
+              <div className="mt-3 flex items-center gap-2">
+                <span className="text-sm">🕗</span>
+                <span className="text-xs text-gray-300">
+                  <span className="text-white font-medium">सुबह 8:00</span> — <span className="text-white font-medium">शाम 8:00</span>
+                </span>
+              </div>
             </div>
           </div>
           <div className="border-t border-gray-700 mt-6 pt-4 text-center text-xs text-gray-500">
-            © 2025 Radhe Bangles. All rights reserved.
+            © 2025 Radhe Bangles — Mukul Dubey. All rights reserved.
           </div>
         </div>
       </footer>
