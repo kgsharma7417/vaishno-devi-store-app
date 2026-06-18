@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../config/firebase";
-import { Sparkles, ShoppingBag, ShieldCheck, ChevronRight, ChevronLeft, ShoppingCart } from "lucide-react";
+import { Sparkles, ShoppingBag, ShieldCheck, ChevronRight, ChevronLeft, ShoppingCart, Loader2 } from "lucide-react";
 import ShopSection from "../../components/customer/ShopSection";
 import { useCart } from "../../contexts/CartContext";
 
@@ -44,7 +44,8 @@ const DEFAULT_SLIDES = [
 export default function HomePage() {
   const { cartCount, setIsCartOpen } = useCart();
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [slides, setSlides] = useState(DEFAULT_SLIDES);
+  const [slides, setSlides] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // Fetch Slides from Firestore
   useEffect(() => {
@@ -54,9 +55,14 @@ export default function HomePage() {
         const docSnap = await getDoc(docRef);
         if (docSnap.exists() && docSnap.data().heroSlides?.length > 0) {
           setSlides(docSnap.data().heroSlides);
+        } else {
+          setSlides(DEFAULT_SLIDES);
         }
       } catch (error) {
         console.error("Error fetching slides:", error);
+        setSlides(DEFAULT_SLIDES);
+      } finally {
+        setLoading(false);
       }
     }
     fetchSlides();
@@ -128,9 +134,16 @@ export default function HomePage() {
       </header>
 
       {/* Hero Section - Full Screen Slider */}
-      <main className="relative h-[100svh] min-h-[600px] w-full overflow-hidden bg-black">
+      <main className="relative h-[100svh] min-h-[600px] w-full overflow-hidden bg-black flex items-center justify-center">
         
-        {slides.map((slide, index) => {
+        {loading ? (
+           <div className="flex flex-col items-center justify-center space-y-4 z-10">
+              <Loader2 className="w-10 h-10 animate-spin text-gold-500" />
+              <p className="text-gold-400/80 font-heading tracking-widest text-xs uppercase animate-pulse">Loading Collection</p>
+           </div>
+        ) : (
+          <>
+            {slides.map((slide, index) => {
           const isActive = index === currentSlide;
           return (
             <div 
@@ -222,6 +235,8 @@ export default function HomePage() {
             </button>
           </div>
         </div>
+          </>
+        )}
 
       </main>
 

@@ -233,7 +233,7 @@ export default function CheckoutPage() {
   };
 
   return (
-    <div className="min-h-screen bg-earth-50 pb-20 font-body animate-fade-in">
+    <div className="min-h-screen bg-earth-50 pb-40 lg:pb-20 font-body animate-fade-in">
       <header className="bg-white/80 backdrop-blur-md border-b border-earth-100 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -438,6 +438,26 @@ export default function CheckoutPage() {
           </div>
         </div>
       </main>
+
+      {/* Mobile Sticky Footer */}
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-earth-200 lg:hidden z-50 shadow-[0_-8px_15px_-3px_rgba(0,0,0,0.1)] pb-safe rounded-t-2xl">
+        <div className="flex items-center justify-between mb-3 px-2">
+          <span className="text-earth-600 font-medium text-sm">Total to Pay</span>
+          <span className="font-heading font-bold text-2xl text-earth-900">{formatPrice(finalTotal)}</span>
+        </div>
+        <button 
+          type="submit" 
+          form="checkout-form"
+          disabled={submitting}
+          className="w-full btn-primary py-4 text-lg shadow-lg"
+        >
+          {submitting ? (
+            <><Loader2 className="w-5 h-5 animate-spin mr-2 inline" /> Processing...</>
+          ) : (
+            "Place Order"
+          )}
+        </button>
+      </div>
     </div>
   );
 }
