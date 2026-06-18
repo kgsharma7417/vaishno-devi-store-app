@@ -29,15 +29,31 @@ export default function CheckoutPage() {
   const [location, setLocation] = useState(null);
   const [gettingLocation, setGettingLocation] = useState(false);
   const [upiDetails, setUpiDetails] = useState({ upiId: "", payeeName: "" });
+  const [razorpayDetails, setRazorpayDetails] = useState({ enabled: false, keyId: "" });
   const [transactionId, setTransactionId] = useState("");
+  const [scriptLoaded, setScriptLoaded] = useState(false);
+
+  // Load Razorpay Script
+  useEffect(() => {
+    const loadScript = () => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => setScriptLoaded(true);
+      script.onerror = () => console.error("Failed to load Razorpay script");
+      document.body.appendChild(script);
+    };
+    loadScript();
+  }, []);
 
   useEffect(() => {
     async function fetchSettings() {
       try {
         const docRef = doc(db, "settings", "homepage");
         const docSnap = await getDoc(docRef);
-        if (docSnap.exists() && docSnap.data().payment) {
-          setUpiDetails(docSnap.data().payment);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          if (data.payment) setUpiDetails(data.payment);
+          if (data.razorpay) setRazorpayDetails(data.razorpay);
         }
       } catch (err) {
         console.error("Error fetching payment settings:", err);
@@ -107,23 +123,22 @@ export default function CheckoutPage() {
     );
   };
 
-  const handlePlaceOrder = async (e) => {
-    e.preventDefault();
-    if (paymentMethod === 'upi' && !transactionId.trim()) {
-      addToast({ type: "warning", message: "Please enter the Transaction ID (UTR) to confirm your UPI payment." });
-      return;
-    }
-    
-    setSubmitting(true);
+  const deliveryCharge = (cartTotal < 299) ? 30 : 0;
+  const finalTotal = cartTotal + deliveryCharge;
 
+  const saveOrderToFirebase = async (txnId = null, pMethod = paymentMethod) => {
     try {
+      let pStatus = 'Pending (COD)';
+      if (pMethod === 'upi') pStatus = 'Pending (UPI)';
+      if (pMethod === 'razorpay') pStatus = 'Paid (Razorpay)';
+
       const orderData = {
         customerDetails: { ...form, location: location },
         items: cartItems,
-        totalAmount: cartTotal,
-        paymentMethod: paymentMethod,
-        transactionId: paymentMethod === 'upi' ? transactionId : null,
-        paymentStatus: paymentMethod === 'cod' ? 'Pending (COD)' : 'Pending (UPI)',
+        totalAmount: finalTotal,
+        paymentMethod: pMethod,
+        transactionId: txnId,
+        paymentStatus: pStatus,
         orderStatus: 'Pending',
         createdAt: serverTimestamp()
       };
@@ -153,6 +168,67 @@ export default function CheckoutPage() {
       addToast({ type: "error", message: "Failed to place order. Please try again." });
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handlePlaceOrder = async (e) => {
+    e.preventDefault();
+    if (paymentMethod === 'upi' && !transactionId.trim()) {
+      addToast({ type: "warning", message: "Please enter the Transaction ID (UTR) to confirm your UPI payment." });
+      return;
+    }
+    
+    setSubmitting(true);
+
+    if (paymentMethod === 'razorpay') {
+      if (!scriptLoaded) {
+        addToast({ type: "error", message: "Razorpay SDK failed to load. Are you online?" });
+        setSubmitting(false);
+        return;
+      }
+      
+      if (!razorpayDetails.keyId) {
+        addToast({ type: "error", message: "Razorpay Key ID is missing. Please contact support." });
+        setSubmitting(false);
+        return;
+      }
+
+      const options = {
+        key: razorpayDetails.keyId,
+        amount: finalTotal * 100, // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
+        currency: "INR",
+        name: "Radhe Bangles",
+        description: "Test Transaction",
+        // image: "https://example.com/your_logo",
+        handler: function (response) {
+          // Payment succeeded
+          saveOrderToFirebase(response.razorpay_payment_id, 'razorpay');
+        },
+        prefill: {
+          name: form.fullName,
+          email: form.email || "test@example.com",
+          contact: form.phone
+        },
+        theme: {
+          color: "#0f766e" // sage-600
+        },
+        modal: {
+          ondismiss: function() {
+            setSubmitting(false);
+          }
+        }
+      };
+      
+      const rzp1 = new window.Razorpay(options);
+      rzp1.on('payment.failed', function (response){
+        console.error("Payment Failed:", response.error);
+        addToast({ type: "error", message: "Payment failed: " + response.error.description });
+        setSubmitting(false);
+      });
+      rzp1.open();
+    } else {
+      // Normal COD or UPI flow
+      await saveOrderToFirebase(paymentMethod === 'upi' ? transactionId : null);
     }
   };
 
@@ -259,12 +335,12 @@ export default function CheckoutPage() {
                       <div className="mt-4 pt-4 border-t border-sage-200 flex flex-col items-center animate-fade-in text-center">
                         <p className="text-sm font-semibold text-earth-800 mb-3">Scan with any UPI App</p>
                         <div className="bg-white p-4 rounded-xl shadow-sm mb-4 inline-block border border-earth-100 hidden sm:block">
-                           <QRCodeSVG value={`upi://pay?pa=${upiDetails.upiId}&pn=${encodeURIComponent(upiDetails.payeeName || 'Store')}&am=${cartTotal}&cu=INR`} size={160} />
+                           <QRCodeSVG value={`upi://pay?pa=${upiDetails.upiId}&pn=${encodeURIComponent(upiDetails.payeeName || 'Store')}&am=${finalTotal}&cu=INR`} size={160} />
                         </div>
                         
                         {/* Mobile Direct Pay Button */}
                         <a 
-                          href={`upi://pay?pa=${upiDetails.upiId}&pn=${encodeURIComponent(upiDetails.payeeName || 'Store')}&am=${cartTotal}&cu=INR`}
+                          href={`upi://pay?pa=${upiDetails.upiId}&pn=${encodeURIComponent(upiDetails.payeeName || 'Store')}&am=${finalTotal}&cu=INR`}
                           className="w-full sm:hidden bg-sage-600 text-white font-bold py-3 px-4 rounded-xl mb-4 flex items-center justify-center gap-2 shadow-sm hover:bg-sage-700 transition-colors"
                         >
                           <span>Pay directly with UPI App</span>
@@ -287,6 +363,16 @@ export default function CheckoutPage() {
                        </div>
                     )}
                   </label>
+
+                  {razorpayDetails.enabled && (
+                    <label className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${paymentMethod === 'razorpay' ? 'border-sage-500 bg-sage-50' : 'border-earth-200 hover:border-earth-300'}`}>
+                      <input type="radio" name="payment" value="razorpay" checked={paymentMethod === 'razorpay'} onChange={(e) => setPaymentMethod(e.target.value)} className="w-5 h-5 text-sage-600" />
+                      <div>
+                        <p className="font-semibold text-earth-800">Online Payment (Razorpay)</p>
+                        <p className="text-sm text-earth-500">Pay securely via Credit Card, Debit Card, Netbanking, or Wallet.</p>
+                      </div>
+                    </label>
+                  )}
                 </div>
               </section>
             </form>
@@ -321,12 +407,14 @@ export default function CheckoutPage() {
                   <span>{formatPrice(cartTotal)}</span>
                 </div>
                 <div className="flex justify-between text-earth-600">
-                  <span>Shipping</span>
-                  <span className="text-sage-600 font-medium">FREE</span>
+                  <span>Shipping {cartTotal < 299 ? '(Delivery Charge)' : ''}</span>
+                  <span className={deliveryCharge > 0 ? "text-earth-900 font-medium" : "text-sage-600 font-medium"}>
+                    {deliveryCharge > 0 ? formatPrice(deliveryCharge) : "FREE"}
+                  </span>
                 </div>
                 <div className="flex justify-between items-end pt-4 border-t border-earth-100">
                   <span className="font-heading font-bold text-lg text-earth-900">Total</span>
-                  <span className="text-2xl font-bold text-earth-900">{formatPrice(cartTotal)}</span>
+                  <span className="text-2xl font-bold text-earth-900">{formatPrice(finalTotal)}</span>
                 </div>
               </div>
 

@@ -18,6 +18,8 @@ export default function HeroSettingsPage() {
   const [slides, setSlides] = useState([]);
   const [upiId, setUpiId] = useState("");
   const [payeeName, setPayeeName] = useState("");
+  const [razorpayEnabled, setRazorpayEnabled] = useState(false);
+  const [razorpayKeyId, setRazorpayKeyId] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -35,6 +37,10 @@ export default function HeroSettingsPage() {
           if (data.payment) {
             setUpiId(data.payment.upiId || "");
             setPayeeName(data.payment.payeeName || "");
+          }
+          if (data.razorpay) {
+            setRazorpayEnabled(data.razorpay.enabled || false);
+            setRazorpayKeyId(data.razorpay.keyId || "");
           }
         } else {
           // If no settings exist yet, start with one empty slide
@@ -113,6 +119,7 @@ export default function HeroSettingsPage() {
       await setDoc(doc(db, "settings", "homepage"), {
         heroSlides: slides,
         payment: { upiId, payeeName },
+        razorpay: { enabled: razorpayEnabled, keyId: razorpayKeyId },
         updatedAt: serverTimestamp()
       }, { merge: true });
       
@@ -314,6 +321,47 @@ export default function HeroSettingsPage() {
               />
               <p className="text-xs text-earth-400 mt-2">The business name that will appear when customers scan the QR.</p>
             </div>
+          </div>
+        </div>
+
+        {/* Razorpay Settings Section */}
+        <div className="card p-6 md:p-8 animate-fade-in-up mb-12">
+          <div className="flex items-center justify-between mb-6 pb-6 border-b border-earth-100">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center">
+                <span className="font-bold text-blue-600 text-xl">₹</span>
+              </div>
+              <div>
+                <h2 className="text-xl font-heading font-bold text-earth-800">Razorpay Integration</h2>
+                <p className="text-sm text-earth-500 mt-1">Accept cards, netbanking, and wallets via Razorpay.</p>
+              </div>
+            </div>
+            
+            <button
+              onClick={() => setRazorpayEnabled(!razorpayEnabled)}
+              className={`relative w-14 h-8 rounded-full transition-colors duration-300
+                         ${razorpayEnabled ? "bg-sage-500" : "bg-earth-300"}`}
+            >
+              <span
+                className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow-md
+                           transition-transform duration-300
+                           ${razorpayEnabled ? "translate-x-7" : "translate-x-1"}`}
+              />
+            </button>
+          </div>
+          
+          <div className={`transition-all duration-300 ${razorpayEnabled ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
+            <label className="input-label">Razorpay Key ID <span className="text-rose-400">*</span></label>
+            <input
+              type="text"
+              value={razorpayKeyId}
+              onChange={(e) => setRazorpayKeyId(e.target.value)}
+              placeholder="rzp_test_xxxxxxxxxxx"
+              className="input-field font-mono"
+            />
+            <p className="text-xs text-earth-400 mt-2">
+              You can find this in your Razorpay Dashboard under Settings &gt; API Keys.
+            </p>
           </div>
         </div>
       </div>

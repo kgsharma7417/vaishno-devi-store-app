@@ -156,7 +156,10 @@ export default function MyOrdersPage() {
                     <div>
                       <h3 className="text-sm font-bold text-earth-900 uppercase tracking-wider mb-2">Summary</h3>
                       <p className="text-xs text-earth-600 mb-1">Items: {order.items?.length}</p>
-                      <p className="text-xs text-earth-600 mb-1">Payment: {order.paymentMethod.toUpperCase()}</p>
+                      <p className="text-xs text-earth-600 mb-1">Payment: {order.paymentMethod.toUpperCase()} ({order.paymentStatus})</p>
+                      {order.transactionId && (
+                         <p className="text-xs text-earth-600 mb-1">Txn ID: {order.transactionId}</p>
+                      )}
                     </div>
                     <div className="pt-4 mt-4 border-t border-earth-200 flex justify-between items-end">
                       <span className="font-heading font-bold text-earth-800">Total</span>

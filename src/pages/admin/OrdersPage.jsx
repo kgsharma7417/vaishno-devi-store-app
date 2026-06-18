@@ -159,6 +159,7 @@ export default function OrdersPage() {
                 >
                   <option value="Pending (COD)">Payment: Pending (COD)</option>
                   <option value="Pending (UPI)">Payment: Pending (UPI)</option>
+                  <option value="Paid (Razorpay)">Payment: Paid (Razorpay) ✅</option>
                   <option value="Received">Payment: Received ✅</option>
                   <option value="Failed">Payment: Failed ❌</option>
                 </select>
@@ -238,7 +239,7 @@ export default function OrdersPage() {
                     <p className="text-xs text-earth-500 font-medium">Method: <span className="uppercase text-earth-800">{order.paymentMethod}</span></p>
                     {order.transactionId && (
                       <p className="text-xs text-earth-500 font-medium mt-1">
-                        UTR: <span className="font-mono text-sage-700 font-bold bg-sage-50 px-1.5 py-0.5 rounded border border-sage-200">{order.transactionId}</span>
+                        Txn ID / UTR: <span className="font-mono text-sage-700 font-bold bg-sage-50 px-1.5 py-0.5 rounded border border-sage-200">{order.transactionId}</span>
                       </p>
                     )}
                   </div>
