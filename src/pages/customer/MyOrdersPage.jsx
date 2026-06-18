@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../config/firebase";
-import { PackageOpen, ArrowLeft, Loader2, Search, ArrowRight } from "lucide-react";
+import { PackageOpen, ArrowLeft, Loader2, Search, ChevronRight, Package } from "lucide-react";
 import { formatPrice } from "../../utils/helpers";
 
 export default function MyOrdersPage() {
@@ -55,116 +55,97 @@ export default function MyOrdersPage() {
 
   const getStatusColor = (status) => {
     const s = status?.toLowerCase() || '';
-    if (s === 'pending') return 'bg-amber-100 text-amber-800 border-amber-200';
-    if (s === 'processing') return 'bg-blue-100 text-blue-800 border-blue-200';
-    if (s === 'shipped') return 'bg-purple-100 text-purple-800 border-purple-200';
-    if (s === 'delivered') return 'bg-emerald-100 text-emerald-800 border-emerald-200';
-    if (s === 'cancelled') return 'bg-rose-100 text-rose-800 border-rose-200';
-    return 'bg-earth-100 text-earth-800 border-earth-200';
+    if (s === 'pending') return 'bg-amber-100 text-amber-800';
+    if (s === 'processing') return 'bg-blue-100 text-blue-800';
+    if (s === 'shipped') return 'bg-purple-100 text-purple-800';
+    if (s === 'delivered') return 'bg-fk-green-light text-fk-green';
+    if (s === 'cancelled') return 'bg-fk-red-light text-fk-red';
+    return 'bg-gray-100 text-gray-800';
   };
 
   return (
-    <div className="min-h-screen bg-earth-50 pb-20 font-body animate-fade-in">
-      <header className="bg-white/80 backdrop-blur-md border-b border-earth-100 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link to="/" className="flex items-center gap-2 text-earth-500 hover:text-earth-800 transition-colors">
+    <div className="min-h-screen bg-gray-50 pb-20 font-body animate-fade-in">
+      {/* Header */}
+      <header className="bg-fk-blue sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-3 md:px-6">
+          <div className="flex items-center h-12 md:h-14 gap-3">
+            <Link to="/" className="text-white p-1">
               <ArrowLeft className="w-5 h-5" />
-              <span className="font-medium">Back to Home</span>
             </Link>
-            <div className="font-heading font-bold text-xl text-earth-800 tracking-tight">RADHE BANGLES</div>
-            <div className="w-24 flex justify-end">
-              <Link to="/track-order" className="text-sage-600 font-semibold hover:text-sage-800 text-sm">
-                Track Order
-              </Link>
-            </div>
+            <h1 className="text-white font-bold text-base flex-1">My Orders</h1>
+            <Link to="/track-order" className="text-white text-xs font-bold uppercase hover:text-white/80">
+              Track Order
+            </Link>
           </div>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="flex justify-between items-end mb-8">
-          <div>
-            <h1 className="text-3xl font-heading font-bold text-earth-900 mb-2">My Orders</h1>
-            <p className="text-earth-500">View the history of orders placed from this device.</p>
-          </div>
-        </div>
+      <main className="max-w-4xl mx-auto px-3 md:px-6 py-4 md:py-8">
 
         {loading ? (
           <div className="flex justify-center py-20">
-            <Loader2 className="w-10 h-10 animate-spin text-sage-500" />
+            <Loader2 className="w-8 h-8 animate-spin text-fk-blue" />
           </div>
         ) : orders.length === 0 ? (
-          <div className="bg-white rounded-3xl p-12 text-center shadow-sm border border-earth-100 animate-fade-in-up">
-            <PackageOpen className="w-16 h-16 text-earth-300 mx-auto mb-4" />
-            <h2 className="text-xl font-heading font-bold text-earth-800 mb-2">No Orders Found</h2>
-            <p className="text-earth-500 mb-6">You haven't placed any orders on this device yet.</p>
-            <div className="flex justify-center gap-4">
-              <Link to="/" className="btn-primary">Start Shopping</Link>
-              <Link to="/track-order" className="btn-secondary">Track Existing Order</Link>
+          <div className="bg-white p-8 md:p-12 text-center shadow-card animate-fade-in">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <PackageOpen className="w-8 h-8 text-gray-300" />
+            </div>
+            <h2 className="text-base font-bold text-gray-800 mb-2">No Orders Yet</h2>
+            <p className="text-sm text-gray-500 mb-6">You haven't placed any orders on this device.</p>
+            <div className="flex justify-center gap-3">
+              <Link to="/" className="bg-fk-blue text-white font-bold py-2.5 px-5 rounded-sm text-xs uppercase">Shop Now</Link>
+              <Link to="/track-order" className="bg-white text-fk-blue font-bold py-2.5 px-5 rounded-sm text-xs uppercase border border-gray-200">Track Order</Link>
             </div>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-3">
             {orders.map((order) => (
-              <div key={order.id} className="bg-white rounded-3xl shadow-sm border border-earth-100 overflow-hidden animate-fade-in-up">
-                {/* Order Header */}
-                <div className="p-4 sm:p-6 border-b border-earth-100 bg-earth-50/50 flex flex-wrap justify-between items-center gap-4">
+              <div key={order.id} className="bg-white shadow-card overflow-hidden animate-fade-in">
+                
+                {/* Order Items */}
+                {order.items?.map((item, idx) => (
+                  <div key={idx} className={`p-3 md:p-4 flex gap-3 ${idx > 0 ? 'border-t border-gray-100' : ''}`}>
+                    {/* Image */}
+                    <div className="w-16 h-20 bg-gray-50 overflow-hidden flex-shrink-0">
+                      <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                    </div>
+                    
+                    {/* Details */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-gray-800 line-clamp-1">{item.name}</p>
+                      <p className="text-[10px] text-gray-500 mt-0.5">Size: {item.size} | Color: {item.color} | Qty: {item.quantity}</p>
+                      <p className="font-bold text-sm text-gray-900 mt-1">{formatPrice(item.price)}</p>
+                    </div>
+
+                    {/* Status */}
+                    <div className="flex flex-col items-end justify-between">
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-sm ${getStatusColor(order.orderStatus)}`}>
+                        {order.orderStatus}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Order Footer */}
+                <div className="px-3 md:px-4 py-2.5 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-earth-500 font-bold uppercase tracking-wider mb-1">Order ID</p>
-                    <p className="font-mono text-earth-900">{order.id}</p>
-                    <p className="text-xs text-earth-400 mt-1">
-                      Placed on: {order.createdAt?.toDate().toLocaleString() || 'Unknown'}
+                    <p className="text-[10px] text-gray-500">
+                      Order #{order.id.slice(-8)} • {order.paymentMethod?.toUpperCase()}
+                    </p>
+                    <p className="text-[10px] text-gray-400">
+                      {order.createdAt?.toDate().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) || ''}
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className={`px-4 py-1.5 rounded-full text-sm font-bold border ${getStatusColor(order.orderStatus)}`}>
-                      {order.orderStatus}
-                    </span>
-                    <Link to="/track-order" state={{ orderId: order.id }} className="p-2 text-earth-500 hover:text-sage-600 bg-white border border-earth-200 rounded-full hover:bg-sage-50 transition-colors" title="Track Order">
-                       <Search className="w-4 h-4" />
+                    <span className="font-bold text-sm text-gray-900">{formatPrice(order.totalAmount)}</span>
+                    <Link 
+                      to="/track-order" 
+                      state={{ orderId: order.id }}
+                      className="text-fk-blue text-xs font-bold flex items-center gap-0.5 hover:underline"
+                    >
+                      TRACK <ChevronRight className="w-3 h-3" />
                     </Link>
-                  </div>
-                </div>
-
-                {/* Order Content */}
-                <div className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {/* Items List */}
-                  <div className="md:col-span-2 space-y-4">
-                    <h3 className="text-sm font-bold text-earth-900 uppercase tracking-wider mb-2">Items Ordered</h3>
-                    <div className="space-y-3">
-                      {order.items?.map((item, idx) => (
-                        <div key={idx} className="flex gap-4">
-                          <div className="w-16 h-20 rounded-lg bg-earth-100 overflow-hidden flex-shrink-0 border border-earth-200">
-                            <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                          </div>
-                          <div className="flex-1">
-                            <p className="font-semibold text-sm text-earth-800 line-clamp-2">{item.name}</p>
-                            <p className="text-xs text-earth-500 mt-1">Size: {item.size} | Color: {item.color}</p>
-                            <div className="flex justify-between items-center mt-2">
-                              <span className="text-xs font-medium text-earth-600">Qty: {item.quantity}</span>
-                              <span className="font-bold text-sm text-earth-900">{formatPrice(item.price)}</span>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Summary */}
-                  <div className="bg-earth-50 rounded-2xl p-4 border border-earth-100 flex flex-col justify-between">
-                    <div>
-                      <h3 className="text-sm font-bold text-earth-900 uppercase tracking-wider mb-2">Summary</h3>
-                      <p className="text-xs text-earth-600 mb-1">Items: {order.items?.length}</p>
-                      <p className="text-xs text-earth-600 mb-1">Payment: {order.paymentMethod.toUpperCase()} ({order.paymentStatus})</p>
-                      {order.transactionId && (
-                         <p className="text-xs text-earth-600 mb-1">Txn ID: {order.transactionId}</p>
-                      )}
-                    </div>
-                    <div className="pt-4 mt-4 border-t border-earth-200 flex justify-between items-end">
-                      <span className="font-heading font-bold text-earth-800">Total</span>
-                      <span className="text-xl font-bold text-sage-600">{formatPrice(order.totalAmount)}</span>
-                    </div>
                   </div>
                 </div>
               </div>

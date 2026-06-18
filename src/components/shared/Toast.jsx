@@ -3,31 +3,31 @@ import { CheckCircle, XCircle, AlertTriangle, Info, X } from "lucide-react";
 
 const ToastContext = createContext(null);
 
-// Toast types configuration
+// Toast types configuration — Flipkart theme
 const TOAST_CONFIG = {
   success: {
     icon: CheckCircle,
-    bg: "bg-sage-50 border-sage-300",
-    iconColor: "text-sage-600",
-    textColor: "text-sage-800",
+    bg: "bg-fk-green-light border-fk-green/30",
+    iconColor: "text-fk-green",
+    textColor: "text-fk-green",
   },
   error: {
     icon: XCircle,
-    bg: "bg-rose-50 border-rose-300",
-    iconColor: "text-rose-600",
-    textColor: "text-rose-800",
+    bg: "bg-fk-red-light border-fk-red/30",
+    iconColor: "text-fk-red",
+    textColor: "text-fk-red",
   },
   warning: {
     icon: AlertTriangle,
-    bg: "bg-gold-50 border-gold-300",
-    iconColor: "text-gold-600",
-    textColor: "text-gold-800",
+    bg: "bg-fk-yellow-light border-fk-yellow/30",
+    iconColor: "text-fk-yellow-dark",
+    textColor: "text-fk-yellow-dark",
   },
   info: {
     icon: Info,
-    bg: "bg-earth-50 border-earth-300",
-    iconColor: "text-earth-600",
-    textColor: "text-earth-800",
+    bg: "bg-fk-blue-light border-fk-blue/30",
+    iconColor: "text-fk-blue",
+    textColor: "text-fk-blue",
   },
 };
 
@@ -44,8 +44,8 @@ function ToastItem({ toast, onDismiss }) {
 
   return (
     <div
-      className={`flex items-start gap-3 p-4 rounded-xl border shadow-medium
-                  animate-slide-down ${config.bg} max-w-sm w-full`}
+      className={`flex items-start gap-3 p-3 border shadow-medium
+                  animate-slide-down ${config.bg} max-w-sm w-full rounded-sm`}
       role="alert"
     >
       <Icon className={`w-5 h-5 mt-0.5 flex-shrink-0 ${config.iconColor}`} />
@@ -61,7 +61,7 @@ function ToastItem({ toast, onDismiss }) {
       </div>
       <button
         onClick={() => onDismiss(toast.id)}
-        className={`flex-shrink-0 p-0.5 rounded-md hover:bg-black/5 transition-colors ${config.iconColor}`}
+        className={`flex-shrink-0 p-0.5 rounded-sm hover:bg-black/5 transition-colors ${config.iconColor}`}
       >
         <X className="w-4 h-4" />
       </button>
@@ -85,7 +85,7 @@ export function ToastProvider({ children }) {
     <ToastContext.Provider value={{ addToast }}>
       {children}
       {/* Toast container */}
-      <div className="fixed top-4 right-4 z-[100] flex flex-col gap-2">
+      <div className="fixed top-14 right-2 md:top-4 md:right-4 z-[200] flex flex-col gap-2">
         {toasts.map((toast) => (
           <ToastItem key={toast.id} toast={toast} onDismiss={dismissToast} />
         ))}

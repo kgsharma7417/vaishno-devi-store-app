@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Filter, X, Check } from "lucide-react";
+import { X, Check } from "lucide-react";
 import { CATEGORIES, BANGLE_SIZES, AVAILABLE_COLORS, COLOR_SWATCHES } from "../../utils/constants";
 
 export default function FilterSidebar({ filters, setFilters, isOpen, setIsOpen }) {
@@ -25,64 +24,73 @@ export default function FilterSidebar({ filters, setFilters, isOpen, setIsOpen }
       {/* Mobile Backdrop */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden"
+          className="fixed inset-0 bg-black/40 z-40 lg:hidden"
           onClick={() => setIsOpen(false)}
         />
       )}
 
       {/* Sidebar Container */}
       <div className={`
-        fixed lg:static inset-y-0 left-0 z-50 w-72 lg:w-64 bg-white lg:bg-transparent lg:block
-        transform transition-transform duration-300 ease-in-out border-r border-earth-100 lg:border-none
-        h-full overflow-y-auto lg:overflow-visible p-6 lg:p-0
+        fixed lg:static inset-y-0 left-0 z-50 w-72 lg:w-56 bg-white lg:bg-white lg:block
+        transform transition-transform duration-300 ease-in-out border-r border-gray-100
+        h-full overflow-y-auto lg:overflow-visible
         ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
       `}>
-        <div className="flex items-center justify-between mb-6 lg:hidden">
-          <h2 className="text-xl font-heading font-bold text-earth-800 flex items-center gap-2">
-            <Filter className="w-5 h-5 text-sage-500" />
-            Filters
-          </h2>
-          <button onClick={() => setIsOpen(false)} className="p-2 bg-earth-50 rounded-full text-earth-500">
-            <X className="w-5 h-5" />
-          </button>
+        {/* Mobile Header */}
+        <div className="flex items-center justify-between p-3 border-b border-gray-100 lg:hidden bg-gray-50">
+          <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wide">Filters</h2>
+          <div className="flex items-center gap-3">
+            {hasActiveFilters && (
+              <button onClick={clearFilters} className="text-xs font-bold text-fk-blue">
+                CLEAR ALL
+              </button>
+            )}
+            <button onClick={() => setIsOpen(false)} className="p-1.5 bg-white rounded-sm text-gray-500 border border-gray-200">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
-        <div className="hidden lg:flex items-center justify-between mb-6">
-          <h2 className="text-lg font-heading font-semibold text-earth-800">Filters</h2>
+        {/* Desktop Header */}
+        <div className="hidden lg:flex items-center justify-between p-4 border-b border-gray-100">
+          <h2 className="text-xs font-bold text-gray-900 uppercase tracking-wider">Filters</h2>
           {hasActiveFilters && (
             <button 
               onClick={clearFilters}
-              className="text-sm font-medium text-sage-600 hover:text-sage-700"
+              className="text-xs font-bold text-fk-blue hover:underline"
             >
-              Clear All
+              CLEAR ALL
             </button>
           )}
         </div>
 
-        <div className="space-y-8">
+        <div className="p-3 lg:p-4 space-y-5">
           {/* Categories */}
           <div>
-            <h3 className="text-sm font-bold text-earth-900 uppercase tracking-wider mb-4">Category</h3>
-            <div className="space-y-3">
-              {CATEGORIES.map(category => (
-                <label key={category} className="flex items-center gap-3 cursor-pointer group">
-                  <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors
-                    ${filters.categories.includes(category) ? "bg-sage-500 border-sage-500" : "border-earth-300 group-hover:border-sage-400"}`}>
-                    {filters.categories.includes(category) && <Check className="w-3.5 h-3.5 text-white" />}
-                  </div>
-                  <span className={`text-sm ${filters.categories.includes(category) ? "text-earth-900 font-medium" : "text-earth-600"}`}>
-                    {category}
-                  </span>
-                </label>
-              ))}
+            <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider mb-3">Category</h3>
+            <div className="space-y-2">
+              {CATEGORIES.map(category => {
+                const isActive = filters.categories.includes(category);
+                return (
+                  <label key={category} className="flex items-center gap-2.5 cursor-pointer group">
+                    <div className={`w-4 h-4 rounded-sm border-2 flex items-center justify-center transition-colors
+                      ${isActive ? "bg-fk-blue border-fk-blue" : "border-gray-300 group-hover:border-fk-blue"}`}>
+                      {isActive && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                    </div>
+                    <span className={`text-sm ${isActive ? "text-fk-blue font-medium" : "text-gray-600"}`}>
+                      {category}
+                    </span>
+                  </label>
+                );
+              })}
             </div>
           </div>
 
-          <hr className="border-earth-200" />
+          <hr className="border-gray-100" />
 
           {/* Sizes */}
           <div>
-            <h3 className="text-sm font-bold text-earth-900 uppercase tracking-wider mb-4">Size</h3>
+            <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider mb-3">Size</h3>
             <div className="flex flex-wrap gap-2">
               {BANGLE_SIZES.map(size => {
                 const isActive = filters.sizes.includes(size);
@@ -90,10 +98,10 @@ export default function FilterSidebar({ filters, setFilters, isOpen, setIsOpen }
                   <button
                     key={size}
                     onClick={() => toggleFilter("sizes", size)}
-                    className={`w-12 h-10 rounded-lg text-sm font-medium border transition-all
+                    className={`min-w-[40px] h-8 px-2 rounded-sm text-xs font-medium border transition-all
                       ${isActive 
-                        ? "bg-earth-800 text-white border-earth-800 shadow-sm" 
-                        : "bg-white text-earth-600 border-earth-200 hover:border-earth-400"}`}
+                        ? "bg-fk-blue text-white border-fk-blue" 
+                        : "bg-white text-gray-600 border-gray-200 hover:border-fk-blue"}`}
                   >
                     {size}
                   </button>
@@ -102,12 +110,12 @@ export default function FilterSidebar({ filters, setFilters, isOpen, setIsOpen }
             </div>
           </div>
 
-          <hr className="border-earth-200" />
+          <hr className="border-gray-100" />
 
           {/* Colors */}
           <div>
-            <h3 className="text-sm font-bold text-earth-900 uppercase tracking-wider mb-4">Color</h3>
-            <div className="flex flex-wrap gap-3">
+            <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider mb-3">Color</h3>
+            <div className="flex flex-wrap gap-2.5">
               {AVAILABLE_COLORS.slice(0, 12).map(color => {
                 const isActive = filters.colors.includes(color);
                 const swatch = COLOR_SWATCHES[color];
@@ -118,8 +126,8 @@ export default function FilterSidebar({ filters, setFilters, isOpen, setIsOpen }
                     key={color}
                     onClick={() => toggleFilter("colors", color)}
                     title={color}
-                    className={`relative w-8 h-8 rounded-full border transition-all duration-200
-                      ${isActive ? "ring-2 ring-offset-2 ring-sage-500 scale-110" : "border-black/10 hover:scale-110"}`}
+                    className={`relative w-7 h-7 rounded-full border-2 transition-all duration-200
+                      ${isActive ? "ring-2 ring-offset-1 ring-fk-blue scale-110" : "border-gray-200 hover:scale-110"}`}
                     style={{
                       background: isGradient ? swatch : swatch,
                       backgroundColor: isGradient ? undefined : swatch,
@@ -127,7 +135,7 @@ export default function FilterSidebar({ filters, setFilters, isOpen, setIsOpen }
                   >
                     {isActive && (
                       <span className="absolute inset-0 flex items-center justify-center mix-blend-difference">
-                        <Check className="w-4 h-4 text-white" />
+                        <Check className="w-3.5 h-3.5 text-white" />
                       </span>
                     )}
                   </button>
@@ -137,15 +145,15 @@ export default function FilterSidebar({ filters, setFilters, isOpen, setIsOpen }
           </div>
         </div>
 
-        {/* Mobile Clear Button */}
-        {hasActiveFilters && (
+        {/* Mobile Apply Button */}
+        <div className="p-3 border-t border-gray-100 lg:hidden bg-gray-50">
           <button 
-            onClick={clearFilters}
-            className="w-full mt-8 lg:hidden btn-secondary py-3 text-sm"
+            onClick={() => setIsOpen(false)}
+            className="w-full bg-fk-blue text-white font-bold py-3 rounded-sm text-sm uppercase"
           >
-            Clear All Filters
+            Apply Filters
           </button>
-        )}
+        </div>
       </div>
     </>
   );
