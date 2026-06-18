@@ -70,7 +70,7 @@ export default function ShopSection() {
   }, [products, filters, searchQuery]);
 
   return (
-    <section id="shop-section" className="py-16 bg-white relative z-20">
+    <section id="shop-section" className="py-16 bg-white relative z-30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}

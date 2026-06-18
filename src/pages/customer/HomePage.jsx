@@ -9,10 +9,34 @@ import { useCart } from "../../contexts/CartContext";
 const DEFAULT_SLIDES = [
   {
     id: 1,
-    image: "https://images.unsplash.com/photo-1599643478524-fb524fa0a8a7?q=80&w=2000&auto=format&fit=crop",
-    title: "The Royal\nBridal Heritage",
-    subtitle: "New Collection",
-    desc: "Discover our meticulously crafted bridal chudas and Kundan sets, designed to make your special day unforgettable.",
+    image: "/hero/1.png",
+    title: "Premium\nBridal Collection",
+    subtitle: "New Arrivals",
+    desc: "Discover our meticulously crafted bridal Kundan bangles, designed to make your special day unforgettable.",
+    align: "left"
+  },
+  {
+    id: 2,
+    image: "/hero/2.png",
+    title: "Exquisite\nJewelry Sets",
+    subtitle: "Luxury Display",
+    desc: "High-end traditional Indian jewelry sets featuring intricate gold designs and warm elegance.",
+    align: "center"
+  },
+  {
+    id: 3,
+    image: "/hero/3.png",
+    title: "Vibrant\nGlass Bangles",
+    subtitle: "Festive Special",
+    desc: "Add a splash of vibrant colors to your celebrations with our premium glass and metal chuda sets.",
+    align: "right"
+  },
+  {
+    id: 4,
+    image: "/hero/4.png",
+    title: "The Perfect\nBridal Look",
+    subtitle: "Editorial Style",
+    desc: "Complete your elegant bridal look with our beautiful assortment of artificial jewelry and mehendi essentials.",
     align: "left"
   }
 ];
@@ -202,7 +226,7 @@ export default function HomePage() {
       </main>
 
       {/* Trust Banner Below Hero */}
-      <div className="bg-earth-900 text-earth-100 py-6 border-b border-earth-800 relative z-30">
+      <div className="bg-earth-900 text-earth-100 py-6 border-b border-earth-800 relative z-10">
         <div className="max-w-7xl mx-auto px-4 flex flex-wrap justify-center md:justify-between items-center gap-8">
           <div className="flex items-center gap-3">
             <ShieldCheck className="w-6 h-6 text-gold-500" />
