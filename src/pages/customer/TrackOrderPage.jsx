@@ -1,15 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import { Search, PackageSearch, ArrowLeft, CheckCircle2, Clock, Truck, Home, Phone, Hash } from "lucide-react";
 import { formatPrice } from "../../utils/helpers";
+import { useSEO } from "../../hooks/useSEO";
 
 export default function TrackOrderPage() {
   const location = useLocation();
   const [searchMode, setSearchMode] = useState("id"); // "id" or "phone"
   const [searchInput, setSearchInput] = useState(location.state?.orderId || "");
   const [loading, setLoading] = useState(false);
+
+  useSEO({ title: "Track Order", description: "Track your Radhe Bangles order status in real-time. Enter your Order ID or phone number to get updates." });
   
   // States for Order ID search
   const [orderData, setOrderData] = useState(null);
@@ -19,15 +22,7 @@ export default function TrackOrderPage() {
   
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    if (location.state?.orderId) {
-      setSearchMode("id");
-      setSearchInput(location.state.orderId);
-      performSearch(location.state.orderId, "id");
-    }
-  }, [location.state?.orderId]);
-
-  const performSearch = async (queryVal, mode) => {
+  const performSearch = useCallback(async (queryVal, mode) => {
     if (!queryVal.trim()) return;
     setLoading(true);
     setError("");
@@ -62,7 +57,15 @@ export default function TrackOrderPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (location.state?.orderId) {
+      setSearchMode("id");
+      setSearchInput(location.state.orderId);
+      performSearch(location.state.orderId, "id");
+    }
+  }, [location.state?.orderId, performSearch]);
 
   const handleSearch = (e) => {
     e.preventDefault();

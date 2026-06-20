@@ -1,8 +1,12 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ToastProvider } from "./components/shared/Toast";
+import { CartProvider } from "./contexts/CartContext";
+import { WishlistProvider } from "./contexts/WishlistContext";
+import { RecentlyViewedProvider } from "./contexts/RecentlyViewedContext";
 import { useAuth } from "./hooks/useAuth";
 import Loader from "./components/shared/Loader";
+import WhatsAppFloat from "./components/shared/WhatsAppFloat";
 
 // Pages
 import HomePage from "./pages/customer/HomePage";
@@ -113,7 +117,14 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <ToastProvider>
-          <AppRoutes />
+          <CartProvider>
+            <WishlistProvider>
+              <RecentlyViewedProvider>
+                <AppRoutes />
+                <WhatsAppFloat />
+              </RecentlyViewedProvider>
+            </WishlistProvider>
+          </CartProvider>
         </ToastProvider>
       </AuthProvider>
     </BrowserRouter>

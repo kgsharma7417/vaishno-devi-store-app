@@ -1,15 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import { 
   Search, ShoppingCart, ChevronRight, ChevronLeft, 
-  Loader2, Heart, Bell, Menu, Home, Grid3X3, User, Zap,
-  Sparkles, Gift, Crown, Star, Gem, Flower2, CircleDot, Palette
+  Loader2, Heart, Home, Grid3X3, User, Zap,
+  Sparkles, Gift, Crown, Star, Gem, Flower2, CircleDot, Palette, Clock
 } from "lucide-react";
 import ShopSection from "../../components/customer/ShopSection";
 import { useCart } from "../../contexts/CartContext";
+import { useAuth } from "../../hooks/useAuth";
+import { useRecentlyViewed } from "../../contexts/RecentlyViewedContext";
 import { CATEGORIES } from "../../utils/constants";
+import UserLoginModal from "../../components/customer/UserLoginModal";
+import { formatPrice } from "../../utils/helpers";
 
 const DEFAULT_SLIDES = [
   {
@@ -79,11 +83,15 @@ const CATEGORY_COLORS = [
 
 export default function HomePage() {
   const { cartCount, setIsCartOpen } = useCart();
+  const { currentUser, userProfile } = useAuth();
+  const { recentItems } = useRecentlyViewed();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [slides, setSlides] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeNav, setActiveNav] = useState("home");
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const shopSectionRef = useRef(null);
 
   // Countdown timer — loops every 24h (resets at midnight)
   const [countdown, setCountdown] = useState({ hours: "00", minutes: "00", seconds: "00" });
@@ -144,6 +152,8 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gray-50 font-body pb-16 md:pb-0">
+
+      {/* SEO: structured data passed via title */}
       
       {/* ===== FLIPKART-STYLE HEADER ===== */}
       <header className="bg-fk-blue sticky top-0 z-50 shadow-header">
@@ -158,7 +168,6 @@ export default function HomePage() {
               </span>
               <span className="hidden md:flex items-center gap-1 text-[10px] text-white/80 italic mt-0.5">
                 Explore <span className="text-fk-yellow">Plus</span>
-                <img src="" alt="" className="w-2 h-2" onError={(e) => e.target.style.display='none'} />
               </span>
             </Link>
 
@@ -199,12 +208,24 @@ export default function HomePage() {
                 )}
               </button>
 
-              <Link
-                to="/admin/login"
+              {/* Account Button — Google Login */}
+              <button
+                onClick={() => setIsLoginModalOpen(true)}
                 className="hidden md:flex items-center gap-1.5 text-white text-sm font-medium hover:text-white/80 transition-colors px-2"
               >
-                Admin
-              </Link>
+                {currentUser && userProfile?.photo ? (
+                  <img
+                    src={userProfile.photo}
+                    alt={userProfile.name}
+                    className="w-7 h-7 rounded-full border-2 border-white/50"
+                  />
+                ) : (
+                  <User className="w-4 h-4" />
+                )}
+                <span className="max-w-[80px] truncate">
+                  {currentUser ? userProfile?.name?.split(" ")[0] : "Login"}
+                </span>
+              </button>
             </div>
           </div>
         </div>
@@ -346,8 +367,49 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* ===== SHOP SECTION ===== */}
-      <ShopSection />
+      {/* ===== RECENTLY VIEWED PRODUCTS ===== */}
+      {recentItems.length > 0 && (
+        <div className="bg-white mt-2 border-b border-gray-100">
+          <div className="max-w-7xl mx-auto px-3 py-3 md:px-6 md:py-4">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm md:text-base font-bold text-gray-800 flex items-center gap-2">
+                <Clock className="w-4 h-4 text-fk-blue" />
+                Recently Viewed
+              </h2>
+            </div>
+            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+              {recentItems.slice(0, 6).map((item) => (
+                <Link
+                  key={item.id}
+                  to={`/product/${item.id}`}
+                  className="flex-shrink-0 w-28 md:w-32 group"
+                >
+                  <div className="aspect-[3/4] bg-gray-50 overflow-hidden rounded-sm mb-1.5">
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
+                    />
+                  </div>
+                  <p className="text-[10px] md:text-xs text-gray-700 line-clamp-2 leading-snug font-medium">
+                    {item.name}
+                  </p>
+                  <p className="text-xs font-bold text-gray-900 mt-0.5">
+                    {formatPrice(item.price)}
+                  </p>
+                  {item.discount > 0 && (
+                    <p className="text-[10px] text-fk-green font-medium">{item.discount}% off</p>
+                  )}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===== SHOP SECTION — Pass searchQuery ===== */}
+      <ShopSection externalSearch={searchQuery} />
 
       {/* ===== FOOTER ===== */}
       <footer className="bg-gray-800 text-white mt-4">
@@ -356,25 +418,77 @@ export default function HomePage() {
             <div>
               <h4 className="text-xs font-bold text-gray-400 uppercase mb-3">About</h4>
               <ul className="space-y-2 text-xs text-gray-300">
-                <li><a href="#" className="hover:text-white">About Us</a></li>
-                <li><a href="#" className="hover:text-white">Contact Us</a></li>
                 <li><Link to="/my-orders" className="hover:text-white">My Orders</Link></li>
+                <li><Link to="/track-order" className="hover:text-white">Track Order</Link></li>
+                <li>
+                  <button
+                    onClick={() => setIsLoginModalOpen(true)}
+                    className="hover:text-white text-left"
+                  >
+                    {currentUser ? "My Account" : "Sign In"}
+                  </button>
+                </li>
               </ul>
             </div>
             <div>
               <h4 className="text-xs font-bold text-gray-400 uppercase mb-3">Help</h4>
               <ul className="space-y-2 text-xs text-gray-300">
-                <li><a href="#" className="hover:text-white">Payments</a></li>
-                <li><a href="#" className="hover:text-white">Shipping</a></li>
+                <li>
+                  <a
+                    href={`https://wa.me/919808861896?text=Hi, I need help with my order`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-white"
+                  >
+                    Payment Support
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href={`https://wa.me/919808861896?text=Hi, I have a shipping question`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-white"
+                  >
+                    Shipping Info
+                  </a>
+                </li>
                 <li><Link to="/track-order" className="hover:text-white">Track Order</Link></li>
               </ul>
             </div>
             <div>
               <h4 className="text-xs font-bold text-gray-400 uppercase mb-3">Policy</h4>
               <ul className="space-y-2 text-xs text-gray-300">
-                <li><a href="#" className="hover:text-white">Return Policy</a></li>
-                <li><a href="#" className="hover:text-white">Terms of Use</a></li>
-                <li><a href="#" className="hover:text-white">Privacy</a></li>
+                <li>
+                  <a
+                    href={`https://wa.me/919808861896?text=Hi, I want to return/exchange my order`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-white"
+                  >
+                    Return Policy
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href={`https://wa.me/919808861896?text=Hi, I have a query about terms`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-white"
+                  >
+                    Terms of Use
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href={`https://wa.me/919808861896?text=Hi, I have a privacy query`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-white"
+                  >
+                    Privacy
+                  </a>
+                </li>
               </ul>
             </div>
             <div>
@@ -424,7 +538,7 @@ export default function HomePage() {
             </div>
           </div>
           <div className="border-t border-gray-700 mt-6 pt-4 text-center text-xs text-gray-500">
-            © 2025 Radhe Bangles — Mukul Dubey. All rights reserved.
+            © {new Date().getFullYear()} Radhe Bangles — Mukul Dubey. All rights reserved.
           </div>
         </div>
       </footer>
@@ -437,7 +551,7 @@ export default function HomePage() {
             { id: "categories", icon: Grid3X3, label: "Categories", href: "#shop-section" },
             { id: "cart", icon: ShoppingCart, label: "Cart", action: () => setIsCartOpen(true), count: cartCount },
             { id: "orders", icon: Heart, label: "Orders", href: "/my-orders" },
-            { id: "account", icon: User, label: "Account", href: "/admin/login" },
+            { id: "account", icon: User, label: "Account", action: () => setIsLoginModalOpen(true), photo: currentUser ? userProfile?.photo : null },
           ].map(item => (
             item.action ? (
               <button
@@ -445,7 +559,11 @@ export default function HomePage() {
                 onClick={() => { setActiveNav(item.id); item.action(); }}
                 className={`flex flex-col items-center gap-0.5 px-3 py-1 relative ${activeNav === item.id ? 'text-fk-blue' : 'text-gray-500'}`}
               >
-                <item.icon className="w-5 h-5" />
+                {item.photo ? (
+                  <img src={item.photo} alt="Account" className="w-5 h-5 rounded-full border border-fk-blue" />
+                ) : (
+                  <item.icon className="w-5 h-5" />
+                )}
                 {item.count > 0 && (
                   <span className="absolute -top-0.5 right-1 w-4 h-4 bg-fk-red text-white text-[9px] font-bold rounded-full flex items-center justify-center">
                     {item.count}
@@ -477,6 +595,12 @@ export default function HomePage() {
           ))}
         </div>
       </nav>
+
+      {/* User Login Modal */}
+      <UserLoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+      />
     </div>
   );
 }

@@ -1,15 +1,18 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import { useToast } from "../../components/shared/Toast";
 import Loader from "../../components/shared/Loader";
 import SizeGuideModal from "../../components/customer/SizeGuideModal";
 import { useCart } from "../../contexts/CartContext";
+import { useWishlist } from "../../contexts/WishlistContext";
+import { useRecentlyViewed } from "../../contexts/RecentlyViewedContext";
 import { formatPrice } from "../../utils/helpers";
 import { COLOR_SWATCHES } from "../../utils/constants";
+import { useSEO } from "../../hooks/useSEO";
 import { 
-  ArrowLeft, Check, Share2, Star,
+  ArrowLeft, Check, Share2,
   Ruler, Truck, ShieldCheck, Video, ShoppingCart, 
   Heart, ChevronRight, Zap, MapPin, RotateCcw
 } from "lucide-react";
@@ -18,9 +21,21 @@ export default function ProductPage() {
   const { id } = useParams();
   const { addToast } = useToast();
   const { addToCart, cartCount, setIsCartOpen } = useCart();
+  const { isWishlisted, toggleWishlist } = useWishlist();
+  const { addRecentlyViewed } = useRecentlyViewed();
+  const navigate = useNavigate();
   
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
+  
+  // Dynamic SEO
+  useSEO({
+    title: product ? product.productName : "Product Details",
+    description: product
+      ? `Buy ${product.productName} at ₹${product.finalPrice}. ${product.description?.slice(0, 100) || ''} — Radhe Bangles`
+      : undefined,
+    image: product?.imageUrls?.[0],
+  });
   
   // Selections
   const [selectedColor, setSelectedColor] = useState("");
@@ -38,13 +53,14 @@ export default function ProductPage() {
         if (docSnap.exists()) {
           const data = { id: docSnap.id, ...docSnap.data() };
           setProduct(data);
-          // Set defaults
+          addRecentlyViewed(data); // Track this view
+          // Set default selections
           if (data.colors?.length > 0) setSelectedColor(data.colors[0]);
-          
-          // Auto-select first available size
           if (data.sizesAndStock) {
-            const firstAvailableSize = Object.keys(data.sizesAndStock).find(size => data.sizesAndStock[size] > 0);
-            if (firstAvailableSize) setSelectedSize(firstAvailableSize);
+            const firstAvailable = Object.keys(data.sizesAndStock).find(
+              (s) => data.sizesAndStock[s] > 0
+            );
+            if (firstAvailable) setSelectedSize(firstAvailable);
           }
         } else {
           addToast({ type: "error", message: "Product not found." });
@@ -59,21 +75,25 @@ export default function ProductPage() {
     fetchProduct();
   }, [id, addToast]);
 
-  const handleAddToCart = () => {
+  const handleAddToCart = (navigateToCheckout = false) => {
     if (product.isOutOfStock) {
       addToast({ type: "error", message: "This product is currently out of stock." });
-      return;
+      return false;
     }
     if (!selectedColor) {
       addToast({ type: "warning", message: "Please select a color first." });
-      return;
+      return false;
     }
     if (!selectedSize) {
       addToast({ type: "warning", message: "Please select a size first." });
-      return;
+      return false;
     }
 
     addToCart(product, selectedSize, selectedColor, 1);
+    if (navigateToCheckout) {
+      setTimeout(() => navigate('/checkout'), 300);
+    }
+    return true;
   };
 
   const handleShare = async () => {
@@ -197,13 +217,17 @@ export default function ProductPage() {
               {product.productName}
             </h1>
 
-            {/* Rating */}
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1 bg-fk-green text-white text-xs font-bold px-2 py-0.5 rounded-sm">
-                4.2 <Star className="w-3 h-3 fill-white" />
-              </span>
-              <span className="text-xs text-gray-500">120 Ratings & 45 Reviews</span>
-            </div>
+            {/* Rating — only show if product has rating data */}
+            {product.rating && (
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1 bg-fk-green text-white text-xs font-bold px-2 py-0.5 rounded-sm">
+                  {product.rating.toFixed(1)} <Star className="w-3 h-3 fill-white" />
+                </span>
+                {product.reviewCount && (
+                  <span className="text-xs text-gray-500">{product.reviewCount} Ratings</span>
+                )}
+              </div>
+            )}
 
             {/* Special offer tag */}
             <div className="flex items-center gap-1.5 text-fk-green text-sm font-medium">
@@ -372,7 +396,7 @@ export default function ProductPage() {
       {/* Mobile Sticky Bottom — ADD TO CART + BUY NOW */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 shadow-[0_-2px_10px_rgba(0,0,0,0.08)] flex md:hidden">
         <button 
-          onClick={handleAddToCart}
+          onClick={() => handleAddToCart(false)}
           disabled={product.isOutOfStock}
           className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-bold uppercase border-r border-gray-200 transition-colors
             ${product.isOutOfStock ? 'bg-gray-100 text-gray-400' : 'bg-white text-fk-blue hover:bg-fk-blue-light'}`}
@@ -381,7 +405,7 @@ export default function ProductPage() {
           {product.isOutOfStock ? "Out of Stock" : "Add to Cart"}
         </button>
         <button 
-          onClick={() => { handleAddToCart(); if(!product.isOutOfStock) { setIsCartOpen(false); setTimeout(() => { window.location.href = '/checkout'; }, 300); }}}
+          onClick={() => handleAddToCart(true)}
           disabled={product.isOutOfStock}
           className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-bold uppercase transition-colors
             ${product.isOutOfStock ? 'bg-gray-300 text-gray-500' : 'bg-fk-yellow text-white hover:bg-fk-yellow-dark'}`}
@@ -395,7 +419,7 @@ export default function ProductPage() {
       <div className="hidden md:block max-w-7xl mx-auto px-6 mt-4">
         <div className="bg-white shadow-card p-6 flex gap-4">
           <button 
-            onClick={handleAddToCart}
+            onClick={() => handleAddToCart(false)}
             disabled={product.isOutOfStock}
             className={`flex-1 flex items-center justify-center gap-2 py-4 text-base font-bold uppercase rounded-sm transition-colors
               ${product.isOutOfStock ? 'bg-gray-300 text-gray-500' : 'bg-fk-yellow text-white hover:bg-fk-yellow-dark'}`}
@@ -404,7 +428,7 @@ export default function ProductPage() {
             {product.isOutOfStock ? "Out of Stock" : "Add to Cart"}
           </button>
           <button 
-            onClick={() => { handleAddToCart(); }}
+            onClick={() => handleAddToCart(true)}
             disabled={product.isOutOfStock}
             className={`flex-1 flex items-center justify-center gap-2 py-4 text-base font-bold uppercase rounded-sm transition-colors
               ${product.isOutOfStock ? 'bg-gray-200 text-gray-400' : 'bg-fk-orange text-white hover:opacity-90'}`}

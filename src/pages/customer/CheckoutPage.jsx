@@ -2,16 +2,23 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../../contexts/CartContext";
 import { useToast } from "../../components/shared/Toast";
+import { useAuth } from "../../hooks/useAuth";
+import { useSEO } from "../../hooks/useSEO";
 import { formatPrice } from "../../utils/helpers";
 import { db } from "../../config/firebase";
 import { collection, addDoc, serverTimestamp, doc, getDoc } from "firebase/firestore";
 import { ArrowLeft, MapPin, CreditCard, ShieldCheck, PackageCheck, Loader2, ChevronRight, Tag } from "lucide-react";
 import { QRCodeSVG } from 'qrcode.react';
+import CouponSection, { useCoupon } from "../../components/customer/CouponSection";
+import { launchConfetti } from "../../utils/confetti";
 
 export default function CheckoutPage() {
   const { cartItems, cartTotal, clearCart } = useCart();
   const { addToast } = useToast();
+  const { userProfile } = useAuth();
   const navigate = useNavigate();
+
+  useSEO({ title: "Checkout", description: "Complete your Radhe Bangles order. Secure checkout with COD, UPI and online payment options." });
 
   const [form, setForm] = useState({
     fullName: "",
@@ -22,6 +29,18 @@ export default function CheckoutPage() {
     state: "",
     pincode: "",
   });
+
+  // Auto-fill form from Google login profile
+  useEffect(() => {
+    if (userProfile) {
+      setForm(prev => ({
+        ...prev,
+        fullName: prev.fullName || userProfile.name || "",
+        email: prev.email || userProfile.email || "",
+      }));
+    }
+  }, [userProfile]);
+
   const [paymentMethod, setPaymentMethod] = useState("cod"); // 'cod' or 'upi'
   const [submitting, setSubmitting] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
@@ -32,6 +51,10 @@ export default function CheckoutPage() {
   const [razorpayDetails, setRazorpayDetails] = useState({ enabled: false, keyId: "" });
   const [transactionId, setTransactionId] = useState("");
   const [scriptLoaded, setScriptLoaded] = useState(false);
+
+  // Coupon code system
+  const { appliedCoupon, discountAmount, couponCode, setCouponCode, couponError, applying, applyCoupon, removeCoupon } = useCoupon(cartTotal);
+  const finalTotal = Math.max(0, cartTotal - discountAmount);
 
   // Load Razorpay Script
   useEffect(() => {
@@ -102,6 +125,10 @@ export default function CheckoutPage() {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
+  // Validation helpers
+  const isValidPhone = (phone) => /^[6-9][0-9]{9}$/.test(phone.replace(/\s+/g, ""));
+  const isValidPIN = (pin) => /^[1-9][0-9]{5}$/.test(pin);
+
   const handleGetLocation = () => {
     if (!navigator.geolocation) {
       addToast({ type: "error", message: "Geolocation is not supported by your browser" });
@@ -127,8 +154,9 @@ export default function CheckoutPage() {
     );
   };
 
-  const deliveryCharge = (cartTotal < 299) ? 30 : 0;
-  const finalTotal = cartTotal + deliveryCharge;
+  const deliveryCharge = ((cartTotal - discountAmount) < 299 && (cartTotal - discountAmount) > 0) ? 30 : 0;
+  // finalTotal already defined above: const finalTotal = Math.max(0, cartTotal - discountAmount);
+  const grandTotal = finalTotal + deliveryCharge;
 
   const saveOrderToFirebase = async (txnId = null, pMethod = paymentMethod) => {
     try {
@@ -139,7 +167,10 @@ export default function CheckoutPage() {
       const orderData = {
         customerDetails: { ...form, location: location },
         items: cartItems,
-        totalAmount: finalTotal,
+        subtotal: cartTotal,
+        coupon: appliedCoupon ? { code: appliedCoupon.code, discount: discountAmount } : null,
+        deliveryCharge,
+        totalAmount: grandTotal,
         paymentMethod: pMethod,
         transactionId: txnId,
         paymentStatus: pStatus,
@@ -163,9 +194,11 @@ export default function CheckoutPage() {
 
       setOrderPlaced(true);
       clearCart();
-      window.scrollTo(0,0);
+      window.scrollTo(0, 0);
+      // 🎉 Launch confetti!
+      launchConfetti();
       
-      addToast({ type: "success", title: "Success", message: "Your order has been placed!" });
+      addToast({ type: "success", title: "Success", message: "🎉 Your order has been placed!" });
 
     } catch (error) {
       console.error("Error placing order:", error);
@@ -177,6 +210,19 @@ export default function CheckoutPage() {
 
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
+
+    // Phone validation
+    if (!isValidPhone(form.phone)) {
+      addToast({ type: "error", message: "Please enter a valid 10-digit Indian mobile number." });
+      return;
+    }
+
+    // PIN code validation
+    if (!isValidPIN(form.pincode)) {
+      addToast({ type: "error", message: "Please enter a valid 6-digit PIN code." });
+      return;
+    }
+
     if (paymentMethod === 'upi' && !transactionId.trim()) {
       addToast({ type: "warning", message: "Please enter the Transaction ID (UTR) to confirm your UPI payment." });
       return;
@@ -199,7 +245,7 @@ export default function CheckoutPage() {
 
       const options = {
         key: razorpayDetails.keyId,
-        amount: finalTotal * 100,
+        amount: grandTotal * 100,
         currency: "INR",
         name: "Radhe Bangles",
         description: "Test Transaction",
@@ -290,7 +336,18 @@ export default function CheckoutPage() {
                   </div>
                   <div>
                     <label className="input-label text-xs">Phone Number *</label>
-                    <input required type="tel" name="phone" value={form.phone} onChange={handleFieldChange} className="input-field text-sm" placeholder="+91 9876543210" />
+                    <input
+                      required
+                      type="tel"
+                      name="phone"
+                      value={form.phone}
+                      onChange={handleFieldChange}
+                      className="input-field text-sm"
+                      placeholder="9876543210"
+                      pattern="[6-9][0-9]{9}"
+                      maxLength={10}
+                      title="Enter a valid 10-digit Indian mobile number"
+                    />
                   </div>
                   <div>
                     <label className="input-label text-xs">Email (Optional)</label>
@@ -321,7 +378,18 @@ export default function CheckoutPage() {
                   </div>
                   <div>
                     <label className="input-label text-xs">PIN Code *</label>
-                    <input required type="text" name="pincode" value={form.pincode} onChange={handleFieldChange} className="input-field text-sm" placeholder="400001" />
+                    <input
+                      required
+                      type="text"
+                      name="pincode"
+                      value={form.pincode}
+                      onChange={handleFieldChange}
+                      className="input-field text-sm"
+                      placeholder="400001"
+                      pattern="[1-9][0-9]{5}"
+                      maxLength={6}
+                      title="Enter a valid 6-digit PIN code"
+                    />
                   </div>
                 </div>
               </section>
@@ -354,11 +422,11 @@ export default function CheckoutPage() {
                       <div className="mt-3 pt-3 border-t border-blue-200 flex flex-col items-center animate-fade-in text-center">
                         <p className="text-xs font-semibold text-gray-800 mb-2">Scan with any UPI App</p>
                         <div className="bg-white p-3 rounded-sm shadow-sm mb-3 inline-block border border-gray-100 hidden sm:block">
-                           <QRCodeSVG value={`upi://pay?pa=${upiDetails.upiId}&pn=${encodeURIComponent(upiDetails.payeeName || 'Store')}&am=${finalTotal}&cu=INR`} size={140} />
+                        <QRCodeSVG value={`upi://pay?pa=${upiDetails.upiId}&pn=${encodeURIComponent(upiDetails.payeeName || 'Store')}&am=${grandTotal}&cu=INR`} size={140} />
                         </div>
                         
                         <a 
-                          href={`upi://pay?pa=${upiDetails.upiId}&pn=${encodeURIComponent(upiDetails.payeeName || 'Store')}&am=${finalTotal}&cu=INR`}
+                          href={`upi://pay?pa=${upiDetails.upiId}&pn=${encodeURIComponent(upiDetails.payeeName || 'Store')}&am=${grandTotal}&cu=INR`}
                           className="w-full sm:hidden bg-fk-blue text-white font-bold py-2.5 px-4 rounded-sm mb-3 flex items-center justify-center gap-2 text-sm"
                         >
                           Pay with UPI App
@@ -398,7 +466,10 @@ export default function CheckoutPage() {
 
           {/* Right Column: Order Summary */}
           <div className="lg:col-span-4">
-            <div className="bg-white p-4 md:p-6 shadow-card sticky top-24">
+            {/* Coupon Section */}
+            <CouponSection cartTotal={cartTotal} />
+
+            <div className="bg-white p-4 md:p-6 shadow-card sticky top-24 mt-2">
               <h2 className="text-sm font-bold text-gray-900 uppercase mb-4">Price Details</h2>
               
               <div className="space-y-3 mb-4 max-h-[300px] overflow-y-auto">
@@ -424,6 +495,12 @@ export default function CheckoutPage() {
                   <span>Price ({cartItems.length} items)</span>
                   <span>{formatPrice(cartTotal)}</span>
                 </div>
+                {discountAmount > 0 && (
+                  <div className="flex justify-between text-fk-green font-medium">
+                    <span>Coupon Savings ({appliedCoupon?.code})</span>
+                    <span>−{formatPrice(discountAmount)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-gray-600">
                   <span>Delivery Charges</span>
                   <span className={deliveryCharge > 0 ? "text-gray-900" : "text-fk-green font-medium"}>
@@ -432,8 +509,11 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex justify-between items-end pt-2 border-t border-dashed border-gray-200 font-bold text-gray-900">
                   <span>Total Amount</span>
-                  <span className="text-base">{formatPrice(finalTotal)}</span>
+                  <span className="text-base">{formatPrice(grandTotal)}</span>
                 </div>
+                {discountAmount > 0 && (
+                  <p className="text-[10px] text-fk-green text-right">You save {formatPrice(discountAmount)}! 🎉</p>
+                )}
               </div>
 
               {/* Desktop Place Order */}
@@ -462,7 +542,12 @@ export default function CheckoutPage() {
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 lg:hidden z-50 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] flex items-center">
         <div className="flex-1 px-4 py-2">
           <p className="text-[10px] text-gray-500">Total Amount</p>
-          <p className="font-bold text-base text-gray-900">{formatPrice(finalTotal)}</p>
+          <div>
+            <p className="font-bold text-base text-gray-900">{formatPrice(grandTotal)}</p>
+            {discountAmount > 0 && (
+              <p className="text-[10px] text-fk-green">Saved {formatPrice(discountAmount)}</p>
+            )}
+          </div>
         </div>
         <button 
           type="submit" 

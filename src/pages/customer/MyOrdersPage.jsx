@@ -1,32 +1,58 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../../config/firebase";
-import { PackageOpen, ArrowLeft, Loader2, Search, ChevronRight, Package } from "lucide-react";
+import { PackageOpen, ArrowLeft, Loader2, ChevronRight } from "lucide-react";
 import { formatPrice } from "../../utils/helpers";
+import { useSEO } from "../../hooks/useSEO";
+import { useAuth } from "../../hooks/useAuth";
 
 export default function MyOrdersPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { userProfile } = useAuth();
+
+  useSEO({ title: "My Orders", description: "View all your Radhe Bangles orders. Track status, view items, and manage your purchases." });
 
   useEffect(() => {
     fetchMyOrders();
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userProfile]);
 
   const fetchMyOrders = async () => {
     setLoading(true);
     try {
-      const savedOrders = JSON.parse(localStorage.getItem('my_bangle_orders') || '[]');
-      
-      if (savedOrders.length === 0) {
+      const savedIds = JSON.parse(localStorage.getItem('my_bangle_orders') || '[]');
+      const allOrderIds = new Set(savedIds);
+
+      // If user logged in via Google, also fetch by phone (if they placed orders with their number)
+      let phoneOrders = [];
+      if (userProfile?.email) {
+        try {
+          const q = query(
+            collection(db, "orders"),
+            where("customerDetails.email", "==", userProfile.email)
+          );
+          const snap = await getDocs(q);
+          snap.docs.forEach(d => allOrderIds.add(d.id));
+          phoneOrders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        } catch (e) {
+          console.error("Error fetching orders by email:", e);
+        }
+      }
+
+      if (allOrderIds.size === 0) {
         setOrders([]);
         setLoading(false);
         return;
       }
 
-      const fetchedOrders = [];
-      // Fetch each order from Firestore
-      for (const orderId of savedOrders) {
+      const fetchedOrders = [...phoneOrders];
+      const fetchedIds = new Set(phoneOrders.map(o => o.id));
+
+      // Fetch localStorage-only order IDs from Firestore
+      for (const orderId of savedIds) {
+        if (fetchedIds.has(orderId)) continue;
         try {
           const docRef = doc(db, "orders", orderId);
           const docSnap = await getDoc(docRef);
@@ -47,7 +73,7 @@ export default function MyOrdersPage() {
 
       setOrders(fetchedOrders);
     } catch (error) {
-      console.error("Error loading orders from local storage:", error);
+      console.error("Error loading orders:", error);
     } finally {
       setLoading(false);
     }

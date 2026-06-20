@@ -4,9 +4,10 @@ import { db } from "../../config/firebase";
 import ProductCard from "./ProductCard";
 import FilterSidebar from "./FilterSidebar";
 import Loader from "../shared/Loader";
+import { ProductCardSkeleton } from "../shared/Skeleton";
 import { Filter, Search, X, ChevronDown, SlidersHorizontal } from "lucide-react";
 
-export default function ShopSection() {
+export default function ShopSection({ externalSearch = "" }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   
@@ -16,7 +17,9 @@ export default function ShopSection() {
     sizes: [],
     colors: [],
   });
-  const [searchQuery, setSearchQuery] = useState("");
+  // Internal search (ShopSection header) — external (HomePage header) takes priority
+  const [internalSearch, setInternalSearch] = useState("");
+  const searchQuery = externalSearch || internalSearch;
   const [sortBy, setSortBy] = useState("newest");
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [showSortDropdown, setShowSortDropdown] = useState(false);
@@ -111,22 +114,30 @@ export default function ShopSection() {
 
             {/* Right: Search, Sort, Filter */}
             <div className="flex items-center gap-2">
-              {/* Desktop Search */}
+              {/* Desktop Search — only shown when no externalSearch active */}
+              {!externalSearch && (
               <div className="hidden md:block relative w-48">
                 <input 
                   type="text" 
                   placeholder="Search..." 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  value={internalSearch}
+                  onChange={(e) => setInternalSearch(e.target.value)}
                   className="w-full pl-8 pr-3 py-1.5 bg-gray-50 border border-gray-200 rounded-sm text-sm focus:outline-none focus:border-fk-blue"
                 />
                 <Search className="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-                {searchQuery && (
-                  <button onClick={() => setSearchQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                {internalSearch && (
+                  <button onClick={() => setInternalSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                     <X className="w-3.5 h-3.5" />
                   </button>
                 )}
               </div>
+              )}
+              {externalSearch && (
+                <div className="hidden md:flex items-center gap-1.5 bg-fk-blue-light text-fk-blue text-xs font-medium px-3 py-1.5 rounded-sm">
+                  <Search className="w-3 h-3" />
+                  Searching: "{externalSearch}"
+                </div>
+              )}
 
               {/* Sort Dropdown */}
               <div className="relative">
@@ -222,8 +233,10 @@ export default function ShopSection() {
           {/* Product Grid */}
           <div className="flex-1 min-w-0">
             {loading ? (
-              <div className="py-20 bg-white">
-                <Loader text="Loading products..." />
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-px bg-gray-100">
+                {Array.from({ length: 10 }).map((_, i) => (
+                  <ProductCardSkeleton key={i} />
+                ))}
               </div>
             ) : filteredProducts.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-[1px] md:gap-[1px] bg-gray-100">
@@ -243,7 +256,7 @@ export default function ShopSection() {
                 <button 
                   onClick={() => {
                     setFilters({ categories: [], sizes: [], colors: [] });
-                    setSearchQuery("");
+                    setInternalSearch("");
                   }}
                   className="text-fk-blue font-medium text-sm hover:underline"
                 >
