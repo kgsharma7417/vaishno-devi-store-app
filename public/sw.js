@@ -1,9 +1,9 @@
-const CACHE_NAME = 'radhe-bangles-cache-v2';
+const CACHE_NAME = 'radhe-bangles-cache-v3';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/logo.svg'
+  '/vaishnodevi_app_icon.svg'
 ];
 
 self.addEventListener('install', (event) => {
