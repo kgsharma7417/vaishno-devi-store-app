@@ -166,28 +166,34 @@ export default function QuickViewModal({ product, onClose }) {
             {availableSizes.length > 0 && (
               <div>
                 <p className="text-xs font-bold text-gray-700 uppercase mb-1.5">Size</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {availableSizes.map((size) => {
-                    const stock = product.sizesAndStock[size];
-                    const oos = stock === 0;
-                    return (
-                      <button
-                        key={size}
-                        disabled={oos}
-                        onClick={() => setSelectedSize(size)}
-                        className={`w-10 h-8 text-xs font-semibold border-2 rounded-sm transition-all ${
-                          selectedSize === size
-                            ? "bg-fk-blue text-white border-fk-blue"
-                            : oos
-                            ? "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed line-through"
-                            : "bg-white text-gray-700 border-gray-200 hover:border-fk-blue"
-                        }`}
-                      >
-                        {size}
-                      </button>
-                    );
-                  })}
-                </div>
+                {availableSizes.length === 1 && (availableSizes[0] === "Free Size" || availableSizes[0] === "Standard Size") ? (
+                  <div className="inline-block bg-sage-50 text-sage-700 text-xs font-semibold px-3 py-1.5 rounded border border-sage-100">
+                    ✨ Free Size / Fits All
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-1.5">
+                    {availableSizes.map((size) => {
+                      const stock = product.sizesAndStock[size];
+                      const oos = stock === 0;
+                      return (
+                        <button
+                          key={size}
+                          disabled={oos}
+                          onClick={() => setSelectedSize(size)}
+                          className={`w-10 h-8 text-xs font-semibold border-2 rounded-sm transition-all ${
+                            selectedSize === size
+                              ? "bg-fk-blue text-white border-fk-blue"
+                              : oos
+                              ? "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed line-through"
+                              : "bg-white text-gray-700 border-gray-200 hover:border-fk-blue"
+                          }`}
+                        >
+                          {size}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
 

@@ -56,6 +56,10 @@ export default function CheckoutPage() {
   const { appliedCoupon, discountAmount, couponCode, setCouponCode, couponError, applying, applyCoupon, removeCoupon } = useCoupon(cartTotal);
   const finalTotal = Math.max(0, cartTotal - discountAmount);
 
+  const handleApplyCoupon = (code) => {
+    applyCoupon(code, form.phone, form.email);
+  };
+
   // Load Razorpay Script
   useEffect(() => {
     const loadScript = () => {
@@ -154,9 +158,12 @@ export default function CheckoutPage() {
     );
   };
 
+  const [isGiftWrap, setIsGiftWrap] = useState(false);
+
   const deliveryCharge = ((cartTotal - discountAmount) < 299 && (cartTotal - discountAmount) > 0) ? 30 : 0;
+  const giftWrapCharge = isGiftWrap ? 30 : 0;
   // finalTotal already defined above: const finalTotal = Math.max(0, cartTotal - discountAmount);
-  const grandTotal = finalTotal + deliveryCharge;
+  const grandTotal = finalTotal + deliveryCharge + giftWrapCharge;
 
   const saveOrderToFirebase = async (txnId = null, pMethod = paymentMethod) => {
     try {
@@ -170,6 +177,8 @@ export default function CheckoutPage() {
         subtotal: cartTotal,
         coupon: appliedCoupon ? { code: appliedCoupon.code, discount: discountAmount } : null,
         deliveryCharge,
+        giftWrapCharge,
+        isGiftWrap,
         totalAmount: grandTotal,
         paymentMethod: pMethod,
         transactionId: txnId,
@@ -467,7 +476,15 @@ export default function CheckoutPage() {
           {/* Right Column: Order Summary */}
           <div className="lg:col-span-4">
             {/* Coupon Section */}
-            <CouponSection cartTotal={cartTotal} />
+            <CouponSection 
+              couponCode={couponCode}
+              setCouponCode={setCouponCode}
+              appliedCoupon={appliedCoupon}
+              couponError={couponError}
+              applying={applying}
+              applyCoupon={handleApplyCoupon}
+              removeCoupon={removeCoupon}
+            />
 
             <div className="bg-white p-4 md:p-6 shadow-card sticky top-24 mt-2">
               <h2 className="text-sm font-bold text-gray-900 uppercase mb-4">Price Details</h2>
@@ -490,6 +507,22 @@ export default function CheckoutPage() {
                 ))}
               </div>
 
+              {/* Gift Wrap Section */}
+              <div className="mb-4 p-3 bg-rose-50/50 border border-rose-100 rounded-sm">
+                <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                  <input 
+                    type="checkbox" 
+                    checked={isGiftWrap}
+                    onChange={(e) => setIsGiftWrap(e.target.checked)}
+                    className="w-4 h-4 text-rose-500 border-rose-300 rounded focus:ring-rose-400"
+                  />
+                  <div>
+                    <p className="text-xs font-bold text-gray-800">🎁 Gift Wrap this order? (+₹30)</p>
+                    <p className="text-[10px] text-gray-500">Includes beautiful gift box & custom greeting note.</p>
+                  </div>
+                </label>
+              </div>
+
               <div className="border-t border-dashed border-gray-200 pt-3 space-y-2 text-sm">
                 <div className="flex justify-between text-gray-600">
                   <span>Price ({cartItems.length} items)</span>
@@ -499,6 +532,12 @@ export default function CheckoutPage() {
                   <div className="flex justify-between text-fk-green font-medium">
                     <span>Coupon Savings ({appliedCoupon?.code})</span>
                     <span>−{formatPrice(discountAmount)}</span>
+                  </div>
+                )}
+                {isGiftWrap && (
+                  <div className="flex justify-between text-gray-600">
+                    <span>Gift Wrap Charge</span>
+                    <span>{formatPrice(30)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-gray-600">

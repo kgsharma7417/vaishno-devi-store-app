@@ -37,7 +37,9 @@ const INITIAL_FORM = {
   description: "",
   category: "",
   colors: [],
+  hasSizes: true, // Default to true
   sizesAndStock: [{ size: "", stock: "" }],
+  singleStock: "", // For free-size items
   mrp: "",
   discountPercentage: "",
   videoUrl: "",
@@ -63,9 +65,22 @@ export default function ProductForm({ editId }) {
             const data = docSnap.data();
             
             // Format sizesAndStock back to array format
-            const sizesArr = data.sizesAndStock 
-              ? Object.entries(data.sizesAndStock).map(([size, stock]) => ({ size: size === "Free Size" ? "" : size, stock: stock.toString() }))
-              : [{ size: "", stock: "" }];
+            const sizesMap = data.sizesAndStock || {};
+            const sizesKeys = Object.keys(sizesMap);
+            
+            const hasMultipleSizes = !(sizesKeys.length === 1 && (sizesKeys[0] === "Free Size" || sizesKeys[0] === "Standard Size"));
+            
+            let sizesArr = [{ size: "", stock: "" }];
+            let singleStockVal = "";
+
+            if (hasMultipleSizes) {
+              sizesArr = Object.entries(sizesMap).map(([size, stock]) => ({ 
+                size: size === "Free Size" ? "" : size, 
+                stock: stock.toString() 
+              }));
+            } else {
+              singleStockVal = (sizesMap["Free Size"] || sizesMap["Standard Size"] || "").toString();
+            }
 
             if (sizesArr.length === 0) sizesArr.push({ size: "", stock: "" });
 
@@ -74,7 +89,9 @@ export default function ProductForm({ editId }) {
               description: data.description || "",
               category: data.category || "",
               colors: data.colors || [],
+              hasSizes: hasMultipleSizes,
               sizesAndStock: sizesArr,
+              singleStock: singleStockVal,
               mrp: data.mrp?.toString() || "",
               discountPercentage: data.discountPercentage?.toString() || "",
               videoUrl: data.videoUrl || "",
@@ -111,7 +128,17 @@ export default function ProductForm({ editId }) {
 
   // --- Field handlers ---
   const updateField = (field, value) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
+    setForm((prev) => {
+      const updated = { ...prev, [field]: value };
+      
+      // Auto-toggle multiple sizes based on category selection
+      if (field === "category") {
+        const isBangleCategory = value === "Bangles" || value === "Bridal Chuda";
+        updated.hasSizes = isBangleCategory;
+      }
+      
+      return updated;
+    });
   };
 
   // --- Color handlers ---
@@ -249,16 +276,28 @@ export default function ProductForm({ editId }) {
       addToast({ type: "error", message: "Please select at least one color." });
       return false;
     }
-    const validSizes = form.sizesAndStock.filter(
-      (s) => s.stock !== ""
-    );
-    if (validSizes.length === 0) {
-      addToast({
-        type: "error",
-        message: "Please add stock for at least one item.",
-      });
-      return false;
+
+    if (form.hasSizes) {
+      const validSizes = form.sizesAndStock.filter(
+        (s) => s.stock !== ""
+      );
+      if (validSizes.length === 0) {
+        addToast({
+          type: "error",
+          message: "Please add stock for at least one size.",
+        });
+        return false;
+      }
+    } else {
+      if (!form.singleStock || Number(form.singleStock) < 0) {
+        addToast({
+          type: "error",
+          message: "Please enter a valid stock quantity.",
+        });
+        return false;
+      }
     }
+
     if (!form.mrp || Number(form.mrp) <= 0) {
       addToast({ type: "error", message: "Please enter a valid MRP." });
       return false;
@@ -295,12 +334,16 @@ export default function ProductForm({ editId }) {
 
       // 2. Build sizesAndStock map
       const sizesAndStockMap = {};
-      form.sizesAndStock
-        .filter((s) => s.stock !== "")
-        .forEach((s) => {
-          const finalSize = s.size || "Free Size";
-          sizesAndStockMap[finalSize] = Number(s.stock);
-        });
+      if (form.hasSizes) {
+        form.sizesAndStock
+          .filter((s) => s.stock !== "")
+          .forEach((s) => {
+            const finalSize = s.size || "Free Size";
+            sizesAndStockMap[finalSize] = Number(s.stock);
+          });
+      } else {
+        sizesAndStockMap["Free Size"] = Number(form.singleStock);
+      }
 
       // 3. Build product document
       const productData = {
@@ -368,6 +411,7 @@ export default function ProductForm({ editId }) {
       </div>
     );
   }
+
 
   return (
     <div className="max-w-4xl mx-auto animate-fade-in">
@@ -498,85 +542,138 @@ export default function ProductForm({ editId }) {
 
         {/* ===== SIZES & STOCK SECTION ===== */}
         <section className="card p-6 lg:p-8">
-          <h2 className="text-lg font-heading font-semibold text-earth-700 mb-2 flex items-center gap-2">
-            <PackageCheck className="w-5 h-5 text-sage-500" />
-            Sizes & Stock <span className="text-rose-400">*</span>
-          </h2>
-          <p className="text-sm text-earth-400 mb-5">
-            Add sizes and stock quantities. If the item has no size (e.g. Ring, Necklace), just leave the size blank and enter stock.
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5 pb-4 border-b border-earth-100">
+            <div>
+              <h2 className="text-lg font-heading font-semibold text-earth-700 flex items-center gap-2">
+                <PackageCheck className="w-5 h-5 text-sage-500" />
+                Sizes & Stock <span className="text-rose-400">*</span>
+              </h2>
+              <p className="text-sm text-earth-400 mt-1">
+                Manage stock and size variations.
+              </p>
+            </div>
 
-          <div className="space-y-3">
-            {form.sizesAndStock.map((row, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-3 animate-scale-in"
+            {/* Has Sizes Toggle */}
+            <div className="flex items-center gap-2 bg-earth-50 px-3 py-1.5 rounded-xl border border-earth-100">
+              <label htmlFor="has-sizes-toggle" className="text-xs font-semibold text-earth-600 cursor-pointer">
+                Has Multiple Sizes?
+              </label>
+              <button
+                id="has-sizes-toggle"
+                type="button"
+                onClick={() => updateField("hasSizes", !form.hasSizes)}
+                className={`relative w-10 h-6 rounded-full transition-colors duration-300 ${
+                  form.hasSizes ? "bg-sage-500" : "bg-earth-300"
+                }`}
               >
-                <GripVertical className="w-4 h-4 text-earth-300 flex-shrink-0 hidden sm:block" />
-
-                {/* Size select */}
-                <div className="flex-1">
-                  <select
-                    value={row.size}
-                    onChange={(e) =>
-                      updateSizeRow(index, "size", e.target.value)
-                    }
-                    className="select-field text-sm"
-                  >
-                    <option value="">Select Size</option>
-                    {BANGLE_SIZES.map((size) => (
-                      <option
-                        key={size}
-                        value={size}
-                        disabled={usedSizes.includes(size) && row.size !== size}
-                      >
-                        {size}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Stock input */}
-                <div className="flex-1">
-                  <input
-                    type="number"
-                    min="0"
-                    value={row.stock}
-                    onChange={(e) =>
-                      updateSizeRow(index, "stock", e.target.value)
-                    }
-                    placeholder="Stock qty"
-                    className="input-field text-sm"
-                  />
-                </div>
-
-                {/* Remove button */}
-                <button
-                  type="button"
-                  onClick={() => removeSizeRow(index)}
-                  disabled={form.sizesAndStock.length <= 1}
-                  className="p-2 text-earth-400 hover:text-rose-500 hover:bg-rose-50 
-                             rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
+                <span
+                  className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-300 ${
+                    form.hasSizes ? "translate-x-4.5" : "translate-x-0.5"
+                  }`}
+                />
+              </button>
+            </div>
           </div>
 
-          {/* Add size button */}
-          {availableSizes.length > 0 && (
-            <button
-              type="button"
-              onClick={addSizeRow}
-              className="mt-4 inline-flex items-center gap-2 px-4 py-2 
-                         text-sm font-medium text-sage-600 bg-sage-50 
-                         border border-sage-200 rounded-xl
-                         hover:bg-sage-100 transition-all"
-            >
-              <Plus className="w-4 h-4" />
-              Add Size
-            </button>
+          {form.hasSizes ? (
+            <div className="space-y-4">
+              <p className="text-sm text-earth-400 mb-2">
+                Add each available size (e.g., 2.2, 2.4) and its current stock.
+              </p>
+              <div className="space-y-3">
+                {form.sizesAndStock.map((row, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center gap-3 animate-scale-in"
+                  >
+                    <GripVertical className="w-4 h-4 text-earth-300 flex-shrink-0 hidden sm:block" />
+
+                    {/* Size select */}
+                    <div className="flex-1">
+                      <select
+                        value={row.size}
+                        onChange={(e) =>
+                          updateSizeRow(index, "size", e.target.value)
+                        }
+                        className="select-field text-sm"
+                      >
+                        <option value="">Select Size</option>
+                        {BANGLE_SIZES.map((size) => (
+                          <option
+                            key={size}
+                            value={size}
+                            disabled={usedSizes.includes(size) && row.size !== size}
+                          >
+                            {size}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Stock input */}
+                    <div className="flex-1">
+                      <input
+                        type="number"
+                        min="0"
+                        value={row.stock}
+                        onChange={(e) =>
+                          updateSizeRow(index, "stock", e.target.value)
+                        }
+                        placeholder="Stock qty"
+                        className="input-field text-sm"
+                      />
+                    </div>
+
+                    {/* Remove button */}
+                    <button
+                      type="button"
+                      onClick={() => removeSizeRow(index)}
+                      disabled={form.sizesAndStock.length <= 1}
+                      className="p-2 text-earth-400 hover:text-rose-500 hover:bg-rose-50 
+                                 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Add size button */}
+              {availableSizes.length > 0 && (
+                <button
+                  type="button"
+                  onClick={addSizeRow}
+                  className="mt-4 inline-flex items-center gap-2 px-4 py-2 
+                             text-sm font-medium text-sage-600 bg-sage-50 
+                             border border-sage-200 rounded-xl
+                             hover:bg-sage-100 transition-all"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Size
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-3 max-w-md animate-scale-in">
+              <p className="text-sm text-earth-400 mb-2">
+                This item will be listed as **Free Size / Standard Size** (great for Earrings, Rings, Necklaces, etc.).
+              </p>
+              <div>
+                <label htmlFor="single-stock" className="input-label">
+                  Total Available Stock <span className="text-rose-400">*</span>
+                </label>
+                <input
+                  id="single-stock"
+                  type="number"
+                  min="0"
+                  value={form.singleStock}
+                  onChange={(e) => updateField("singleStock", e.target.value)}
+                  placeholder="e.g., 25"
+                  className="input-field"
+                  required
+                />
+              </div>
+            </div>
           )}
         </section>
 

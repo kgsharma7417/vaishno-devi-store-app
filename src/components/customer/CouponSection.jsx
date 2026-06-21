@@ -1,13 +1,19 @@
 import { useState } from "react";
 import { Tag, CheckCircle2, X, Loader2 } from "lucide-react";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { db } from "../../config/firebase";
+import { useAuth } from "../../hooks/useAuth";
 
 // Valid coupons — in production, fetch from Firestore
-const VALID_COUPONS = {
-  "RADHE10": { discount: 10, type: "percent", minOrder: 199, desc: "10% off on orders above ₹199" },
-  "NEWUSER": { discount: 50, type: "flat", minOrder: 299, desc: "Flat ₹50 off on orders above ₹299" },
+// Valid coupons — in production, fetch from Firestore
+export const VALID_COUPONS = {
+  "RADHE10": { discount: 10, type: "percent", minOrder: 299, maxDiscount: 30, desc: "10% off (up to ₹30) on orders above ₹299" }, // Min 299, Max 30
+  "RADHE12": { discount: 12, type: "percent", minOrder: 399, maxDiscount: 50, desc: "12% off (up to ₹50) on orders above ₹399" }, // Min 399, Max 50
+  "NEWUSER": { discount: 50, type: "flat", minOrder: 499, desc: "Flat ₹50 off on orders above ₹499" },
   "BRIDAL20": { discount: 20, type: "percent", minOrder: 499, desc: "20% off on bridal collection" },
   "FESTIVE": { discount: 15, type: "percent", minOrder: 399, desc: "15% off this festive season" },
   "HALDI50": { discount: 50, type: "flat", minOrder: 249, desc: "Flat ₹50 off on Haldi special" },
+  "RADHE100": { discount: 100, type: "flat", minOrder: 999, desc: "Flat ₹100 off on orders above ₹999" },
 };
 
 export function useCoupon(cartTotal) {
@@ -15,16 +21,16 @@ export function useCoupon(cartTotal) {
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponError, setCouponError] = useState("");
   const [applying, setApplying] = useState(false);
+  const { userProfile } = useAuth();
 
-  const applyCoupon = (code = couponCode) => {
+  const applyCoupon = async (code = couponCode, customerPhone = "", customerEmail = "") => {
     const trimmed = code.trim().toUpperCase();
     if (!trimmed) return;
 
     setApplying(true);
     setCouponError("");
 
-    // Simulate API call delay
-    setTimeout(() => {
+    try {
       const coupon = VALID_COUPONS[trimmed];
       if (!coupon) {
         setCouponError("Invalid coupon code. Please try again.");
@@ -36,10 +42,57 @@ export function useCoupon(cartTotal) {
         setApplying(false);
         return;
       }
+
+      // Check if user has already used this coupon in Firestore orders
+      const emailsToCheck = [userProfile?.email, customerEmail].filter(Boolean);
+      const phonesToCheck = [customerPhone].filter(Boolean);
+
+      let alreadyUsed = false;
+
+      if (emailsToCheck.length > 0) {
+        for (const email of emailsToCheck) {
+          const q = query(
+            collection(db, "orders"),
+            where("customerDetails.email", "==", email),
+            where("coupon.code", "==", trimmed)
+          );
+          const snap = await getDocs(q);
+          if (!snap.empty) {
+            alreadyUsed = true;
+            break;
+          }
+        }
+      }
+
+      if (!alreadyUsed && phonesToCheck.length > 0) {
+        for (const phone of phonesToCheck) {
+          const q = query(
+            collection(db, "orders"),
+            where("customerDetails.phone", "==", phone),
+            where("coupon.code", "==", trimmed)
+          );
+          const snap = await getDocs(q);
+          if (!snap.empty) {
+            alreadyUsed = true;
+            break;
+          }
+        }
+      }
+
+      if (alreadyUsed) {
+        setCouponError("You have already used this coupon code once.");
+        setApplying(false);
+        return;
+      }
+
       setAppliedCoupon({ code: trimmed, ...coupon });
       setCouponCode("");
+    } catch (err) {
+      console.error("Error validating coupon usage:", err);
+      setCouponError("Unable to validate coupon usage. Please try again.");
+    } finally {
       setApplying(false);
-    }, 600);
+    }
   };
 
   const removeCoupon = () => {
@@ -47,11 +100,17 @@ export function useCoupon(cartTotal) {
     setCouponError("");
   };
 
-  const discountAmount = appliedCoupon
-    ? appliedCoupon.type === "percent"
-      ? Math.round((cartTotal * appliedCoupon.discount) / 100)
-      : appliedCoupon.discount
-    : 0;
+  let discountAmount = 0;
+  if (appliedCoupon) {
+    if (appliedCoupon.type === "percent") {
+      const calculated = Math.round((cartTotal * appliedCoupon.discount) / 100);
+      discountAmount = appliedCoupon.maxDiscount 
+        ? Math.min(calculated, appliedCoupon.maxDiscount) 
+        : calculated;
+    } else {
+      discountAmount = appliedCoupon.discount;
+    }
+  }
 
   return {
     couponCode,
@@ -65,12 +124,15 @@ export function useCoupon(cartTotal) {
   };
 }
 
-export default function CouponSection({ cartTotal, onCouponApplied }) {
-  const {
-    couponCode, setCouponCode,
-    appliedCoupon, couponError, applying,
-    applyCoupon, removeCoupon, discountAmount,
-  } = useCoupon(cartTotal);
+export default function CouponSection({ 
+  couponCode, 
+  setCouponCode, 
+  appliedCoupon, 
+  couponError, 
+  applying, 
+  applyCoupon, 
+  removeCoupon 
+}) {
 
   // Notify parent of discount change
   const handleApply = () => {
@@ -79,9 +141,9 @@ export default function CouponSection({ cartTotal, onCouponApplied }) {
 
   // Available coupon hints
   const hints = [
-    { code: "RADHE10", label: "10% OFF" },
-    { code: "NEWUSER", label: "₹50 OFF" },
-    { code: "FESTIVE", label: "15% OFF" },
+    { code: "RADHE100", label: "₹100 OFF (Min ₹999)" },
+    { code: "RADHE12", label: "12% OFF (Min ₹399, Max ₹50)" },
+    { code: "RADHE10", label: "10% OFF (Min ₹299, Max ₹30)" },
   ];
 
   return (

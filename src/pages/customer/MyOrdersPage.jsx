@@ -132,20 +132,23 @@ export default function MyOrdersPage() {
                 {/* Order Items */}
                 {order.items?.map((item, idx) => (
                   <div key={idx} className={`p-3 md:p-4 flex gap-3 ${idx > 0 ? 'border-t border-gray-100' : ''}`}>
-                    {/* Image */}
-                    <div className="w-16 h-20 bg-gray-50 overflow-hidden flex-shrink-0">
-                      <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                    </div>
-                    
-                    {/* Details */}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-800 line-clamp-1">{item.name}</p>
-                      <p className="text-[10px] text-gray-500 mt-0.5">Size: {item.size} | Color: {item.color} | Qty: {item.quantity}</p>
-                      <p className="font-bold text-sm text-gray-900 mt-1">{formatPrice(item.price)}</p>
-                    </div>
+                    {/* Clickable Image & Details */}
+                    <Link to={`/product/${item.id}`} className="flex gap-3 flex-1 min-w-0 hover:opacity-90 group transition-opacity">
+                      {/* Image */}
+                      <div className="w-16 h-20 bg-gray-50 overflow-hidden flex-shrink-0 border border-gray-100 rounded-sm">
+                        <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      </div>
+                      
+                      {/* Details */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-800 font-medium group-hover:text-fk-blue transition-colors line-clamp-2">{item.name}</p>
+                        <p className="text-[10px] text-gray-500 mt-0.5">Size: {item.size} | Color: {item.color} | Qty: {item.quantity}</p>
+                        <p className="font-bold text-sm text-gray-900 mt-1">{formatPrice(item.price)}</p>
+                      </div>
+                    </Link>
 
                     {/* Status */}
-                    <div className="flex flex-col items-end justify-between">
+                    <div className="flex flex-col items-end justify-between flex-shrink-0">
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-sm ${getStatusColor(order.orderStatus)}`}>
                         {order.orderStatus}
                       </span>

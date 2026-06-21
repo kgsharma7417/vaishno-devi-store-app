@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, collection, query, where, limit, getDocs } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import { useToast } from "../../components/shared/Toast";
 import Loader from "../../components/shared/Loader";
 import SizeGuideModal from "../../components/customer/SizeGuideModal";
+import ReviewsSection from "../../components/customer/ReviewsSection";
 import { useCart } from "../../contexts/CartContext";
 import { useWishlist } from "../../contexts/WishlistContext";
 import { useRecentlyViewed } from "../../contexts/RecentlyViewedContext";
@@ -14,7 +15,7 @@ import { useSEO } from "../../hooks/useSEO";
 import { 
   ArrowLeft, Check, Share2,
   Ruler, Truck, ShieldCheck, Video, ShoppingCart, 
-  Heart, ChevronRight, Zap, MapPin, RotateCcw
+  Heart, ChevronRight, Zap, MapPin, RotateCcw, Star
 } from "lucide-react";
 
 export default function ProductPage() {
@@ -42,6 +43,7 @@ export default function ProductPage() {
   const [selectedSize, setSelectedSize] = useState("");
   const [mainImageIndex, setMainImageIndex] = useState(0);
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
+  const [relatedProducts, setRelatedProducts] = useState([]);
 
   // Fetch product data
   useEffect(() => {
@@ -62,6 +64,24 @@ export default function ProductPage() {
             );
             if (firstAvailable) setSelectedSize(firstAvailable);
           }
+
+          // Fetch Related Products (Frequently Bought Together)
+          try {
+            const q = query(
+              collection(db, "products"),
+              where("category", "==", data.category || "Bangles"),
+              limit(3)
+            );
+            const rSnap = await getDocs(q);
+            const items = rSnap.docs
+              .map(doc => ({ id: doc.id, ...doc.data() }))
+              .filter(item => item.id !== data.id)
+              .slice(0, 2); // Get up to 2 items
+            setRelatedProducts(items);
+          } catch (rErr) {
+            console.error("Error fetching related products:", rErr);
+          }
+
         } else {
           addToast({ type: "error", message: "Product not found." });
         }
@@ -299,42 +319,50 @@ export default function ProductPage() {
             <div>
               <div className="flex justify-between items-center mb-3">
                 <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider">Select Size</h3>
-                <button 
-                  onClick={() => setIsSizeGuideOpen(true)}
-                  className="text-xs font-bold text-fk-blue flex items-center gap-1 hover:underline"
-                >
-                  <Ruler className="w-3 h-3" /> SIZE GUIDE
-                </button>
+                {!(availableSizes.length === 1 && (availableSizes[0] === "Free Size" || availableSizes[0] === "Standard Size")) && (
+                  <button 
+                    onClick={() => setIsSizeGuideOpen(true)}
+                    className="text-xs font-bold text-fk-blue flex items-center gap-1 hover:underline"
+                  >
+                    <Ruler className="w-3 h-3" /> SIZE GUIDE
+                  </button>
+                )}
               </div>
               
-              <div className="flex flex-wrap gap-2">
-                {availableSizes.map(size => {
-                  const stock = product.sizesAndStock[size];
-                  const isOutOfStock = stock === 0;
-                  const isLowStock = stock > 0 && stock <= 2;
-                  const isActive = selectedSize === size;
+              {availableSizes.length === 1 && (availableSizes[0] === "Free Size" || availableSizes[0] === "Standard Size") ? (
+                <div className="inline-flex items-center gap-1.5 bg-sage-50 text-sage-700 text-sm font-semibold px-4 py-2 rounded border border-sage-100">
+                  ✨ Standard Free Size (No sizing required)
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {availableSizes.map(size => {
+                    const stock = product.sizesAndStock[size];
+                    const isOutOfStock = stock === 0;
+                    const isLowStock = stock > 0 && stock <= 2;
+                    const isActive = selectedSize === size;
 
-                  return (
-                    <div key={size} className="relative">
-                      <button
-                        disabled={isOutOfStock}
-                        onClick={() => setSelectedSize(size)}
-                        className={`w-12 h-10 rounded-sm text-sm font-semibold border-2 transition-all
-                          ${isActive 
-                            ? "bg-fk-blue text-white border-fk-blue" 
-                            : isOutOfStock 
-                              ? "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed line-through" 
-                              : "bg-white text-gray-700 border-gray-200 hover:border-fk-blue"}`}
-                      >
-                        {size}
-                      </button>
-                      {isLowStock && !isOutOfStock && (
-                        <span className="absolute -top-1 -right-1 w-2 h-2 bg-fk-red rounded-full" />
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+                    return (
+                      <div key={size} className="relative">
+                        <button
+                          disabled={isOutOfStock}
+                          onClick={() => setSelectedSize(size)}
+                          className={`w-12 h-10 rounded-sm text-sm font-semibold border-2 transition-all
+                            ${isActive 
+                              ? "bg-fk-blue text-white border-fk-blue" 
+                              : isOutOfStock 
+                                ? "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed line-through" 
+                                : "bg-white text-gray-700 border-gray-200 hover:border-fk-blue"}`}
+                        >
+                          {size}
+                        </button>
+                        {isLowStock && !isOutOfStock && (
+                          <span className="absolute -top-1 -right-1 w-2 h-2 bg-fk-red rounded-full" />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
 
               {selectedSize && product.sizesAndStock[selectedSize] <= 2 && product.sizesAndStock[selectedSize] > 0 && (
                 <p className="text-xs text-fk-red mt-2 font-medium flex items-center gap-1">
@@ -371,7 +399,7 @@ export default function ProductPage() {
               <p className="text-sm text-gray-600 whitespace-pre-line leading-relaxed">{product.description}</p>
             </div>
 
-            {/* Video Link if exists */}
+             {/* Video Link if exists */}
             {product.videoUrl && (
               <a 
                 href={product.videoUrl} 
@@ -390,6 +418,36 @@ export default function ProductPage() {
               </a>
             )}
           </div>
+        </div>
+
+        {/* Frequently Bought Together / Complete the Look */}
+        {relatedProducts.length > 0 && (
+          <div className="bg-white p-4 md:p-6 shadow-card mt-4 border-t border-gray-100">
+            <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider mb-3">Frequently Bought Together</h3>
+            <div className="grid grid-cols-2 gap-4">
+              {relatedProducts.map(item => (
+                <Link 
+                  key={item.id} 
+                  to={`/product/${item.id}`}
+                  className="flex gap-3 items-center p-3 border border-gray-100 hover:border-fk-blue/40 rounded transition-all"
+                >
+                  <div className="w-14 h-16 bg-gray-50 overflow-hidden flex-shrink-0">
+                    <img src={item.imageUrls?.[0]} alt={item.productName} className="w-full h-full object-cover" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-gray-800 line-clamp-1">{item.productName}</p>
+                    <p className="text-xs font-bold text-gray-900 mt-1">{formatPrice(item.finalPrice)}</p>
+                    <span className="text-[9px] text-fk-blue font-bold uppercase mt-0.5 inline-block">View Match</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Reviews Section */}
+        <div className="mt-4">
+          <ReviewsSection productId={product.id} />
         </div>
       </main>
 

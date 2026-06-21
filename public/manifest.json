@@ -1,0 +1,28 @@
+{
+  "short_name": "RadheBangles",
+  "name": "Radhe Bangles — Online Shop",
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    },
+    {
+      "src": "/vite.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/vite.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#2874f0",
+  "theme_color": "#2874f0",
+  "display": "standalone",
+  "orientation": "portrait"
+}
