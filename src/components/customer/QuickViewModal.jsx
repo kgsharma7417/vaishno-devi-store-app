@@ -51,7 +51,7 @@ export default function QuickViewModal({ product, onClose }) {
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/60 z-[150] animate-fade-in"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[150] animate-fade-in"
         onClick={onClose}
       />
 
@@ -68,12 +68,12 @@ export default function QuickViewModal({ product, onClose }) {
 
         <div className="flex flex-col sm:flex-row">
           {/* Image */}
-          <div className="sm:w-48 flex-shrink-0 bg-gray-50 relative">
+          <div className="sm:w-48 flex-shrink-0 bg-gray-50 relative overflow-hidden">
             <div className="aspect-square sm:aspect-[3/4] overflow-hidden">
               <img
                 src={product.imageUrls?.[mainImg]}
                 alt={product.productName}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover zoom-hover-img"
               />
             </div>
             {product.discountPercentage > 0 && (

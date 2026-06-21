@@ -199,6 +199,28 @@ export default function TrackOrderPage() {
               </div>
               <p className="text-xs text-gray-500 font-mono">ID: {orderData.id}</p>
               <p className="text-[10px] text-gray-400">{orderData.createdAt?.toDate().toLocaleString()}</p>
+              
+              {/* Courier Tracking Information (if available) */}
+              {(orderData.courierName || orderData.trackingNumber) && (
+                <div className="mt-3 p-3 bg-blue-50 border border-blue-100 rounded-sm text-xs text-blue-800 space-y-1 animate-scale-in">
+                  <p className="font-bold">📦 Shipping Information</p>
+                  {orderData.courierName && (
+                    <p><span className="text-blue-600 font-medium">Courier Partner:</span> {orderData.courierName}</p>
+                  )}
+                  {orderData.trackingNumber && (
+                    <p>
+                      <span className="text-blue-600 font-medium">Tracking Number / Link:</span>{" "}
+                      {orderData.trackingNumber.startsWith("http") ? (
+                        <a href={orderData.trackingNumber} target="_blank" rel="noopener noreferrer" className="underline text-fk-blue font-bold">
+                          Track Shipment ↗
+                        </a>
+                      ) : (
+                        <span className="font-mono font-bold bg-white px-1.5 py-0.5 rounded border border-blue-200">{orderData.trackingNumber}</span>
+                      )}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Tracking Progress — Vertical Timeline (Mobile Friendly) */}

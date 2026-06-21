@@ -95,7 +95,7 @@ export default function ProductPage() {
     fetchProduct();
   }, [id, addToast]);
 
-  const handleAddToCart = (navigateToCheckout = false) => {
+  const handleAddToCart = (navigateToCheckout = false, clickEvent = null) => {
     if (product.isOutOfStock) {
       addToast({ type: "error", message: "This product is currently out of stock." });
       return false;
@@ -109,7 +109,7 @@ export default function ProductPage() {
       return false;
     }
 
-    addToCart(product, selectedSize, selectedColor, 1);
+    addToCart(product, selectedSize, selectedColor, 1, clickEvent);
     if (navigateToCheckout) {
       setTimeout(() => navigate('/checkout'), 300);
     }
@@ -454,7 +454,7 @@ export default function ProductPage() {
       {/* Mobile Sticky Bottom — ADD TO CART + BUY NOW */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 shadow-[0_-2px_10px_rgba(0,0,0,0.08)] flex md:hidden">
         <button 
-          onClick={() => handleAddToCart(false)}
+          onClick={(e) => handleAddToCart(false, e)}
           disabled={product.isOutOfStock}
           className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-bold uppercase border-r border-gray-200 transition-colors
             ${product.isOutOfStock ? 'bg-gray-100 text-gray-400' : 'bg-white text-fk-blue hover:bg-fk-blue-light'}`}
@@ -463,9 +463,9 @@ export default function ProductPage() {
           {product.isOutOfStock ? "Out of Stock" : "Add to Cart"}
         </button>
         <button 
-          onClick={() => handleAddToCart(true)}
+          onClick={(e) => handleAddToCart(true, e)}
           disabled={product.isOutOfStock}
-          className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-bold uppercase transition-colors
+          className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-bold uppercase transition-colors animate-sparkle-shine
             ${product.isOutOfStock ? 'bg-gray-300 text-gray-500' : 'bg-fk-yellow text-white hover:bg-fk-yellow-dark'}`}
         >
           <Zap className="w-4 h-4" />
@@ -477,7 +477,7 @@ export default function ProductPage() {
       <div className="hidden md:block max-w-7xl mx-auto px-6 mt-4">
         <div className="bg-white shadow-card p-6 flex gap-4">
           <button 
-            onClick={() => handleAddToCart(false)}
+            onClick={(e) => handleAddToCart(false, e)}
             disabled={product.isOutOfStock}
             className={`flex-1 flex items-center justify-center gap-2 py-4 text-base font-bold uppercase rounded-sm transition-colors
               ${product.isOutOfStock ? 'bg-gray-300 text-gray-500' : 'bg-fk-yellow text-white hover:bg-fk-yellow-dark'}`}
@@ -486,9 +486,9 @@ export default function ProductPage() {
             {product.isOutOfStock ? "Out of Stock" : "Add to Cart"}
           </button>
           <button 
-            onClick={() => handleAddToCart(true)}
+            onClick={(e) => handleAddToCart(true, e)}
             disabled={product.isOutOfStock}
-            className={`flex-1 flex items-center justify-center gap-2 py-4 text-base font-bold uppercase rounded-sm transition-colors
+            className={`flex-1 flex items-center justify-center gap-2 py-4 text-base font-bold uppercase rounded-sm transition-colors animate-sparkle-shine
               ${product.isOutOfStock ? 'bg-gray-200 text-gray-400' : 'bg-fk-orange text-white hover:opacity-90'}`}
           >
             <Zap className="w-5 h-5" />

@@ -170,4 +170,80 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  /* Sparkle Shimmer Animation */
+  @keyframes sparkle-shine {
+    0% {
+      left: -100%;
+    }
+    100% {
+      left: 100%;
+    }
+  }
+
+  .animate-sparkle-shine {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .animate-sparkle-shine::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.4) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    transform: skewX(-25deg);
+    animation: sparkle-shine 3s infinite ease-in-out;
+  }
+
+  /* Zoom Magnifier hover helper */
+  .zoom-hover-img {
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .zoom-hover-img:hover {
+    transform: scale(1.5);
+  }
+
+  /* Fly-to-Cart bubble keyframes */
+  @keyframes fly-to-cart-effect {
+    0% {
+      transform: translate(0, 0) scale(1);
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.8;
+      transform: translate(calc(var(--target-x) / 2), calc(var(--target-y) / 2 - 100px)) scale(0.6);
+    }
+    100% {
+      transform: translate(var(--target-x), var(--target-y)) scale(0.1);
+      opacity: 0;
+    }
+  }
+
+  .fly-bubble {
+    position: fixed;
+    z-index: 9999;
+    pointer-events: none;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    border: 2px solid #2874f0;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+    animation: fly-to-cart-effect 1s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  }
+
+  /* Cross-browser backdrop blur compatibility fallback */
+  .backdrop-blur-sm {
+    -webkit-backdrop-filter: blur(4px) !important;
+    backdrop-filter: blur(4px) !important;
+  }
 }

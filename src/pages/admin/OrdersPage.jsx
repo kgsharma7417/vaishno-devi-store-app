@@ -248,6 +248,63 @@ export default function OrdersPage() {
                     <p className="text-xl font-heading font-black text-sage-600">{formatPrice(order.totalAmount)}</p>
                   </div>
                 </div>
+
+                {/* Courier / Shipping Details updates */}
+                <div className="mt-4 pt-4 border-t border-dashed border-earth-100 space-y-3">
+                  <p className="text-xs font-bold text-earth-800 uppercase tracking-wider">Courier & Shipping Info</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+                    <div>
+                      <label className="text-[10px] text-earth-400 block mb-1">Courier Partner</label>
+                      <input 
+                        type="text"
+                        placeholder="e.g., Delhivery, BlueDart"
+                        defaultValue={order.courierName || ""}
+                        id={`courier-${order.id}`}
+                        className="input-field text-xs py-2 px-3 border border-earth-200"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-earth-400 block mb-1">Tracking ID / URL</label>
+                      <input 
+                        type="text"
+                        placeholder="e.g., UTR123456 or track URL"
+                        defaultValue={order.trackingNumber || ""}
+                        id={`tracking-${order.id}`}
+                        className="input-field text-xs py-2 px-3 border border-earth-200"
+                      />
+                    </div>
+                    <div>
+                      <button
+                        type="button"
+                        disabled={updatingId === order.id}
+                        onClick={async () => {
+                          const courierVal = document.getElementById(`courier-${order.id}`).value.trim();
+                          const trackingVal = document.getElementById(`tracking-${order.id}`).value.trim();
+                          setUpdatingId(order.id);
+                          try {
+                            await updateDoc(doc(db, "orders", order.id), {
+                              courierName: courierVal,
+                              trackingNumber: trackingVal
+                            });
+                            setOrders(prev => prev.map(o => 
+                              o.id === order.id ? { ...o, courierName: courierVal, trackingNumber: trackingVal } : o
+                            ));
+                            addToast({ type: "success", message: "Shipping details updated." });
+                          } catch (err) {
+                            console.error("Error updating shipping:", err);
+                            addToast({ type: "error", message: "Failed to update shipping." });
+                          } finally {
+                            setUpdatingId(null);
+                          }
+                        }}
+                        className="btn-primary w-full text-xs py-2 h-[38px] rounded"
+                      >
+                        Update Shipping
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
               </div>
 
             </div>

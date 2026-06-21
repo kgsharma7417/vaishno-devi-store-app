@@ -31,7 +31,39 @@ export function CartProvider({ children }) {
   const cartTotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
   const cartCount = cartItems.reduce((count, item) => count + item.quantity, 0);
 
-  const addToCart = (product, selectedSize, selectedColor, quantity = 1) => {
+  const addToCart = (product, selectedSize, selectedColor, quantity = 1, clickEvent = null) => {
+    // Fly-to-Cart bubble trigger animation logic
+    if (clickEvent) {
+      const btn = clickEvent.currentTarget || clickEvent.target;
+      if (btn) {
+        const rect = btn.getBoundingClientRect();
+        // Target: Header's cart icon (usually top right)
+        // Find cart button in DOM
+        const cartBtn = document.querySelector('header .lucide-shopping-cart') || document.querySelector('header a[href="/cart"]');
+        let targetX = window.innerWidth - 60 - rect.left;
+        let targetY = 20 - rect.top;
+
+        if (cartBtn) {
+          const cartRect = cartBtn.getBoundingClientRect();
+          targetX = cartRect.left - rect.left;
+          targetY = cartRect.top - rect.top;
+        }
+
+        const bubble = document.createElement('div');
+        bubble.className = 'fly-bubble';
+        bubble.style.left = `${rect.left + rect.width / 2 - 20}px`;
+        bubble.style.top = `${rect.top}px`;
+        bubble.style.backgroundImage = `url(${product.imageUrls?.[0] || product.image})`;
+        bubble.style.setProperty('--target-x', `${targetX}px`);
+        bubble.style.setProperty('--target-y', `${targetY}px`);
+
+        document.body.appendChild(bubble);
+        setTimeout(() => {
+          bubble.remove();
+        }, 1000);
+      }
+    }
+
     const existingItemIndex = cartItems.findIndex(
       item => item.id === product.id && item.size === selectedSize && item.color === selectedColor
     );
@@ -67,7 +99,11 @@ export function CartProvider({ children }) {
         }];
       }
     });
-    setIsCartOpen(true);
+
+    // Soft delay to let fly-to-cart animation complete before drawer opens
+    setTimeout(() => {
+      setIsCartOpen(true);
+    }, 800);
   };
 
   const removeFromCart = (id, size, color) => {

@@ -41,6 +41,29 @@ export default function CartDrawer() {
           </button>
         </div>
 
+        {/* Free Delivery Progress Bar */}
+        {cartItems.length > 0 && (
+          <div className="bg-white px-4 py-3 border-b border-gray-100 animate-scale-in">
+            {cartTotal >= 299 ? (
+              <p className="text-xs font-semibold text-fk-green flex items-center gap-1">
+                🎉 You unlocked **Free Delivery** on this order!
+              </p>
+            ) : (
+              <div>
+                <p className="text-xs text-gray-600 mb-1.5">
+                  Add <span className="font-bold text-fk-blue">{formatPrice(299 - cartTotal)}</span> more for **Free Delivery**!
+                </p>
+                <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+                  <div 
+                    className="bg-fk-blue h-full transition-all duration-500 rounded-full" 
+                    style={{ width: `${Math.min(100, (cartTotal / 299) * 100)}%` }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Cart Items */}
         <div className="flex-1 overflow-y-auto">
           {cartItems.length === 0 ? (
