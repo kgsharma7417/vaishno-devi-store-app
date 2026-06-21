@@ -1,9 +1,9 @@
-const CACHE_NAME = 'radhe-bangles-cache-v1';
+const CACHE_NAME = 'radhe-bangles-cache-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/vite.svg'
+  '/logo.svg'
 ];
 
 self.addEventListener('install', (event) => {
