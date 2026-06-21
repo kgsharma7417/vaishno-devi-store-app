@@ -5,7 +5,7 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
 } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "../config/firebase";
 
 export const AuthContext = createContext(null);
@@ -35,6 +35,18 @@ export function AuthProvider({ children }) {
         } catch (error) {
           console.error("Error checking admin status:", error);
           setIsAdmin(false);
+        }
+        // Save user profile to 'users' collection (for admin management)
+        try {
+          await setDoc(doc(db, "users", user.uid), {
+            uid: user.uid,
+            name: user.displayName || "Unknown",
+            email: user.email || "",
+            photo: user.photoURL || "",
+            lastLoginAt: serverTimestamp(),
+          }, { merge: true });
+        } catch (e) {
+          // Non-critical — ignore silently
         }
       } else {
         setCurrentUser(null);

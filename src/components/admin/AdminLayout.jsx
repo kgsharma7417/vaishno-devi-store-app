@@ -9,7 +9,8 @@ import {
   Menu,
   X,
   Settings,
-  ShoppingBag
+  ShoppingBag,
+  Users
 } from "lucide-react";
 import { useState } from "react";
 
@@ -33,6 +34,11 @@ const NAV_ITEMS = [
     to: "/admin/inventory",
     icon: Boxes,
     label: "Inventory",
+  },
+  {
+    to: "/admin/users",
+    icon: Users,
+    label: "Users",
   },
   {
     to: "/admin/settings",

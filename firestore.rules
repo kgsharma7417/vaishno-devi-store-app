@@ -46,13 +46,18 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
-    // Reviews Collection
+    // Reviews Collection: Grahak reviews padh sakte hain, sirf logged-in user review add kar sakte hain
     match /reviews/{reviewId} {
-      // Anyone can view reviews
       allow read: if true;
-      // Only logged-in users can leave a review
       allow create: if request.auth != null;
       allow update, delete: if isAdmin();
+    }
+
+    // Users Collection: Login hone par user ka profile save hota hai
+    // Sirf admin sabhi users dekh sakta hai
+    match /users/{userId} {
+      allow read: if isAdmin() || (request.auth != null && request.auth.uid == userId);
+      allow write: if request.auth != null && request.auth.uid == userId;
     }
   }
 }

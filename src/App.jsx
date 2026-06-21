@@ -19,6 +19,7 @@ import UploadPage from "./pages/admin/UploadPage";
 import OrdersPage from "./pages/admin/OrdersPage";
 import HeroSettingsPage from "./pages/admin/HeroSettingsPage";
 import InventoryPage from "./pages/admin/InventoryPage";
+import UsersPage from "./pages/admin/UsersPage";
 import NotFoundPage from "./pages/customer/NotFoundPage";
 import CartDrawer from "./components/customer/CartDrawer";
 import TrackOrderPage from "./pages/customer/TrackOrderPage";
@@ -95,6 +96,7 @@ function AppRoutes() {
         <Route path="upload" element={<UploadPage />} />
         <Route path="orders" element={<OrdersPage />} />
         <Route path="inventory" element={<InventoryPage />} />
+        <Route path="users" element={<UsersPage />} />
         <Route path="settings" element={<HeroSettingsPage />} />
       </Route>
 
