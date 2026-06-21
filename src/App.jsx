@@ -27,19 +27,20 @@ import MyOrdersPage from "./pages/customer/MyOrdersPage";
 // Layout
 import AdminLayout from "./components/admin/AdminLayout";
 
-// Protected Route wrapper — redirects to login if not authenticated
+// Protected Route wrapper — redirects to login if not authenticated OR not admin
 function ProtectedRoute({ children }) {
   const { currentUser, isAdmin, loading } = useAuth();
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-earth-50">
-        <Loader size="large" text="Loading..." />
+        <Loader size="large" text="Checking access..." />
       </div>
     );
   }
 
-  if (!currentUser || !isAdmin) {
+  // Double-check: must be logged in AND must be admin
+  if (!currentUser || isAdmin !== true) {
     return <Navigate to="/admin/login" replace />;
   }
 

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'radhe-bangles-cache-v3';
+const CACHE_NAME = 'radhe-bangles-cache-v4';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -31,8 +31,9 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // We only want to handle GET requests
+  // Only handle GET requests over http/https — skip chrome-extension and other schemes
   if (event.request.method !== 'GET') return;
+  if (!event.request.url.startsWith('http')) return;
 
   event.respondWith(
     fetch(event.request)
