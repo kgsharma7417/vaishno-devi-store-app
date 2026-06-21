@@ -157,20 +157,32 @@ export default function HomePage() {
       <header className="sticky top-0 z-50 shadow-md">
         {/* Top Header Row (Amazon Dark) */}
         <div className="bg-amazon-dark px-3 py-2 md:px-6 md:py-2.5 text-white">
-          <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 md:gap-6">
+          <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-2 md:gap-6">
             
-            {/* Logo */}
-            <Link to="/" className="flex-shrink-0 flex flex-col hover:outline hover:outline-1 hover:outline-white p-1 rounded-sm">
-              <span className="text-white font-black text-base md:text-xl tracking-tight leading-none">
-                Maa Vaishno Devi
-              </span>
-              <span className="text-amazon-yellow text-[11px] md:text-xs font-bold tracking-wider leading-none mt-0.5">
-                Ladies Corner
-              </span>
-            </Link>
+            {/* Top Row for Mobile (Logo + Optional items) */}
+            <div className="flex justify-between items-center w-full md:w-auto">
+              {/* Logo */}
+              <Link to="/" className="flex-shrink-0 flex flex-col hover:outline hover:outline-1 hover:outline-white p-1 rounded-sm">
+                <span className="text-white font-black text-lg md:text-xl tracking-tight leading-none">
+                  Maa Vaishno Devi
+                </span>
+                <span className="text-amazon-yellow text-xs font-bold tracking-wider leading-none mt-0.5">
+                  Ladies Corner
+                </span>
+              </Link>
+              
+              {/* Deliver to - Mobile Version */}
+              <div className="flex md:hidden items-center gap-1 text-left">
+                <span className="text-sm">📍</span>
+                <div className="flex flex-col">
+                  <span className="text-[9px] text-gray-300 leading-none">Deliver to</span>
+                  <span className="text-[10px] font-bold leading-none mt-0.5">India</span>
+                </div>
+              </div>
+            </div>
 
             {/* Delivery Location Indicator (Amazon style - desktop only) */}
-            <div className="hidden lg:flex items-center gap-1.5 hover:outline hover:outline-1 hover:outline-white p-1 rounded-sm text-left">
+            <div className="hidden md:flex items-center gap-1.5 hover:outline hover:outline-1 hover:outline-white p-1 rounded-sm text-left">
               <span className="text-sm">📍</span>
               <div className="flex flex-col">
                 <span className="text-[11px] text-gray-300 leading-none">Deliver to</span>
@@ -179,27 +191,27 @@ export default function HomePage() {
             </div>
 
             {/* Search Bar (Amazon Style) */}
-            <div className="flex-1 flex items-stretch">
+            <div className="flex-1 flex items-stretch w-full">
               <input
                 type="text"
-                placeholder="Search Maa Vaishno Devi Ladies Corner..."
+                placeholder="Search products..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') scrollToShop();
                 }}
-                className="w-full px-3 py-2 bg-white rounded-l-md text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amazon-orange"
+                className="w-full px-3 py-2 md:py-2.5 bg-white rounded-l-md text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amazon-orange"
               />
               <button 
                 onClick={scrollToShop}
-                className="bg-amazon-yellow hover:bg-amazon-orange transition-colors px-5 rounded-r-md flex items-center justify-center text-amazon-dark font-bold"
+                className="bg-amazon-yellow hover:bg-amazon-orange transition-colors px-4 md:px-5 rounded-r-md flex items-center justify-center text-amazon-dark font-bold"
               >
                 <Search className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Right Side Info */}
-            <div className="flex items-center gap-2 md:gap-4">
+            {/* Right Side Info (Hidden on Mobile due to Bottom Nav) */}
+            <div className="hidden md:flex items-center gap-4">
               
               {/* Account / Login (Amazon Style) */}
               <button
@@ -236,7 +248,7 @@ export default function HomePage() {
                     </span>
                   )}
                 </div>
-                <span className="hidden md:inline text-xs font-bold mt-2">Cart</span>
+                <span className="text-xs font-bold mt-2">Cart</span>
               </button>
             </div>
 

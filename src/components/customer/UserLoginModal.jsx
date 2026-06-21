@@ -147,7 +147,7 @@ export default function UserLoginModal({ isOpen, onClose }) {
                     <span className="text-sm font-medium text-gray-700">Track Order</span>
                     <ChevronRight className="w-4 h-4 text-gray-400 ml-auto" />
                   </Link>
-                  {isAdmin && (
+                  {isAdmin ? (
                     <Link
                       to="/admin/dashboard"
                       onClick={onClose}
@@ -158,6 +158,18 @@ export default function UserLoginModal({ isOpen, onClose }) {
                       </div>
                       <span className="text-sm font-medium text-gray-700">Admin Dashboard</span>
                       <ChevronRight className="w-4 h-4 text-gray-400 ml-auto" />
+                    </Link>
+                  ) : (
+                    <Link
+                      to="/admin/login"
+                      onClick={onClose}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-orange-50 hover:text-amazon-orange transition-colors group"
+                    >
+                      <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                        <LogIn className="w-4 h-4 text-amazon-orange" />
+                      </div>
+                      <span className="text-sm font-medium text-gray-700 group-hover:text-amazon-orange">Login as Admin</span>
+                      <ChevronRight className="w-4 h-4 text-gray-400 ml-auto group-hover:text-amazon-orange" />
                     </Link>
                   )}
                 </div>
@@ -209,10 +221,26 @@ export default function UserLoginModal({ isOpen, onClose }) {
                 {/* Guest option */}
                 <button
                   onClick={onClose}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
                 >
                   Continue as Guest →
                 </button>
+
+                <div className="relative my-3">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-100" />
+                  </div>
+                </div>
+
+                {/* Admin Login */}
+                <Link
+                  to="/admin/login"
+                  onClick={onClose}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm text-gray-600 hover:text-amazon-orange transition-colors font-medium border border-gray-200 rounded-lg hover:border-amazon-orange/50 hover:bg-orange-50"
+                >
+                  <LogIn className="w-4 h-4" />
+                  Login as Admin
+                </Link>
 
                 <p className="text-[10px] text-gray-400 text-center mt-3 leading-relaxed">
                   By signing in, you agree to our Terms of Service and Privacy Policy.
