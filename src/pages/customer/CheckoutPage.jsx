@@ -73,7 +73,12 @@ export default function CheckoutPage() {
         if (docSnap.exists()) {
           const data = docSnap.data();
           if (data.payment) setUpiDetails(data.payment);
-          if (data.razorpay?.keyId) setRazorpayDetails(data.razorpay);
+          if (data.razorpay) {
+            setRazorpayDetails({
+              enabled: data.razorpay.enabled === true,
+              keyId: data.razorpay.keyId || "rzp_test_StaSH1lgs2dfUO"
+            });
+          }
         }
       } catch (err) {
         console.error("Error fetching payment settings:", err);

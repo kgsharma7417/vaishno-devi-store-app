@@ -7,6 +7,7 @@ import { RecentlyViewedProvider } from "./contexts/RecentlyViewedContext";
 import { useAuth } from "./hooks/useAuth";
 import Loader from "./components/shared/Loader";
 import WhatsAppFloat from "./components/shared/WhatsAppFloat";
+import ErrorBoundary from "./components/shared/ErrorBoundary";
 
 // Pages
 import HomePage from "./pages/customer/HomePage";
@@ -114,19 +115,21 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <ToastProvider>
-          <CartProvider>
-            <WishlistProvider>
-              <RecentlyViewedProvider>
-                <AppRoutes />
-                <WhatsAppFloat />
-              </RecentlyViewedProvider>
-            </WishlistProvider>
-          </CartProvider>
-        </ToastProvider>
-      </AuthProvider>
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <AuthProvider>
+          <ToastProvider>
+            <CartProvider>
+              <WishlistProvider>
+                <RecentlyViewedProvider>
+                  <AppRoutes />
+                  <WhatsAppFloat />
+                </RecentlyViewedProvider>
+              </WishlistProvider>
+            </CartProvider>
+          </ToastProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }
