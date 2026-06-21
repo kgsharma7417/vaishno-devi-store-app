@@ -29,7 +29,7 @@ import AdminLayout from "./components/admin/AdminLayout";
 
 // Protected Route wrapper — redirects to login if not authenticated
 function ProtectedRoute({ children }) {
-  const { currentUser, loading } = useAuth();
+  const { currentUser, isAdmin, loading } = useAuth();
 
   if (loading) {
     return (
@@ -39,7 +39,7 @@ function ProtectedRoute({ children }) {
     );
   }
 
-  if (!currentUser) {
+  if (!currentUser || !isAdmin) {
     return <Navigate to="/admin/login" replace />;
   }
 
@@ -47,8 +47,9 @@ function ProtectedRoute({ children }) {
 }
 
 // Redirect to dashboard if already logged in
+// Redirect to dashboard if already logged in as admin
 function PublicRoute({ children }) {
-  const { currentUser, loading } = useAuth();
+  const { currentUser, isAdmin, loading } = useAuth();
 
   if (loading) {
     return (
@@ -58,7 +59,7 @@ function PublicRoute({ children }) {
     );
   }
 
-  if (currentUser) {
+  if (currentUser && isAdmin) {
     return <Navigate to="/admin/dashboard" replace />;
   }
 
