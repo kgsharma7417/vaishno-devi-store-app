@@ -1,20 +1,23 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { collection, addDoc, serverTimestamp, doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import { useToast } from "../shared/Toast";
 import {
   CATEGORIES,
-  BANGLE_SIZES,
+  SUB_CATEGORIES,
   AVAILABLE_COLORS,
   COLOR_SWATCHES,
+  OCCASION_TAGS,
+  MATERIAL_TYPES,
+  RENTAL_STATUS,
   MAX_IMAGES,
-  STORAGE_PRODUCTS_PATH,
+  LOW_STOCK_THRESHOLD,
 } from "../../utils/constants";
 import {
-  calculateFinalPrice,
   formatPrice,
   generateUniqueFileName,
   validateImageFile,
+  generateSKU,
 } from "../../utils/helpers";
 import {
   Plus,
@@ -24,952 +27,935 @@ import {
   X,
   Tag,
   IndianRupee,
-  Percent,
   PackageCheck,
-  Video,
   Star,
   Loader2,
-  GripVertical,
+  Copy,
+  Printer,
+  RefreshCw,
+  AlertTriangle,
+  Clock,
+  Key,
+  ShoppingBag,
+  RotateCcw,
+  CheckCircle2,
+  Barcode,
+  CalendarDays,
+  Layers,
 } from "lucide-react";
 
-const INITIAL_FORM = {
+// ─── Initial State ─────────────────────────────────────────────────────────────
+const buildInitialForm = () => ({
   productName: "",
   description: "",
   category: "",
-  colors: [],
-  hasSizes: true, // Default to true
-  sizesAndStock: [{ size: "", stock: "" }],
-  singleStock: "", // For free-size items
+  subCategory: "",
+  sku: "",
+  isRental: false,
+  // --- Sale fields ---
   mrp: "",
-  discountPercentage: "",
-  videoUrl: "",
-  externalImageUrls: "",
+  sellingPrice: "",
+  stockQuantity: "",
+  // --- Rental fields ---
+  rentPrice: "",
+  securityDeposit: "",
+  replacementValue: "",
+  rentalStatus: "Available",
+  expectedReturnDate: "",
+  // --- Attributes ---
+  colors: [],
+  sizeAgeGroup: "",
+  materialType: "",
+  occasionTags: [],
+  // --- Extras ---
   isFeatured: false,
-};
+  isReturnable: true,
+  externalImageUrls: "",
+  videoUrl: "",
+});
 
+// ─── Helpers ───────────────────────────────────────────────────────────────────
+function Toggle({ id, checked, onChange, label, sub }) {
+  return (
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-sm font-semibold text-slate-700">{label}</p>
+        {sub && <p className="text-xs text-slate-400 mt-0.5">{sub}</p>}
+      </div>
+      <button
+        id={id}
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        onClick={() => onChange(!checked)}
+        className={`relative w-12 h-6 rounded-full transition-colors duration-300 flex-shrink-0 ${
+          checked ? "bg-violet-500" : "bg-slate-300"
+        }`}
+      >
+        <span
+          className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-300 ${
+            checked ? "translate-x-6" : "translate-x-0.5"
+          }`}
+        />
+      </button>
+    </div>
+  );
+}
+
+function SectionCard({ icon: Icon, title, children, accentColor = "violet" }) {
+  const colorMap = {
+    violet: "text-violet-500 bg-violet-50",
+    rose: "text-rose-500 bg-rose-50",
+    amber: "text-amber-500 bg-amber-50",
+    emerald: "text-emerald-500 bg-emerald-50",
+    blue: "text-blue-500 bg-blue-50",
+    slate: "text-slate-500 bg-slate-100",
+  };
+  const cls = colorMap[accentColor] || colorMap.violet;
+  return (
+    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+      <div className="px-6 py-4 border-b border-slate-50 flex items-center gap-3">
+        <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${cls}`}>
+          <Icon className="w-4 h-4" />
+        </div>
+        <h2 className="text-base font-semibold text-slate-800">{title}</h2>
+      </div>
+      <div className="p-6">{children}</div>
+    </div>
+  );
+}
+
+// ─── Main Component ────────────────────────────────────────────────────────────
 export default function ProductForm({ editId }) {
-  const [form, setForm] = useState(INITIAL_FORM);
-  const [images, setImages] = useState([]); // { file, preview, progress, url }
+  const [form, setForm] = useState(buildInitialForm);
+  const [images, setImages] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [loadingInitial, setLoadingInitial] = useState(!!editId);
+  const [isDuplicate, setIsDuplicate] = useState(false);
   const fileInputRef = useRef(null);
+  const printRef = useRef(null);
   const { addToast } = useToast();
 
+  // ─── Load product for edit ─────────────────────────────────────────────────
   useEffect(() => {
-    if (editId) {
-      const fetchProduct = async () => {
-        try {
-          const docSnap = await getDoc(doc(db, "products", editId));
-          if (docSnap.exists()) {
-            const data = docSnap.data();
-            
-            // Format sizesAndStock back to array format
-            const sizesMap = data.sizesAndStock || {};
-            const sizesKeys = Object.keys(sizesMap);
-            
-            const hasMultipleSizes = !(sizesKeys.length === 1 && (sizesKeys[0] === "Free Size" || sizesKeys[0] === "Standard Size"));
-            
-            let sizesArr = [{ size: "", stock: "" }];
-            let singleStockVal = "";
-
-            if (hasMultipleSizes) {
-              sizesArr = Object.entries(sizesMap).map(([size, stock]) => ({ 
-                size: size === "Free Size" ? "" : size, 
-                stock: stock.toString() 
-              }));
-            } else {
-              singleStockVal = (sizesMap["Free Size"] || sizesMap["Standard Size"] || "").toString();
-            }
-
-            if (sizesArr.length === 0) sizesArr.push({ size: "", stock: "" });
-
-            setForm({
-              productName: data.productName || "",
-              description: data.description || "",
-              category: data.category || "",
-              colors: data.colors || [],
-              hasSizes: hasMultipleSizes,
-              sizesAndStock: sizesArr,
-              singleStock: singleStockVal,
-              mrp: data.mrp?.toString() || "",
-              discountPercentage: data.discountPercentage?.toString() || "",
-              videoUrl: data.videoUrl || "",
-              externalImageUrls: "",
-              isFeatured: data.isFeatured || false,
-            });
-
-            if (data.imageUrls) {
-              setImages(data.imageUrls.map(url => ({
-                file: null,
-                preview: url,
-                url: url,
-                progress: 100
-              })));
-            }
-          } else {
-            addToast({ type: "error", message: "Product not found." });
-          }
-        } catch (error) {
-          console.error("Error fetching product:", error);
-          addToast({ type: "error", message: "Failed to fetch product details." });
-        } finally {
-          setLoadingInitial(false);
+    if (!editId) return;
+    const fetchProduct = async () => {
+      try {
+        const docSnap = await getDoc(doc(db, "products", editId));
+        if (!docSnap.exists()) {
+          addToast({ type: "error", message: "Product not found." });
+          return;
         }
-      };
-      fetchProduct();
-    }
+        const data = docSnap.data();
+        setForm({
+          productName: data.productName || "",
+          description: data.description || "",
+          category: data.category || "",
+          subCategory: data.subCategory || "",
+          sku: data.sku || "",
+          isRental: data.isRental || false,
+          mrp: data.mrp?.toString() || "",
+          sellingPrice: data.sellingPrice?.toString() || data.finalPrice?.toString() || "",
+          stockQuantity: data.stockQuantity?.toString() || "",
+          rentPrice: data.rentPrice?.toString() || "",
+          securityDeposit: data.securityDeposit?.toString() || "",
+          replacementValue: data.replacementValue?.toString() || "",
+          rentalStatus: data.rentalStatus || "Available",
+          expectedReturnDate: data.expectedReturnDate || "",
+          colors: data.colors || [],
+          sizeAgeGroup: data.sizeAgeGroup || "",
+          materialType: data.materialType || "",
+          occasionTags: data.occasionTags || [],
+          isFeatured: data.isFeatured || false,
+          isReturnable: data.isReturnable !== undefined ? data.isReturnable : true,
+          externalImageUrls: "",
+          videoUrl: data.videoUrl || "",
+        });
+        if (data.imageUrls) {
+          setImages(
+            data.imageUrls.map((url) => ({ file: null, preview: url, url, progress: 100 }))
+          );
+        }
+      } catch (err) {
+        console.error(err);
+        addToast({ type: "error", message: "Failed to fetch product." });
+      } finally {
+        setLoadingInitial(false);
+      }
+    };
+    fetchProduct();
   }, [editId, addToast]);
 
-  const finalPrice = calculateFinalPrice(
-    Number(form.mrp),
-    Number(form.discountPercentage)
-  );
+  // ─── Derived values ────────────────────────────────────────────────────────
+  const mrpNum = Number(form.mrp) || 0;
+  const sellingNum = Number(form.sellingPrice) || 0;
+  const profit = mrpNum > 0 && sellingNum > 0 ? mrpNum - sellingNum : null;
+  const profitPct = profit !== null && mrpNum > 0 ? Math.round((profit / mrpNum) * 100) : 0;
 
-  // --- Field handlers ---
-  const updateField = (field, value) => {
+  const isOverdue =
+    form.isRental &&
+    form.expectedReturnDate &&
+    form.rentalStatus === "Rented Out" &&
+    new Date(form.expectedReturnDate) < new Date();
+
+  const stockNum = Number(form.stockQuantity) || 0;
+  const isLowStock = !form.isRental && form.stockQuantity !== "" && stockNum <= LOW_STOCK_THRESHOLD && stockNum > 0;
+  const isOutOfStock = !form.isRental && form.stockQuantity !== "" && stockNum === 0;
+
+  const subCategoryOptions = SUB_CATEGORIES[form.category] || [];
+
+  // ─── Field helpers ─────────────────────────────────────────────────────────
+  const set = useCallback((field, value) => {
     setForm((prev) => {
-      const updated = { ...prev, [field]: value };
-      
-      // Auto-toggle multiple sizes based on category selection
+      const next = { ...prev, [field]: value };
       if (field === "category") {
-        const isBangleCategory = value === "Bangles" || value === "Bridal Chuda";
-        updated.hasSizes = isBangleCategory;
+        next.subCategory = "";
+        next.sku = generateSKU(value);
       }
-      
-      return updated;
+      return next;
     });
-  };
+  }, []);
 
-  // --- Color handlers ---
-  const toggleColor = (color) => {
-    setForm((prev) => ({
-      ...prev,
-      colors: prev.colors.includes(color)
-        ? prev.colors.filter((c) => c !== color)
-        : [...prev.colors, color],
+  const toggleColor = (color) =>
+    setForm((p) => ({
+      ...p,
+      colors: p.colors.includes(color) ? p.colors.filter((c) => c !== color) : [...p.colors, color],
     }));
-  };
 
-  // --- Size & Stock handlers ---
-  const addSizeRow = () => {
-    setForm((prev) => ({
-      ...prev,
-      sizesAndStock: [...prev.sizesAndStock, { size: "", stock: "" }],
+  const toggleOccasion = (tag) =>
+    setForm((p) => ({
+      ...p,
+      occasionTags: p.occasionTags.includes(tag)
+        ? p.occasionTags.filter((t) => t !== tag)
+        : [...p.occasionTags, tag],
     }));
+
+  const refreshSKU = () => setForm((p) => ({ ...p, sku: generateSKU(p.category) }));
+
+  const copySKU = () => {
+    if (!form.sku) return;
+    navigator.clipboard.writeText(form.sku);
+    addToast({ type: "success", message: "SKU copied to clipboard!" });
   };
 
-  const removeSizeRow = (index) => {
-    setForm((prev) => ({
-      ...prev,
-      sizesAndStock: prev.sizesAndStock.filter((_, i) => i !== index),
+  const printLabel = () => {
+    const win = window.open("", "_blank", "width=400,height=300");
+    win.document.write(`
+      <html><head><title>Product Label</title>
+      <style>
+        body{font-family:monospace;text-align:center;padding:20px;margin:0;}
+        .sku{font-size:28px;font-weight:900;letter-spacing:4px;border:3px solid #000;padding:8px 20px;display:inline-block;margin-bottom:8px;}
+        .name{font-size:14px;max-width:260px;word-break:break-word;}
+        .shop{font-size:11px;color:#666;margin-top:6px;}
+        @media print{body{padding:5px;}}
+      </style></head>
+      <body onload="window.print();window.close();">
+        <div class="sku">${form.sku || "NO-SKU"}</div><br/>
+        <div class="name">${form.productName || "Product Name"}</div>
+        <div class="shop">Maa Vaishno Devi Ladies Corner</div>
+      </body></html>
+    `);
+    win.document.close();
+  };
+
+  // ─── Duplicate product ─────────────────────────────────────────────────────
+  const duplicateProduct = () => {
+    setForm((p) => ({
+      ...p,
+      productName: `Copy of ${p.productName}`,
+      sku: generateSKU(p.category),
     }));
+    setIsDuplicate(true);
+    addToast({ type: "info", message: "Form duplicated! Update name & details then save." });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const updateSizeRow = (index, field, value) => {
-    setForm((prev) => {
-      const updated = [...prev.sizesAndStock];
-      updated[index] = { ...updated[index], [field]: value };
-      return { ...prev, sizesAndStock: updated };
-    });
-  };
-
-  // --- Image handlers ---
+  // ─── Image handlers ────────────────────────────────────────────────────────
   const handleImageSelect = (e) => {
     const files = Array.from(e.target.files);
     if (images.length + files.length > MAX_IMAGES) {
-      addToast({
-        type: "warning",
-        message: `You can upload a maximum of ${MAX_IMAGES} images.`,
-      });
+      addToast({ type: "warning", message: `Max ${MAX_IMAGES} images allowed.` });
       return;
     }
-
-    const newImages = [];
+    const newImgs = [];
     for (const file of files) {
-      const validation = validateImageFile(file);
-      if (!validation.valid) {
-        addToast({ type: "error", message: validation.error });
-        continue;
-      }
-      newImages.push({
-        file,
-        preview: URL.createObjectURL(file),
-        progress: 0,
-        url: null,
-      });
+      const v = validateImageFile(file);
+      if (!v.valid) { addToast({ type: "error", message: v.error }); continue; }
+      newImgs.push({ file, preview: URL.createObjectURL(file), progress: 0, url: null });
     }
-
-    setImages((prev) => [...prev, ...newImages]);
-    // Reset input
+    setImages((p) => [...p, ...newImgs]);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const removeImage = (index) => {
-    setImages((prev) => {
-      // Revoke the object URL to prevent memory leaks
-      URL.revokeObjectURL(prev[index].preview);
-      return prev.filter((_, i) => i !== index);
+  const removeImage = (idx) => {
+    setImages((p) => {
+      if (p[idx]?.preview && !p[idx].url) URL.revokeObjectURL(p[idx].preview);
+      return p.filter((_, i) => i !== idx);
     });
   };
 
-  // --- Upload images to Cloudinary ---
+  // ─── Upload to Cloudinary ──────────────────────────────────────────────────
   const uploadImages = async () => {
-    const uploadPromises = images.map((img, index) => {
-      if (img.url) return Promise.resolve(img.url); // Already uploaded
-
-      return new Promise(async (resolve, reject) => {
-        try {
-          const formData = new FormData();
-          formData.append("file", img.file);
-          formData.append("upload_preset", "library_upload");
-          formData.append("cloud_name", "dz7vbpney");
-
-          // Simulate starting progress
-          setImages((prev) => {
-            const updated = [...prev];
-            if (updated[index]) updated[index] = { ...updated[index], progress: 50 };
-            return updated;
-          });
-
-          const response = await fetch("https://api.cloudinary.com/v1_1/dz7vbpney/image/upload", {
-            method: "POST",
-            body: formData,
-          });
-
-          if (!response.ok) {
-            throw new Error("Failed to upload image to Cloudinary");
-          }
-
-          const data = await response.json();
-          
-          setImages((prev) => {
-            const updated = [...prev];
-            if (updated[index]) {
-              updated[index] = { ...updated[index], url: data.secure_url, progress: 100 };
-            }
-            return updated;
-          });
-          
-          resolve(data.secure_url);
-        } catch (error) {
-          console.error("Cloudinary upload error:", error);
-          reject(error);
-        }
-      });
-    });
-
-    return Promise.all(uploadPromises);
+    return Promise.all(
+      images.map((img, idx) => {
+        if (img.url) return Promise.resolve(img.url);
+        return new Promise(async (resolve, reject) => {
+          try {
+            const fd = new FormData();
+            fd.append("file", img.file);
+            fd.append("upload_preset", "maa vaishno devi");
+            fd.append("cloud_name", "dvzyaivr7");
+            setImages((p) => { const u = [...p]; if (u[idx]) u[idx] = { ...u[idx], progress: 50 }; return u; });
+            const res = await fetch("https://api.cloudinary.com/v1_1/dvzyaivr7/image/upload", { method: "POST", body: fd });
+            if (!res.ok) throw new Error("Cloudinary upload failed");
+            const data = await res.json();
+            setImages((p) => { const u = [...p]; if (u[idx]) u[idx] = { ...u[idx], url: data.secure_url, progress: 100 }; return u; });
+            resolve(data.secure_url);
+          } catch (err) { reject(err); }
+        });
+      })
+    );
   };
 
-  // --- Form validation ---
+  // ─── Validation ────────────────────────────────────────────────────────────
   const validateForm = () => {
-    if (!form.productName.trim()) {
-      addToast({ type: "error", message: "Product name is required." });
-      return false;
-    }
-    if (!form.category) {
-      addToast({ type: "error", message: "Please select a category." });
-      return false;
-    }
-    if (form.colors.length === 0) {
-      addToast({ type: "error", message: "Please select at least one color." });
-      return false;
-    }
-
-    if (form.hasSizes) {
-      const validSizes = form.sizesAndStock.filter(
-        (s) => s.stock !== ""
-      );
-      if (validSizes.length === 0) {
-        addToast({
-          type: "error",
-          message: "Please add stock for at least one size.",
-        });
-        return false;
-      }
+    if (!form.productName.trim()) { addToast({ type: "error", message: "Product name is required." }); return false; }
+    if (!form.category) { addToast({ type: "error", message: "Please select a category." }); return false; }
+    if (form.isRental) {
+      if (!form.rentPrice || Number(form.rentPrice) <= 0) { addToast({ type: "error", message: "Please enter a valid Rent Price." }); return false; }
     } else {
-      if (!form.singleStock || Number(form.singleStock) < 0) {
-        addToast({
-          type: "error",
-          message: "Please enter a valid stock quantity.",
-        });
-        return false;
-      }
+      if (!form.mrp || Number(form.mrp) <= 0) { addToast({ type: "error", message: "Please enter a valid MRP." }); return false; }
+      if (!form.sellingPrice || Number(form.sellingPrice) <= 0) { addToast({ type: "error", message: "Please enter a Selling Price." }); return false; }
+      if (Number(form.sellingPrice) > Number(form.mrp)) { addToast({ type: "error", message: "Selling Price cannot exceed MRP." }); return false; }
     }
-
-    if (!form.mrp || Number(form.mrp) <= 0) {
-      addToast({ type: "error", message: "Please enter a valid MRP." });
-      return false;
-    }
-    if (images.length === 0 && (!form.externalImageUrls || form.externalImageUrls.trim() === "")) {
-      addToast({
-        type: "error",
-        message: "Please upload or paste at least one product image URL.",
-      });
-      return false;
+    if (images.length === 0 && !form.externalImageUrls.trim()) {
+      addToast({ type: "error", message: "Please upload at least one product image." }); return false;
     }
     return true;
   };
 
-  // --- Submit handler ---
+  // ─── Submit ────────────────────────────────────────────────────────────────
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
 
+    // Low stock warning (non-blocking)
+    if (isLowStock) {
+      addToast({ type: "warning", message: `⚠️ Stock sirf ${form.stockQuantity} bachi hai — reorder karein!` });
+    }
+    if (isOutOfStock) {
+      addToast({ type: "warning", message: "⚠️ Stock zero hai! Product out of stock rahega." });
+    }
+
     setSubmitting(true);
     setUploading(true);
-
     try {
-      // 1. Upload images
-      addToast({ type: "info", message: "Processing images..." });
+      addToast({ type: "info", message: "Images upload ho rahi hain..." });
       let imageUrls = await uploadImages();
-      
-      // Combine with external URLs
-      if (form.externalImageUrls && form.externalImageUrls.trim() !== "") {
-        const external = form.externalImageUrls.split(",").map(u => u.trim()).filter(Boolean);
+      if (form.externalImageUrls.trim()) {
+        const external = form.externalImageUrls.split(",").map((u) => u.trim()).filter(Boolean);
         imageUrls = [...imageUrls, ...external];
       }
       setUploading(false);
 
-      // 2. Build sizesAndStock map
-      const sizesAndStockMap = {};
-      if (form.hasSizes) {
-        form.sizesAndStock
-          .filter((s) => s.stock !== "")
-          .forEach((s) => {
-            const finalSize = s.size || "Free Size";
-            sizesAndStockMap[finalSize] = Number(s.stock);
-          });
-      } else {
-        sizesAndStockMap["Free Size"] = Number(form.singleStock);
-      }
+      const sku = form.sku || generateSKU(form.category);
 
-      // 3. Build product document
       const productData = {
         productName: form.productName.trim(),
         description: form.description.trim(),
         category: form.category,
+        subCategory: form.subCategory,
+        sku,
+        isRental: form.isRental,
+        // Pricing
+        ...(form.isRental
+          ? {
+              rentPrice: Number(form.rentPrice),
+              securityDeposit: Number(form.securityDeposit) || 0,
+              replacementValue: Number(form.replacementValue) || 0,
+              rentalStatus: form.rentalStatus,
+              expectedReturnDate: form.expectedReturnDate || null,
+              // Keep these for backward compat / display
+              mrp: 0,
+              finalPrice: Number(form.rentPrice),
+              discountPercentage: 0,
+            }
+          : {
+              mrp: Number(form.mrp),
+              sellingPrice: Number(form.sellingPrice),
+              finalPrice: Number(form.sellingPrice),
+              discountPercentage: mrpNum > 0 ? Math.round(((mrpNum - sellingNum) / mrpNum) * 100) : 0,
+              stockQuantity: Number(form.stockQuantity) || 0,
+            }),
         colors: form.colors,
-        sizesAndStock: sizesAndStockMap,
-        mrp: Number(form.mrp),
-        discountPercentage: Number(form.discountPercentage) || 0,
-        finalPrice,
-        imageUrls,
-        videoUrl: form.videoUrl.trim(),
+        sizeAgeGroup: form.sizeAgeGroup.trim(),
+        materialType: form.materialType,
+        occasionTags: form.occasionTags,
         isFeatured: form.isFeatured,
-        createdAt: serverTimestamp(),
+        isReturnable: form.isReturnable,
+        videoUrl: form.videoUrl.trim(),
+        imageUrls,
         updatedAt: serverTimestamp(),
       };
 
-      // 4. Save to Firestore
-      if (editId) {
-        // Update existing product
-        await updateDoc(doc(db, "products", editId), {
-          ...productData,
-          createdAt: undefined, // don't overwrite createdAt
-        });
-        addToast({
-          type: "success",
-          title: "Product Updated!",
-          message: `"${form.productName}" has been updated successfully.`,
-        });
+      if (editId && !isDuplicate) {
+        await updateDoc(doc(db, "products", editId), productData);
+        addToast({ type: "success", title: "Updated!", message: `"${form.productName}" updated successfully.` });
       } else {
-        // Create new product
-        await addDoc(collection(db, "products"), productData);
-        addToast({
-          type: "success",
-          title: "Product Added!",
-          message: `"${form.productName}" has been saved successfully.`,
-        });
-        
-        // 5. Reset form only if adding new
-        setForm(INITIAL_FORM);
+        await addDoc(collection(db, "products"), { ...productData, createdAt: serverTimestamp() });
+        addToast({ type: "success", title: "Product Added!", message: `"${form.productName}" saved successfully.` });
+        setForm(buildInitialForm());
         setImages([]);
+        setIsDuplicate(false);
       }
-    } catch (error) {
-      console.error("Error saving product:", error);
-      addToast({
-        type: "error",
-        title: "Upload Failed",
-        message: error.message || "Something went wrong. Please try again.",
-      });
+    } catch (err) {
+      console.error(err);
+      addToast({ type: "error", title: "Failed", message: err.message || "Something went wrong." });
     } finally {
       setSubmitting(false);
       setUploading(false);
     }
   };
 
-  // Get available sizes (not already added)
-  const usedSizes = form.sizesAndStock.map((s) => s.size).filter(Boolean);
-  const availableSizes = BANGLE_SIZES.filter((s) => !usedSizes.includes(s));
-
+  // ─── Loading skeleton ──────────────────────────────────────────────────────
   if (loadingInitial) {
     return (
       <div className="flex justify-center items-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-sage-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-violet-500" />
       </div>
     );
   }
 
-
+  // ══════════════════════════════════════════════════════════════════════════
   return (
-    <div className="max-w-4xl mx-auto animate-fade-in">
-      {/* Page header */}
-      <div className="mb-8">
-        <h1 className="text-2xl lg:text-3xl font-heading font-bold text-earth-800">
-          {editId ? "Edit Product" : "Upload Product"}
-        </h1>
-        <p className="text-earth-400 mt-1">
-          {editId ? "Update existing product details" : "Add a new bangle or jewellery item to your store"}
-        </p>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-8">
-        {/* ===== BASIC INFO SECTION ===== */}
-        <section className="card p-6 lg:p-8">
-          <h2 className="text-lg font-heading font-semibold text-earth-700 mb-6 flex items-center gap-2">
-            <Tag className="w-5 h-5 text-sage-500" />
-            Basic Information
-          </h2>
-
-          <div className="space-y-5">
-            {/* Product Name */}
-            <div>
-              <label htmlFor="product-name" className="input-label">
-                Product Name <span className="text-rose-400">*</span>
-              </label>
-              <input
-                id="product-name"
-                type="text"
-                value={form.productName}
-                onChange={(e) => updateField("productName", e.target.value)}
-                placeholder="e.g., Gold Shimmer Bridal Chuda Set"
-                className="input-field"
-                required
-              />
-            </div>
-
-            {/* Description */}
-            <div>
-              <label htmlFor="product-desc" className="input-label">
-                Description
-              </label>
-              <textarea
-                id="product-desc"
-                value={form.description}
-                onChange={(e) => updateField("description", e.target.value)}
-                placeholder="Describe the product — material, design details, occasion..."
-                rows={4}
-                className="input-field resize-none"
-              />
-            </div>
-
-            {/* Category */}
-            <div>
-              <label htmlFor="product-category" className="input-label">
-                Category <span className="text-rose-400">*</span>
-              </label>
-              <select
-                id="product-category"
-                value={form.category}
-                onChange={(e) => updateField("category", e.target.value)}
-                className="select-field"
-                required
-              >
-                <option value="">Select a category</option>
-                {CATEGORIES.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </section>
-
-        {/* ===== COLORS SECTION ===== */}
-        <section className="card p-6 lg:p-8">
-          <h2 className="text-lg font-heading font-semibold text-earth-700 mb-2 flex items-center gap-2">
-            <div className="w-5 h-5 rounded-full bg-gradient-to-r from-rose-400 via-gold-400 to-sage-400" />
-            Colors <span className="text-rose-400">*</span>
-          </h2>
-          <p className="text-sm text-earth-400 mb-4">
-            Select all available colors for this product
+    <div className="max-w-5xl mx-auto animate-fade-in pb-24">
+      {/* ── Page Header ── */}
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl lg:text-3xl font-bold text-slate-800">
+            {editId && !isDuplicate ? "✏️ Edit Product" : isDuplicate ? "📋 Duplicate Product" : "➕ Add New Product"}
+          </h1>
+          <p className="text-slate-400 mt-1 text-sm">
+            {isDuplicate ? "Duplicate se form bhar diya — naam aur details badlein" : "Naya product Firestore mein save karein"}
           </p>
-
-          <div className="flex flex-wrap gap-2">
-            {AVAILABLE_COLORS.map((color) => {
-              const isSelected = form.colors.includes(color);
-              const swatch = COLOR_SWATCHES[color];
-              const isGradient = swatch?.includes("gradient");
-
-              return (
-                <button
-                  key={color}
-                  type="button"
-                  onClick={() => toggleColor(color)}
-                  className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium
-                             border transition-all duration-200
-                             ${
-                               isSelected
-                                 ? "border-sage-400 bg-sage-50 text-sage-700 shadow-sm"
-                                 : "border-earth-200 bg-white text-earth-600 hover:border-earth-300"
-                             }`}
-                >
-                  <span
-                    className="w-4 h-4 rounded-full border border-black/10 flex-shrink-0"
-                    style={{
-                      background: isGradient ? swatch : swatch,
-                      backgroundColor: isGradient ? undefined : swatch,
-                    }}
-                  />
-                  {color}
-                  {isSelected && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-sage-500" />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
-          {form.colors.length > 0 && (
-            <div className="mt-3 text-sm text-sage-600">
-              Selected: {form.colors.join(", ")}
-            </div>
-          )}
-        </section>
-
-        {/* ===== SIZES & STOCK SECTION ===== */}
-        <section className="card p-6 lg:p-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5 pb-4 border-b border-earth-100">
-            <div>
-              <h2 className="text-lg font-heading font-semibold text-earth-700 flex items-center gap-2">
-                <PackageCheck className="w-5 h-5 text-sage-500" />
-                Sizes & Stock <span className="text-rose-400">*</span>
-              </h2>
-              <p className="text-sm text-earth-400 mt-1">
-                Manage stock and size variations.
-              </p>
-            </div>
-
-            {/* Has Sizes Toggle */}
-            <div className="flex items-center gap-2 bg-earth-50 px-3 py-1.5 rounded-xl border border-earth-100">
-              <label htmlFor="has-sizes-toggle" className="text-xs font-semibold text-earth-600 cursor-pointer">
-                Has Multiple Sizes?
-              </label>
-              <button
-                id="has-sizes-toggle"
-                type="button"
-                onClick={() => updateField("hasSizes", !form.hasSizes)}
-                className={`relative w-10 h-6 rounded-full transition-colors duration-300 ${
-                  form.hasSizes ? "bg-sage-500" : "bg-earth-300"
-                }`}
-              >
-                <span
-                  className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-300 ${
-                    form.hasSizes ? "translate-x-4.5" : "translate-x-0.5"
-                  }`}
-                />
-              </button>
-            </div>
-          </div>
-
-          {form.hasSizes ? (
-            <div className="space-y-4">
-              <p className="text-sm text-earth-400 mb-2">
-                Add each available size (e.g., 2.2, 2.4) and its current stock.
-              </p>
-              <div className="space-y-3">
-                {form.sizesAndStock.map((row, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-3 animate-scale-in"
-                  >
-                    <GripVertical className="w-4 h-4 text-earth-300 flex-shrink-0 hidden sm:block" />
-
-                    {/* Size select */}
-                    <div className="flex-1">
-                      <select
-                        value={row.size}
-                        onChange={(e) =>
-                          updateSizeRow(index, "size", e.target.value)
-                        }
-                        className="select-field text-sm"
-                      >
-                        <option value="">Select Size</option>
-                        {BANGLE_SIZES.map((size) => (
-                          <option
-                            key={size}
-                            value={size}
-                            disabled={usedSizes.includes(size) && row.size !== size}
-                          >
-                            {size}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Stock input */}
-                    <div className="flex-1">
-                      <input
-                        type="number"
-                        min="0"
-                        value={row.stock}
-                        onChange={(e) =>
-                          updateSizeRow(index, "stock", e.target.value)
-                        }
-                        placeholder="Stock qty"
-                        className="input-field text-sm"
-                      />
-                    </div>
-
-                    {/* Remove button */}
-                    <button
-                      type="button"
-                      onClick={() => removeSizeRow(index)}
-                      disabled={form.sizesAndStock.length <= 1}
-                      className="p-2 text-earth-400 hover:text-rose-500 hover:bg-rose-50 
-                                 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-
-              {/* Add size button */}
-              {availableSizes.length > 0 && (
-                <button
-                  type="button"
-                  onClick={addSizeRow}
-                  className="mt-4 inline-flex items-center gap-2 px-4 py-2 
-                             text-sm font-medium text-sage-600 bg-sage-50 
-                             border border-sage-200 rounded-xl
-                             hover:bg-sage-100 transition-all"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Size
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="space-y-3 max-w-md animate-scale-in">
-              <p className="text-sm text-earth-400 mb-2">
-                This item will be listed as **Free Size / Standard Size** (great for Earrings, Rings, Necklaces, etc.).
-              </p>
-              <div>
-                <label htmlFor="single-stock" className="input-label">
-                  Total Available Stock <span className="text-rose-400">*</span>
-                </label>
-                <input
-                  id="single-stock"
-                  type="number"
-                  min="0"
-                  value={form.singleStock}
-                  onChange={(e) => updateField("singleStock", e.target.value)}
-                  placeholder="e.g., 25"
-                  className="input-field"
-                  required
-                />
-              </div>
-            </div>
-          )}
-        </section>
-
-        {/* ===== PRICING SECTION ===== */}
-        <section className="card p-6 lg:p-8">
-          <h2 className="text-lg font-heading font-semibold text-earth-700 mb-6 flex items-center gap-2">
-            <IndianRupee className="w-5 h-5 text-sage-500" />
-            Pricing
-          </h2>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            {/* MRP */}
-            <div>
-              <label htmlFor="product-mrp" className="input-label">
-                MRP (₹) <span className="text-rose-400">*</span>
-              </label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-earth-400 text-sm">
-                  ₹
-                </span>
-                <input
-                  id="product-mrp"
-                  type="number"
-                  min="0"
-                  value={form.mrp}
-                  onChange={(e) => updateField("mrp", e.target.value)}
-                  placeholder="2999"
-                  className="input-field pl-8"
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Discount */}
-            <div>
-              <label htmlFor="product-discount" className="input-label">
-                Discount (%)
-              </label>
-              <div className="relative">
-                <input
-                  id="product-discount"
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={form.discountPercentage}
-                  onChange={(e) =>
-                    updateField("discountPercentage", e.target.value)
-                  }
-                  placeholder="25"
-                  className="input-field pr-8"
-                />
-                <Percent className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-earth-400" />
-              </div>
-            </div>
-
-            {/* Final Price (auto-calculated) */}
-            <div>
-              <label className="input-label">Final Price</label>
-              <div className="flex items-center h-[50px] px-4 bg-sage-50 border border-sage-200 rounded-xl">
-                <span className="text-lg font-heading font-bold text-sage-700">
-                  {form.mrp ? formatPrice(finalPrice) : "—"}
-                </span>
-                {form.mrp && Number(form.discountPercentage) > 0 && (
-                  <span className="ml-2 badge-gold text-xs">
-                    {form.discountPercentage}% OFF
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Price preview */}
-          {form.mrp && Number(form.discountPercentage) > 0 && (
-            <div className="mt-4 p-3 bg-earth-50 rounded-xl text-sm text-earth-500 animate-scale-in">
-              <span className="line-through text-earth-400">
-                {formatPrice(Number(form.mrp))}
-              </span>
-              <span className="mx-2">→</span>
-              <span className="font-semibold text-sage-700">
-                {formatPrice(finalPrice)}
-              </span>
-              <span className="text-earth-400 ml-1">
-                (Save {formatPrice(Number(form.mrp) - finalPrice)})
-              </span>
-            </div>
-          )}
-        </section>
-
-        {/* ===== IMAGES SECTION ===== */}
-        <section className="card p-6 lg:p-8">
-          <h2 className="text-lg font-heading font-semibold text-earth-700 mb-2 flex items-center gap-2">
-            <ImageIcon className="w-5 h-5 text-sage-500" />
-            Product Images <span className="text-rose-400">*</span>
-          </h2>
-          <p className="text-sm text-earth-400 mb-5">
-            Upload up to {MAX_IMAGES} images. First image will be the main
-            display. (JPG, PNG, WebP — max 5MB each)
-          </p>
-
-          {/* Upload area */}
-          <div
-            onClick={() => fileInputRef.current?.click()}
-            className="relative border-2 border-dashed border-earth-200 rounded-2xl p-8
-                       text-center cursor-pointer
-                       hover:border-sage-400 hover:bg-sage-50/50 
-                       transition-all duration-300 group"
-          >
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp,image/avif"
-              multiple
-              onChange={handleImageSelect}
-              className="hidden"
-            />
-            <div className="flex flex-col items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-earth-100 group-hover:bg-sage-100 
-                              flex items-center justify-center transition-colors">
-                <Upload className="w-6 h-6 text-earth-400 group-hover:text-sage-500 transition-colors" />
-              </div>
-              <div>
-                <p className="font-medium text-earth-600">
-                  Click to upload images
-                </p>
-                <p className="text-sm text-earth-400 mt-0.5">
-                  or drag and drop files here
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Image previews */}
-          {images.length > 0 && (
-            <div className="mt-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-              {images.map((img, index) => (
-                <div
-                  key={index}
-                  className="relative group rounded-xl overflow-hidden border border-earth-100 
-                             aspect-square animate-scale-in"
-                >
-                  <img
-                    src={img.preview}
-                    alt={`Product image ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-
-                  {/* Upload progress overlay */}
-                  {uploading && img.progress < 100 && !img.url && (
-                    <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center">
-                      <Loader2 className="w-6 h-6 text-white animate-spin mb-2" />
-                      <span className="text-white text-sm font-medium">
-                        {img.progress}%
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Badges */}
-                  {index === 0 && (
-                    <span className="absolute top-2 left-2 badge-sage text-xs">
-                      Main
-                    </span>
-                  )}
-
-                  {/* Remove button */}
-                  <button
-                    type="button"
-                    onClick={() => removeImage(index)}
-                    disabled={submitting}
-                    className="absolute top-2 right-2 p-1.5 bg-black/60 text-white rounded-lg
-                               opacity-0 group-hover:opacity-100 transition-opacity
-                               hover:bg-red-500"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
-
-              {/* Add more button */}
-              {images.length < MAX_IMAGES && (
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="aspect-square rounded-xl border-2 border-dashed border-earth-200
-                             flex flex-col items-center justify-center gap-2
-                             text-earth-400 hover:border-sage-400 hover:text-sage-500
-                             hover:bg-sage-50/50 transition-all"
-                >
-                  <Plus className="w-6 h-6" />
-                  <span className="text-xs">Add More</span>
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* External URLs */}
-          <div className="mt-8 pt-6 border-t border-earth-100">
-            <label htmlFor="external-urls" className="input-label">
-              Or Paste Image URLs (Alternative)
-            </label>
-            <textarea
-              id="external-urls"
-              value={form.externalImageUrls}
-              onChange={(e) => updateField("externalImageUrls", e.target.value)}
-              placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
-              rows={2}
-              className="input-field resize-none text-sm"
-            />
-            <p className="mt-1 text-xs text-earth-400">
-              Separate multiple URLs with commas. Perfect for quickly adding images from Google or Unsplash to bypass CORS issues.
-            </p>
-          </div>
-        </section>
-
-        {/* ===== VIDEO & EXTRAS SECTION ===== */}
-        <section className="card p-6 lg:p-8">
-          <h2 className="text-lg font-heading font-semibold text-earth-700 mb-6 flex items-center gap-2">
-            <Video className="w-5 h-5 text-sage-500" />
-            Video & Extras
-          </h2>
-
-          <div className="space-y-5">
-            {/* Video URL */}
-            <div>
-              <label htmlFor="product-video" className="input-label">
-                Video URL (Optional)
-              </label>
-              <input
-                id="product-video"
-                type="url"
-                value={form.videoUrl}
-                onChange={(e) => updateField("videoUrl", e.target.value)}
-                placeholder="https://youtube.com/shorts/... or direct video link"
-                className="input-field"
-              />
-              <p className="mt-1 text-xs text-earth-400">
-                Add a short reel or video showcasing the product
-              </p>
-            </div>
-
-            {/* Featured toggle */}
-            <div className="flex items-center justify-between p-4 bg-earth-50 rounded-xl">
-              <div className="flex items-center gap-3">
-                <Star className="w-5 h-5 text-gold-500" />
-                <div>
-                  <p className="text-sm font-medium text-earth-700">
-                    Featured Product
-                  </p>
-                  <p className="text-xs text-earth-400">
-                    Show in "Trending Now" section on homepage
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => updateField("isFeatured", !form.isFeatured)}
-                className={`relative w-12 h-7 rounded-full transition-colors duration-300
-                           ${form.isFeatured ? "bg-sage-500" : "bg-earth-300"}`}
-              >
-                <span
-                  className={`absolute top-0.5 w-6 h-6 bg-white rounded-full shadow-md
-                             transition-transform duration-300
-                             ${form.isFeatured ? "translate-x-5" : "translate-x-0.5"}`}
-                />
-              </button>
-            </div>
-          </div>
-        </section>
-
-        {/* ===== SUBMIT BUTTON ===== */}
-        <div className="flex items-center justify-between gap-4 pb-8">
+        </div>
+        {(editId || form.productName) && (
           <button
             type="button"
-            onClick={() => {
-              setForm(INITIAL_FORM);
-              setImages([]);
-            }}
-            className="btn-secondary"
-            disabled={submitting}
+            onClick={duplicateProduct}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-violet-200 text-violet-600 bg-violet-50 hover:bg-violet-100 text-sm font-medium transition-all"
           >
-            Clear Form
+            <Copy className="w-4 h-4" />
+            Duplicate
           </button>
+        )}
+      </div>
 
-          <button
-            type="submit"
-            disabled={submitting}
-            className="btn-primary text-base px-8"
-          >
-            {submitting ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                {uploading ? "Uploading Images..." : "Saving Product..."}
-              </>
-            ) : (
-              editId ? "Update Product" : "Publish Product"
-            )}
-          </button>
+      {/* ── Overdue Alert ── */}
+      {isOverdue && (
+        <div className="mb-4 flex items-center gap-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl px-4 py-3 text-sm font-medium animate-fade-in">
+          <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+          <span>⚠️ Overdue! Yeh item <strong>{form.expectedReturnDate}</strong> ko return hona tha — abhi bhi "Rented Out" hai.</span>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit}>
+        {/* ═══ 2-COLUMN GRID (desktop) ═══════════════════════════════════════ */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+          {/* ──────────── LEFT COLUMN ──────────── */}
+          <div className="space-y-6">
+
+            {/* ── SECTION 1: Basic Info ── */}
+            <SectionCard icon={Tag} title="Basic Information" accentColor="violet">
+              <div className="space-y-4">
+
+                {/* Product Name */}
+                <div>
+                  <label htmlFor="pf-name" className="block text-xs font-semibold text-slate-600 mb-1.5">
+                    Product Name <span className="text-rose-400">*</span>
+                  </label>
+                  <input
+                    id="pf-name"
+                    type="text"
+                    value={form.productName}
+                    onChange={(e) => set("productName", e.target.value)}
+                    placeholder="e.g. Red AD Stone Bridal Set"
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 transition"
+                    required
+                  />
+                </div>
+
+                {/* Category */}
+                <div>
+                  <label htmlFor="pf-category" className="block text-xs font-semibold text-slate-600 mb-1.5">
+                    Category <span className="text-rose-400">*</span>
+                  </label>
+                  <select
+                    id="pf-category"
+                    value={form.category}
+                    onChange={(e) => set("category", e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 transition bg-white"
+                    required
+                  >
+                    <option value="">Category chunein...</option>
+                    {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+
+                {/* Sub-category (dynamic) */}
+                {subCategoryOptions.length > 0 && (
+                  <div className="animate-fade-in">
+                    <label htmlFor="pf-subcat" className="block text-xs font-semibold text-slate-600 mb-1.5">
+                      Sub-category
+                    </label>
+                    <select
+                      id="pf-subcat"
+                      value={form.subCategory}
+                      onChange={(e) => set("subCategory", e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 transition bg-white"
+                    >
+                      <option value="">Sub-category chunein (optional)</option>
+                      {subCategoryOptions.map((s) => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                )}
+
+                {/* Description */}
+                <div>
+                  <label htmlFor="pf-desc" className="block text-xs font-semibold text-slate-600 mb-1.5">
+                    Description
+                  </label>
+                  <textarea
+                    id="pf-desc"
+                    value={form.description}
+                    onChange={(e) => set("description", e.target.value)}
+                    placeholder="Product ki details likhein — material, design, occasion..."
+                    rows={3}
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 transition resize-none"
+                  />
+                </div>
+
+                {/* SKU */}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5 flex items-center gap-1.5">
+                    <Barcode className="w-3.5 h-3.5" /> Auto-Generated SKU
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 flex items-center gap-2 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl">
+                      <span className="font-mono text-sm font-bold text-violet-700 tracking-wider flex-1">
+                        {form.sku || (form.category ? "(Category chunein to SKU auto-generate hoga)" : "—")}
+                      </span>
+                    </div>
+                    <button type="button" onClick={refreshSKU} title="Regenerate SKU"
+                      className="p-2.5 rounded-xl border border-slate-200 text-slate-500 hover:text-violet-600 hover:border-violet-300 hover:bg-violet-50 transition">
+                      <RefreshCw className="w-4 h-4" />
+                    </button>
+                    <button type="button" onClick={copySKU} title="Copy SKU"
+                      className="p-2.5 rounded-xl border border-slate-200 text-slate-500 hover:text-violet-600 hover:border-violet-300 hover:bg-violet-50 transition">
+                      <Copy className="w-4 h-4" />
+                    </button>
+                    <button type="button" onClick={printLabel} title="Print Label"
+                      className="p-2.5 rounded-xl border border-slate-200 text-slate-500 hover:text-emerald-600 hover:border-emerald-300 hover:bg-emerald-50 transition">
+                      <Printer className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <p className="mt-1.5 text-[11px] text-slate-400">SKU auto-generate hota hai category select karne par. Baad mein regenerate bhi kar sakte hain.</p>
+                </div>
+
+                {/* Return Policy */}
+                <div className="pt-2">
+                  <Toggle
+                    id="pf-returnable-toggle"
+                    checked={form.isReturnable}
+                    onChange={(v) => set("isReturnable", v)}
+                    label="7-Day Return Available"
+                    sub="Turn off for non-returnable items like Cakes, Food, or Custom orders."
+                  />
+                </div>
+              </div>
+            </SectionCard>
+
+            {/* ── SECTION 2: Sale vs Rent Toggle ── */}
+            <SectionCard icon={form.isRental ? Key : ShoppingBag} title="Item Type — Sale ya Rent?" accentColor={form.isRental ? "rose" : "emerald"}>
+              <div className="space-y-5">
+                {/* Toggle */}
+                <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                  <Toggle
+                    id="pf-rental-toggle"
+                    checked={form.isRental}
+                    onChange={(v) => set("isRental", v)}
+                    label={form.isRental ? "🔑 Rental Item (Kiraye pe)" : "🛍️ Normal Sale Item"}
+                    sub={form.isRental ? "Bridal jewelry, costumes — rent par diye jaane wale items" : "Birthday items, regular gifts — seedha beche jaane wale"}
+                  />
+                </div>
+
+                {/* ── SALE fields ── */}
+                {!form.isRental && (
+                  <div className="space-y-4 animate-fade-in">
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* MRP */}
+                      <div>
+                        <label htmlFor="pf-mrp" className="block text-xs font-semibold text-slate-600 mb-1.5">
+                          MRP (₹) <span className="text-rose-400">*</span>
+                        </label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">₹</span>
+                          <input id="pf-mrp" type="number" min="0" value={form.mrp}
+                            onChange={(e) => set("mrp", e.target.value)}
+                            placeholder="999" className="w-full pl-7 pr-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 transition" />
+                        </div>
+                      </div>
+                      {/* Selling Price */}
+                      <div>
+                        <label htmlFor="pf-sell" className="block text-xs font-semibold text-slate-600 mb-1.5">
+                          Selling Price (₹) <span className="text-rose-400">*</span>
+                        </label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">₹</span>
+                          <input id="pf-sell" type="number" min="0" value={form.sellingPrice}
+                            onChange={(e) => set("sellingPrice", e.target.value)}
+                            placeholder="799" className="w-full pl-7 pr-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 transition" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Profit Margin calculator */}
+                    {profit !== null && (
+                      <div className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium animate-fade-in ${
+                        profit > 0 ? "bg-emerald-50 border border-emerald-100 text-emerald-700" : "bg-rose-50 border border-rose-100 text-rose-700"
+                      }`}>
+                        <IndianRupee className="w-4 h-4 flex-shrink-0" />
+                        <span>
+                          {profit > 0
+                            ? `Profit: ${formatPrice(profit)} (${profitPct}% margin)`
+                            : `⚠️ Selling price MRP se zyada hai!`}
+                        </span>
+                        {profit > 0 && (
+                          <span className="ml-auto text-xs bg-emerald-100 px-2 py-0.5 rounded-full">
+                            {profitPct}% OFF for customer
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Stock Quantity */}
+                    <div>
+                      <label htmlFor="pf-stock" className="block text-xs font-semibold text-slate-600 mb-1.5">
+                        <PackageCheck className="w-3.5 h-3.5 inline mr-1" />
+                        Stock Quantity
+                      </label>
+                      <input id="pf-stock" type="number" min="0" value={form.stockQuantity}
+                        onChange={(e) => set("stockQuantity", e.target.value)}
+                        placeholder="e.g. 25"
+                        className={`w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 transition ${
+                          isOutOfStock ? "border-rose-400 bg-rose-50 focus:ring-rose-100" :
+                          isLowStock ? "border-amber-400 bg-amber-50 focus:ring-amber-100 focus:border-amber-400" :
+                          "border-slate-200 focus:border-violet-400 focus:ring-violet-100"
+                        }`} />
+                      {isLowStock && !isOutOfStock && (
+                        <p className="mt-1.5 text-xs text-amber-600 flex items-center gap-1 animate-fade-in">
+                          <AlertTriangle className="w-3.5 h-3.5" /> Stock bahut kam hai — reorder karein!
+                        </p>
+                      )}
+                      {isOutOfStock && (
+                        <p className="mt-1.5 text-xs text-rose-600 flex items-center gap-1 animate-fade-in">
+                          <AlertTriangle className="w-3.5 h-3.5" /> Stock zero — product Out of Stock dikhega
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── RENTAL fields ── */}
+                {form.isRental && (
+                  <div className="space-y-4 animate-fade-in">
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Rent Price */}
+                      <div>
+                        <label htmlFor="pf-rent" className="block text-xs font-semibold text-slate-600 mb-1.5">
+                          Rent Price (₹/event) <span className="text-rose-400">*</span>
+                        </label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">₹</span>
+                          <input id="pf-rent" type="number" min="0" value={form.rentPrice}
+                            onChange={(e) => set("rentPrice", e.target.value)}
+                            placeholder="500" className="w-full pl-7 pr-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition" />
+                        </div>
+                      </div>
+                      {/* Security Deposit */}
+                      <div>
+                        <label htmlFor="pf-deposit" className="block text-xs font-semibold text-slate-600 mb-1.5">
+                          Security Deposit (₹)
+                        </label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">₹</span>
+                          <input id="pf-deposit" type="number" min="0" value={form.securityDeposit}
+                            onChange={(e) => set("securityDeposit", e.target.value)}
+                            placeholder="2000" className="w-full pl-7 pr-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Replacement Value */}
+                      <div>
+                        <label htmlFor="pf-replace" className="block text-xs font-semibold text-slate-600 mb-1.5">
+                          Replacement Value (₹)
+                        </label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">₹</span>
+                          <input id="pf-replace" type="number" min="0" value={form.replacementValue}
+                            onChange={(e) => set("replacementValue", e.target.value)}
+                            placeholder="8000" className="w-full pl-7 pr-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition" />
+                        </div>
+                      </div>
+                      {/* Current Status */}
+                      <div>
+                        <label htmlFor="pf-rstatus" className="block text-xs font-semibold text-slate-600 mb-1.5">
+                          Current Status
+                        </label>
+                        <select id="pf-rstatus" value={form.rentalStatus}
+                          onChange={(e) => set("rentalStatus", e.target.value)}
+                          className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition bg-white">
+                          {RENTAL_STATUS.map((s) => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Expected Return Date */}
+                    <div>
+                      <label htmlFor="pf-retdate" className="block text-xs font-semibold text-slate-600 mb-1.5 flex items-center gap-1.5">
+                        <CalendarDays className="w-3.5 h-3.5" /> Expected Return Date
+                      </label>
+                      <input id="pf-retdate" type="date" value={form.expectedReturnDate}
+                        onChange={(e) => set("expectedReturnDate", e.target.value)}
+                        className={`w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 transition ${
+                          isOverdue ? "border-rose-400 bg-rose-50 focus:ring-rose-100" : "border-slate-200 focus:border-rose-400 focus:ring-rose-100"
+                        }`} />
+                      {isOverdue && (
+                        <p className="mt-1.5 text-xs text-rose-600 flex items-center gap-1 font-semibold animate-fade-in">
+                          <Clock className="w-3.5 h-3.5" /> OVERDUE! Return date nikal chuki hai.
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Rental info summary */}
+                    {form.rentPrice && (
+                      <div className="p-3 bg-rose-50 rounded-xl border border-rose-100 text-xs text-rose-700 space-y-1 animate-fade-in">
+                        <p>🔑 <strong>Kiraya:</strong> {formatPrice(Number(form.rentPrice))}/event</p>
+                        {form.securityDeposit && <p>🛡️ <strong>Security:</strong> {formatPrice(Number(form.securityDeposit))} (advance lena hai)</p>}
+                        {form.replacementValue && <p>⚠️ <strong>Replacement:</strong> {formatPrice(Number(form.replacementValue))} (agar toota/khoya)</p>}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </SectionCard>
+          </div>
+
+          {/* ──────────── RIGHT COLUMN ──────────── */}
+          <div className="space-y-6">
+
+            {/* ── SECTION 3: Images ── */}
+            <SectionCard icon={ImageIcon} title="Product Images" accentColor="blue">
+              <div>
+                <p className="text-xs text-slate-400 mb-4">
+                  Max {MAX_IMAGES} images — pehli photo main thumbnail hogi (JPG, PNG, WebP — 5MB each)
+                </p>
+
+                {/* Upload zone */}
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center cursor-pointer hover:border-violet-400 hover:bg-violet-50/30 transition-all group"
+                >
+                  <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/avif"
+                    multiple onChange={handleImageSelect} className="hidden" />
+                  <div className="w-10 h-10 rounded-xl bg-slate-100 group-hover:bg-violet-100 flex items-center justify-center mx-auto mb-3 transition-colors">
+                    <Upload className="w-5 h-5 text-slate-400 group-hover:text-violet-500 transition-colors" />
+                  </div>
+                  <p className="text-sm font-medium text-slate-600">Click to upload images</p>
+                  <p className="text-xs text-slate-400 mt-0.5">ya URLs paste karein neeche</p>
+                </div>
+
+                {/* Image grid */}
+                {images.length > 0 && (
+                  <div className="mt-4 grid grid-cols-3 gap-3">
+                    {images.map((img, i) => (
+                      <div key={i} className="relative group rounded-xl overflow-hidden border border-slate-100 aspect-square">
+                        <img src={img.preview} alt={`Preview ${i + 1}`} className="w-full h-full object-cover" />
+                        {uploading && img.progress < 100 && (
+                          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                            <Loader2 className="w-5 h-5 text-white animate-spin" />
+                          </div>
+                        )}
+                        {i === 0 && <span className="absolute top-1.5 left-1.5 bg-violet-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md">Main</span>}
+                        <button type="button" onClick={() => removeImage(i)} disabled={submitting}
+                          className="absolute top-1.5 right-1.5 p-1 bg-black/60 text-white rounded-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-rose-500">
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                    {images.length < MAX_IMAGES && (
+                      <button type="button" onClick={() => fileInputRef.current?.click()}
+                        className="aspect-square rounded-xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center gap-1 text-slate-400 hover:border-violet-400 hover:text-violet-500 hover:bg-violet-50/30 transition-all">
+                        <Plus className="w-5 h-5" />
+                        <span className="text-[10px]">Add</span>
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {/* External URLs */}
+                <div className="mt-4 pt-4 border-t border-slate-100">
+                  <label htmlFor="pf-exturl" className="block text-xs font-semibold text-slate-600 mb-1.5">
+                    Ya Image URLs paste karein (alternative)
+                  </label>
+                  <textarea id="pf-exturl" value={form.externalImageUrls}
+                    onChange={(e) => set("externalImageUrls", e.target.value)}
+                    placeholder="https://...jpg, https://...jpg (comma separated)"
+                    rows={2}
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 transition resize-none" />
+                </div>
+              </div>
+            </SectionCard>
+
+            {/* ── SECTION 4: Attributes ── */}
+            <SectionCard icon={Layers} title="Product Attributes" accentColor="amber">
+              <div className="space-y-5">
+
+                {/* Colors */}
+                <div>
+                  <p className="text-xs font-semibold text-slate-600 mb-2">Colors</p>
+                  <div className="flex flex-wrap gap-2">
+                    {AVAILABLE_COLORS.map((color) => {
+                      const sel = form.colors.includes(color);
+                      const swatch = COLOR_SWATCHES[color];
+                      const isGrad = swatch?.includes("gradient");
+                      return (
+                        <button key={color} type="button" onClick={() => toggleColor(color)}
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                            sel ? "border-violet-400 bg-violet-50 text-violet-700 shadow-sm" : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                          }`}>
+                          <span className="w-3.5 h-3.5 rounded-full border border-black/10 flex-shrink-0"
+                            style={{ background: isGrad ? swatch : undefined, backgroundColor: isGrad ? undefined : swatch }} />
+                          {color}
+                          {sel && <CheckCircle2 className="w-3 h-3 text-violet-500" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {form.colors.length > 0 && (
+                    <p className="mt-2 text-xs text-violet-600">Selected: {form.colors.join(", ")}</p>
+                  )}
+                </div>
+
+                {/* Size / Age Group */}
+                <div>
+                  <label htmlFor="pf-size" className="block text-xs font-semibold text-slate-600 mb-1.5">
+                    Size / Age Group
+                  </label>
+                  <input id="pf-size" type="text" value={form.sizeAgeGroup}
+                    onChange={(e) => set("sizeAgeGroup", e.target.value)}
+                    placeholder="e.g. 2.4 inch, Free Size, 3-5 years, One Size"
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition" />
+                </div>
+
+                {/* Material Type */}
+                <div>
+                  <label htmlFor="pf-material" className="block text-xs font-semibold text-slate-600 mb-1.5">
+                    Material Type
+                  </label>
+                  <select id="pf-material" value={form.materialType}
+                    onChange={(e) => set("materialType", e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition bg-white">
+                    <option value="">Material chunein (optional)</option>
+                    {MATERIAL_TYPES.map((m) => <option key={m} value={m}>{m}</option>)}
+                  </select>
+                </div>
+
+                {/* Occasion Tags */}
+                <div>
+                  <p className="text-xs font-semibold text-slate-600 mb-2">
+                    Occasion Tags
+                    <span className="ml-1 text-slate-400 font-normal">(filter ke liye important)</span>
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {OCCASION_TAGS.map((tag) => {
+                      const sel = form.occasionTags.includes(tag);
+                      return (
+                        <button key={tag} type="button" onClick={() => toggleOccasion(tag)}
+                          className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                            sel ? "bg-amber-500 border-amber-500 text-white shadow-sm" : "border-slate-200 text-slate-600 hover:border-amber-300 hover:bg-amber-50"
+                          }`}>
+                          {sel && "✓ "}{tag}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </SectionCard>
+
+            {/* ── SECTION 5: Extras ── */}
+            <SectionCard icon={Star} title="Extra Settings" accentColor="slate">
+              <div className="space-y-4">
+                {/* Video URL */}
+                <div>
+                  <label htmlFor="pf-video" className="block text-xs font-semibold text-slate-600 mb-1.5">
+                    Video URL (Optional)
+                  </label>
+                  <input id="pf-video" type="url" value={form.videoUrl}
+                    onChange={(e) => set("videoUrl", e.target.value)}
+                    placeholder="YouTube/Instagram reel link..."
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition" />
+                </div>
+                {/* Featured */}
+                <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                  <Toggle
+                    id="pf-featured"
+                    checked={form.isFeatured}
+                    onChange={(v) => set("isFeatured", v)}
+                    label="⭐ Featured Product"
+                    sub='Homepage "Trending Now" section mein dikhao'
+                  />
+                </div>
+              </div>
+            </SectionCard>
+          </div>
+        </div>
+
+        {/* ── STICKY SAVE BAR ────────────────────────────────────────────────── */}
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-t border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
+          <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <button type="button"
+                onClick={() => { setForm(buildInitialForm()); setImages([]); setIsDuplicate(false); }}
+                disabled={submitting}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-medium transition-all disabled:opacity-50">
+                <RotateCcw className="w-4 h-4" /> Clear
+              </button>
+              {isLowStock && (
+                <span className="flex items-center gap-1.5 text-amber-600 text-xs font-semibold bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200">
+                  <AlertTriangle className="w-3.5 h-3.5" /> Low Stock Warning
+                </span>
+              )}
+              {isOverdue && (
+                <span className="flex items-center gap-1.5 text-rose-600 text-xs font-semibold bg-rose-50 px-3 py-1.5 rounded-lg border border-rose-200">
+                  <Clock className="w-3.5 h-3.5" /> Overdue Item
+                </span>
+              )}
+            </div>
+            <button type="submit" disabled={submitting}
+              className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-semibold text-sm shadow-md hover:shadow-lg transition-all disabled:opacity-70 disabled:cursor-not-allowed">
+              {submitting ? (
+                <><Loader2 className="w-4 h-4 animate-spin" />{uploading ? "Images upload ho rahi hain..." : "Save ho raha hai..."}</>
+              ) : (
+                <>{editId && !isDuplicate ? "✏️ Update Product" : "💾 Save Product"}</>
+              )}
+            </button>
+          </div>
         </div>
       </form>
     </div>

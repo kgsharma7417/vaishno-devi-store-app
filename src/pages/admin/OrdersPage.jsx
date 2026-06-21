@@ -75,7 +75,10 @@ export default function OrdersPage() {
   const getStatusColor = (status) => {
     switch (status) {
       case 'Pending': return 'bg-amber-100 text-amber-800 border-amber-200';
-      case 'Shipped': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'Processing': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'Packed': return 'bg-indigo-100 text-indigo-800 border-indigo-200';
+      case 'Shipped': return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'Out for Delivery': return 'bg-orange-100 text-orange-800 border-orange-200';
       case 'Delivered': return 'bg-emerald-100 text-emerald-800 border-emerald-200';
       case 'Cancelled': return 'bg-rose-100 text-rose-800 border-rose-200';
       default: return 'bg-earth-100 text-earth-800 border-earth-200';
@@ -155,7 +158,7 @@ export default function OrdersPage() {
                   disabled={updatingId === order.id}
                   value={order.paymentStatus}
                   onChange={(e) => handleStatusChange(order.id, "paymentStatus", e.target.value)}
-                  className={`text-xs font-bold border rounded-full px-3 py-1.5 appearance-none cursor-pointer outline-none ${getPaymentColor(order.paymentStatus)}`}
+                  className={`text-xs font-bold border rounded-full px-3 py-1.5 cursor-pointer outline-none ${getPaymentColor(order.paymentStatus)}`}
                 >
                   <option value="Pending (COD)">Payment: Pending (COD)</option>
                   <option value="Pending (UPI)">Payment: Pending (UPI)</option>
@@ -168,11 +171,13 @@ export default function OrdersPage() {
                   disabled={updatingId === order.id}
                   value={order.orderStatus}
                   onChange={(e) => handleStatusChange(order.id, "orderStatus", e.target.value)}
-                  className={`text-xs font-bold border rounded-full px-3 py-1.5 appearance-none cursor-pointer outline-none ${getStatusColor(order.orderStatus)}`}
+                  className={`text-xs font-bold border rounded-full px-3 py-1.5 cursor-pointer outline-none ${getStatusColor(order.orderStatus)}`}
                 >
                   <option value="Pending">Status: Pending</option>
                   <option value="Processing">Status: Processing</option>
+                  <option value="Packed">Status: Packed</option>
                   <option value="Shipped">Status: Shipped</option>
+                  <option value="Out for Delivery">Status: Out for Delivery</option>
                   <option value="Delivered">Status: Delivered</option>
                   <option value="Cancelled">Status: Cancelled</option>
                 </select>

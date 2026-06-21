@@ -2,12 +2,13 @@ import { initializeApp } from "firebase/app";
 import { getFirestore, collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyD18McIB857WstkmwpwZJzLThWe2P_uuEM",
-  authDomain: "bangle-store-d64ab.firebaseapp.com",
-  projectId: "bangle-store-d64ab",
-  storageBucket: "bangle-store-d64ab.firebasestorage.app",
-  messagingSenderId: "857215130669",
-  appId: "1:857215130669:web:dc3b194bdbd9cfe787eca4"
+  apiKey: "AIzaSyDzc_SaBXmtrVVULw9bKT2mZpsD3JfO31c",
+  authDomain: "maa-vaishno-devi-ladies-49ea5.firebaseapp.com",
+  projectId: "maa-vaishno-devi-ladies-49ea5",
+  storageBucket: "maa-vaishno-devi-ladies-49ea5.firebasestorage.app",
+  messagingSenderId: "283680578990",
+  appId: "1:283680578990:web:021f02d0a557364364fc3f",
+  measurementId: "G-NVHGT73E11"
 };
 
 const app = initializeApp(firebaseConfig);

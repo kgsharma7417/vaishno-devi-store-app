@@ -83,10 +83,10 @@ export default function HeroSettingsPage() {
       
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("upload_preset", "library_upload");
-      formData.append("cloud_name", "dz7vbpney");
+      formData.append("upload_preset", "maa vaishno devi");
+      formData.append("cloud_name", "dvzyaivr7");
 
-      const response = await fetch("https://api.cloudinary.com/v1_1/dz7vbpney/image/upload", {
+      const response = await fetch("https://api.cloudinary.com/v1_1/dvzyaivr7/image/upload", {
         method: "POST",
         body: formData,
       });

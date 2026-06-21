@@ -118,54 +118,64 @@ export default function ProductCard({ product }) {
         </Link>
 
         {/* Product Info */}
-        <Link to={`/product/${product.id}`} className="flex-1 flex flex-col">
+        <Link to={`/product/${product.id}`} className="flex-1 flex flex-col bg-white">
           <div className="p-2.5 md:p-3 flex flex-col flex-1">
             {/* Brand / Category */}
-            <div className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-wide mb-0.5">
+            <div className="text-[10px] md:text-xs font-semibold text-amazon-link hover:underline mb-0.5">
               {product.category}
             </div>
 
             {/* Product Name */}
-            <h3 className="text-xs md:text-sm text-gray-700 leading-snug mb-1.5 flex-1 line-clamp-2">
+            <h3 className="text-xs md:text-sm text-gray-800 hover:text-amazon-link leading-snug mb-1.5 flex-1 line-clamp-2">
               {product.productName}
             </h3>
 
-            {/* Real Rating — only if product has rating data */}
-            {product.rating && (
-              <div className="flex items-center gap-1 mb-1.5">
-                <span className="inline-flex items-center gap-0.5 bg-fk-green text-white text-[10px] font-bold px-1.5 py-0.5 rounded-sm">
-                  {product.rating.toFixed(1)}{" "}
-                  <Star className="w-2.5 h-2.5 fill-white" />
-                </span>
-                {product.reviewCount && (
-                  <span className="text-[10px] text-gray-400">
-                    ({product.reviewCount})
-                  </span>
-                )}
+            {/* Real Rating — Amazon Style (Stars) */}
+            <div className="flex items-center gap-1 mb-1.5">
+              <div className="flex items-center">
+                {[...Array(5)].map((_, i) => (
+                  <Star 
+                    key={i} 
+                    className={`w-3 h-3 ${
+                      i < Math.floor(product.rating || 4.2) 
+                        ? "text-amazon-orange fill-amazon-orange" 
+                        : "text-gray-300 fill-gray-200"
+                    }`} 
+                  />
+                ))}
               </div>
-            )}
-
-            {/* Pricing — Flipkart style */}
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="font-bold text-gray-900 text-sm md:text-base">
-                {formatPrice(product.finalPrice)}
+              <span className="text-[11px] text-amazon-link hover:underline">
+                {product.reviewCount || 12}
               </span>
+            </div>
+
+            {/* Pricing — Amazon style */}
+            <div className="flex flex-col gap-0.5">
+              <div className="flex items-baseline gap-1.5 flex-wrap">
+                <span className="text-xs text-amazon-red font-medium">
+                  -{product.discountPercentage || 0}%
+                </span>
+                <span className="font-bold text-gray-900 text-base md:text-lg">
+                  {formatPrice(product.finalPrice)}
+                </span>
+              </div>
               {product.discountPercentage > 0 && (
-                <>
-                  <span className="text-xs text-gray-400 line-through">
-                    {formatPrice(product.mrp)}
-                  </span>
-                  <span className="text-xs text-fk-green font-medium">
-                    {product.discountPercentage}% off
-                  </span>
-                </>
+                <p className="text-[11px] text-gray-500">
+                  M.R.P.: <span className="line-through">{formatPrice(product.mrp)}</span>
+                </p>
               )}
             </div>
 
-            {/* Free Delivery tag */}
-            {product.finalPrice >= 299 && (
-              <p className="text-[10px] text-gray-500 mt-1">Free delivery</p>
-            )}
+            {/* Amazon Delivery Tag */}
+            <p className="text-[10px] text-gray-600 mt-1.5">
+              {product.finalPrice >= 299 ? (
+                <>
+                  <span className="font-bold text-amazon-green">FREE Delivery</span> by <span className="font-bold">Tomorrow</span>
+                </>
+              ) : (
+                "Delivery charges apply"
+              )}
+            </p>
           </div>
         </Link>
       </div>

@@ -27,8 +27,8 @@ export default function CartDrawer() {
       {/* Drawer */}
       <div className="fixed inset-y-0 right-0 z-[100] w-full sm:w-96 bg-gray-50 shadow-2xl flex flex-col transform animate-fade-in-right">
         
-        {/* Header — Flipkart Blue */}
-        <div className="flex items-center justify-between px-4 py-3 bg-fk-blue text-white">
+        {/* Header — Amazon Dark */}
+        <div className="flex items-center justify-between px-4 py-3 bg-amazon-dark text-white">
           <h2 className="text-base font-bold flex items-center gap-2">
             <ShoppingCart className="w-5 h-5" />
             My Cart ({cartCount})
@@ -45,17 +45,17 @@ export default function CartDrawer() {
         {cartItems.length > 0 && (
           <div className="bg-white px-4 py-3 border-b border-gray-100 animate-scale-in">
             {cartTotal >= 299 ? (
-              <p className="text-xs font-semibold text-fk-green flex items-center gap-1">
+              <p className="text-xs font-semibold text-amazon-green flex items-center gap-1">
                 🎉 You unlocked **Free Delivery** on this order!
               </p>
             ) : (
               <div>
                 <p className="text-xs text-gray-600 mb-1.5">
-                  Add <span className="font-bold text-fk-blue">{formatPrice(299 - cartTotal)}</span> more for **Free Delivery**!
+                  Add <span className="font-bold text-amazon-link">{formatPrice(299 - cartTotal)}</span> more for **Free Delivery**!
                 </p>
                 <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
                   <div 
-                    className="bg-fk-blue h-full transition-all duration-500 rounded-full" 
+                    className="bg-amazon-orange h-full transition-all duration-500 rounded-full" 
                     style={{ width: `${Math.min(100, (cartTotal / 299) * 100)}%` }}
                   />
                 </div>
@@ -154,7 +154,7 @@ export default function CartDrawer() {
               </div>
               <div className="flex justify-between text-gray-600">
                 <span>Delivery</span>
-                <span className={deliveryCharge > 0 ? "text-gray-900" : "text-fk-green font-medium"}>
+                <span className={deliveryCharge > 0 ? "text-gray-900" : "text-amazon-green font-semibold"}>
                   {deliveryCharge > 0 ? formatPrice(deliveryCharge) : "FREE"}
                 </span>
               </div>
@@ -168,13 +168,13 @@ export default function CartDrawer() {
             <div className="px-4 pb-4">
               <button 
                 onClick={handleCheckoutClick}
-                className="w-full bg-fk-yellow hover:bg-fk-yellow-dark text-white font-bold py-3.5 rounded-sm text-sm uppercase flex items-center justify-center gap-2 shadow-md transition-colors"
+                className="w-full bg-amazon-orange hover:bg-amazon-orange/90 text-amazon-dark font-bold py-3 rounded-full text-sm uppercase flex items-center justify-center gap-2 shadow-md transition-colors"
               >
-                Place Order
+                Proceed to Checkout
                 <ArrowRight className="w-4 h-4" />
               </button>
               <p className="text-[10px] text-center text-gray-400 mt-2 flex items-center justify-center gap-1">
-                <ShieldCheck className="w-3 h-3 text-fk-green" /> Safe and Secure Payments
+                <ShieldCheck className="w-3 h-3 text-amazon-green" /> Safe and Secure Payments
               </p>
             </div>
           </div>

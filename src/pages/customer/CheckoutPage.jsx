@@ -9,7 +9,6 @@ import { db } from "../../config/firebase";
 import { collection, addDoc, serverTimestamp, doc, getDoc } from "firebase/firestore";
 import { ArrowLeft, MapPin, CreditCard, ShieldCheck, PackageCheck, Loader2, ChevronRight, Tag } from "lucide-react";
 import { QRCodeSVG } from 'qrcode.react';
-import CouponSection, { useCoupon } from "../../components/customer/CouponSection";
 import { launchConfetti } from "../../utils/confetti";
 
 export default function CheckoutPage() {
@@ -18,7 +17,7 @@ export default function CheckoutPage() {
   const { userProfile } = useAuth();
   const navigate = useNavigate();
 
-  useSEO({ title: "Checkout", description: "Complete your Radhe Bangles order. Secure checkout with COD, UPI and online payment options." });
+  useSEO({ title: "Checkout", description: "Complete your Maa Vaishno Devi Ladies Corner & Gift Center order. Secure checkout with COD, UPI and online payment options." });
 
   const [form, setForm] = useState({
     fullName: "",
@@ -48,17 +47,11 @@ export default function CheckoutPage() {
   const [location, setLocation] = useState(null);
   const [gettingLocation, setGettingLocation] = useState(false);
   const [upiDetails, setUpiDetails] = useState({ upiId: "", payeeName: "" });
-  const [razorpayDetails, setRazorpayDetails] = useState({ enabled: false, keyId: "" });
+  const [razorpayDetails, setRazorpayDetails] = useState({ enabled: true, keyId: "rzp_test_StaSH1lgs2dfUO" });
   const [transactionId, setTransactionId] = useState("");
   const [scriptLoaded, setScriptLoaded] = useState(false);
 
-  // Coupon code system
-  const { appliedCoupon, discountAmount, couponCode, setCouponCode, couponError, applying, applyCoupon, removeCoupon } = useCoupon(cartTotal);
-  const finalTotal = Math.max(0, cartTotal - discountAmount);
-
-  const handleApplyCoupon = (code) => {
-    applyCoupon(code, form.phone, form.email);
-  };
+  const finalTotal = cartTotal;
 
   // Load Razorpay Script
   useEffect(() => {
@@ -80,7 +73,7 @@ export default function CheckoutPage() {
         if (docSnap.exists()) {
           const data = docSnap.data();
           if (data.payment) setUpiDetails(data.payment);
-          if (data.razorpay) setRazorpayDetails(data.razorpay);
+          if (data.razorpay?.keyId) setRazorpayDetails(data.razorpay);
         }
       } catch (err) {
         console.error("Error fetching payment settings:", err);
@@ -160,9 +153,8 @@ export default function CheckoutPage() {
 
   const [isGiftWrap, setIsGiftWrap] = useState(false);
 
-  const deliveryCharge = ((cartTotal - discountAmount) < 299 && (cartTotal - discountAmount) > 0) ? 30 : 0;
+  const deliveryCharge = (cartTotal < 299 && cartTotal > 0) ? 30 : 0;
   const giftWrapCharge = isGiftWrap ? 30 : 0;
-  // finalTotal already defined above: const finalTotal = Math.max(0, cartTotal - discountAmount);
   const grandTotal = finalTotal + deliveryCharge + giftWrapCharge;
 
   const saveOrderToFirebase = async (txnId = null, pMethod = paymentMethod) => {
@@ -175,7 +167,6 @@ export default function CheckoutPage() {
         customerDetails: { ...form, location: location },
         items: cartItems,
         subtotal: cartTotal,
-        coupon: appliedCoupon ? { code: appliedCoupon.code, discount: discountAmount } : null,
         deliveryCharge,
         giftWrapCharge,
         isGiftWrap,
@@ -189,6 +180,7 @@ export default function CheckoutPage() {
 
       const docRef = await addDoc(collection(db, "orders"), orderData);
       setPlacedOrderId(docRef.id);
+      setOrderPlaced(true);
 
       // Save order to localStorage for history
       try {
@@ -201,13 +193,20 @@ export default function CheckoutPage() {
         console.error("Could not save to local storage", e);
       }
 
-      setOrderPlaced(true);
-      clearCart();
       window.scrollTo(0, 0);
-      // 🎉 Launch confetti!
-      launchConfetti();
+      
+      try {
+        // 🎉 Launch confetti!
+        launchConfetti();
+      } catch (err) {
+        console.error("Confetti failed", err);
+      }
       
       addToast({ type: "success", title: "Success", message: "🎉 Your order has been placed!" });
+      
+      // Clear cart and redirect immediately to My Orders
+      clearCart();
+      navigate('/my-orders', { replace: true });
 
     } catch (error) {
       console.error("Error placing order:", error);
@@ -246,18 +245,14 @@ export default function CheckoutPage() {
         return;
       }
       
-      if (!razorpayDetails.keyId) {
-        addToast({ type: "error", message: "Razorpay Key ID is missing. Please contact support." });
-        setSubmitting(false);
-        return;
-      }
+      const keyIdToUse = razorpayDetails.keyId || "rzp_test_StaSH1lgs2dfUO";
 
       const options = {
-        key: razorpayDetails.keyId,
+        key: keyIdToUse,
         amount: grandTotal * 100,
         currency: "INR",
-        name: "Radhe Bangles",
-        description: "Test Transaction",
+        name: "Maa Vaishno Devi Ladies Corner",
+        description: "Order Payment",
         handler: function (response) {
           saveOrderToFirebase(response.razorpay_payment_id, 'razorpay');
         },
@@ -267,7 +262,7 @@ export default function CheckoutPage() {
           contact: form.phone
         },
         theme: {
-          color: "#2874f0"
+          color: "#131921"
         },
         modal: {
           ondismiss: function() {
@@ -289,12 +284,12 @@ export default function CheckoutPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-36 lg:pb-8 font-body animate-fade-in">
+    <div className="min-h-screen bg-amazon-bg pb-36 lg:pb-8 font-body animate-fade-in">
       {/* Header */}
-      <header className="bg-fk-blue sticky top-0 z-40">
+      <header className="bg-amazon-dark sticky top-0 z-40 shadow-md">
         <div className="max-w-7xl mx-auto px-3 md:px-6">
           <div className="flex items-center h-12 md:h-14 gap-3">
-            <Link to="/" className="text-white p-1">
+            <Link to="/" className="text-white p-1 hover:outline hover:outline-1 hover:outline-white rounded-sm">
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <h1 className="text-white font-bold text-base">Checkout</h1>
@@ -306,15 +301,15 @@ export default function CheckoutPage() {
       </header>
 
       {/* Steps Indicator */}
-      <div className="bg-white border-b border-gray-100 shadow-sm">
+      <div className="bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-center gap-2 text-xs">
-          <span className="flex items-center gap-1 text-fk-blue font-bold">
-            <span className="w-5 h-5 bg-fk-blue text-white rounded-full flex items-center justify-center text-[10px]">1</span>
+          <span className="flex items-center gap-1 text-amazon-orange font-bold">
+            <span className="w-5 h-5 bg-amazon-orange text-amazon-dark rounded-full flex items-center justify-center text-[10px] font-bold">1</span>
             Cart
           </span>
           <ChevronRight className="w-3 h-3 text-gray-300" />
-          <span className="flex items-center gap-1 text-fk-blue font-bold">
-            <span className="w-5 h-5 bg-fk-blue text-white rounded-full flex items-center justify-center text-[10px]">2</span>
+          <span className="flex items-center gap-1 text-amazon-orange font-bold">
+            <span className="w-5 h-5 bg-amazon-orange text-amazon-dark rounded-full flex items-center justify-center text-[10px] font-bold">2</span>
             Address
           </span>
           <ChevronRight className="w-3 h-3 text-gray-300" />
@@ -333,8 +328,8 @@ export default function CheckoutPage() {
             <form id="checkout-form" onSubmit={handlePlaceOrder} className="space-y-3">
               
               {/* Shipping Details */}
-              <section className="bg-white p-4 md:p-6 shadow-card">
-                <h2 className="text-sm font-bold text-fk-blue uppercase mb-4 flex items-center gap-2">
+              <section className="bg-white p-4 md:p-6 shadow-card rounded-md border border-gray-200">
+                <h2 className="text-sm font-bold text-amazon-navy uppercase mb-4 flex items-center gap-2">
                   <MapPin className="w-4 h-4" /> Delivery Address
                 </h2>
                 
@@ -369,7 +364,7 @@ export default function CheckoutPage() {
                         type="button" 
                         onClick={handleGetLocation} 
                         disabled={gettingLocation}
-                        className={`text-[10px] font-bold flex items-center gap-1 ${location ? 'text-fk-green' : 'text-fk-blue hover:underline'}`}
+                        className={`text-[10px] font-bold flex items-center gap-1 ${location ? 'text-amazon-green' : 'text-amazon-link hover:underline'}`}
                       >
                         {gettingLocation ? <Loader2 className="w-3 h-3 animate-spin" /> : <MapPin className="w-3 h-3" />}
                         {location ? "Location Captured ✓" : "Use Current Location"}
@@ -404,23 +399,23 @@ export default function CheckoutPage() {
               </section>
 
               {/* Payment Method */}
-              <section className="bg-white p-4 md:p-6 shadow-card">
-                <h2 className="text-sm font-bold text-fk-blue uppercase mb-4 flex items-center gap-2">
+              <section className="bg-white p-4 md:p-6 shadow-card rounded-md border border-gray-200">
+                <h2 className="text-sm font-bold text-amazon-navy uppercase mb-4 flex items-center gap-2">
                   <CreditCard className="w-4 h-4" /> Payment Method
                 </h2>
                 
                 <div className="space-y-2">
-                  <label className={`flex items-center gap-3 p-3 border-2 cursor-pointer transition-all rounded-sm ${paymentMethod === 'cod' ? 'border-fk-blue bg-fk-blue-light' : 'border-gray-200 hover:border-gray-300'}`}>
-                    <input type="radio" name="payment" value="cod" checked={paymentMethod === 'cod'} onChange={(e) => setPaymentMethod(e.target.value)} className="w-4 h-4 text-fk-blue" />
+                  <label className={`flex items-center gap-3 p-3 border-2 cursor-pointer transition-all rounded-sm ${paymentMethod === 'cod' ? 'border-amazon-orange bg-yellow-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                    <input type="radio" name="payment" value="cod" checked={paymentMethod === 'cod'} onChange={(e) => setPaymentMethod(e.target.value)} className="w-4 h-4 text-amazon-orange focus:ring-amazon-orange" />
                     <div>
                       <p className="font-semibold text-sm text-gray-800">Cash on Delivery</p>
                       <p className="text-xs text-gray-500">Pay when your order arrives.</p>
                     </div>
                   </label>
 
-                  <label className={`flex flex-col p-3 border-2 cursor-pointer transition-all rounded-sm ${paymentMethod === 'upi' ? 'border-fk-blue bg-fk-blue-light' : 'border-gray-200 hover:border-gray-300'}`}>
+                  <label className={`flex flex-col p-3 border-2 cursor-pointer transition-all rounded-sm ${paymentMethod === 'upi' ? 'border-amazon-orange bg-yellow-50' : 'border-gray-200 hover:border-gray-300'}`}>
                     <div className="flex items-center gap-3">
-                      <input type="radio" name="payment" value="upi" checked={paymentMethod === 'upi'} onChange={(e) => setPaymentMethod(e.target.value)} className="w-4 h-4 text-fk-blue" />
+                      <input type="radio" name="payment" value="upi" checked={paymentMethod === 'upi'} onChange={(e) => setPaymentMethod(e.target.value)} className="w-4 h-4 text-amazon-orange focus:ring-amazon-orange" />
                       <div>
                         <p className="font-semibold text-sm text-gray-800">UPI (GPay, PhonePe, Paytm)</p>
                         <p className="text-xs text-gray-500">Scan QR Code and pay instantly.</p>
@@ -436,7 +431,7 @@ export default function CheckoutPage() {
                         
                         <a 
                           href={`upi://pay?pa=${upiDetails.upiId}&pn=${encodeURIComponent(upiDetails.payeeName || 'Store')}&am=${grandTotal}&cu=INR`}
-                          className="w-full sm:hidden bg-fk-blue text-white font-bold py-2.5 px-4 rounded-sm mb-3 flex items-center justify-center gap-2 text-sm"
+                          className="w-full sm:hidden bg-amazon-orange text-amazon-dark font-bold py-2.5 px-4 rounded-full mb-3 flex items-center justify-center gap-2 text-sm"
                         >
                           Pay with UPI App
                         </a>
@@ -445,7 +440,7 @@ export default function CheckoutPage() {
                         <p className="text-xs font-mono font-bold text-gray-800 bg-white px-3 py-1 rounded-sm border border-gray-200 mb-4">{upiDetails.upiId}</p>
                         
                         <div className="w-full text-left bg-white p-3 rounded-sm border border-gray-200">
-                          <label className="input-label text-xs text-fk-blue">Transaction ID (UTR) <span className="text-fk-red">*</span></label>
+                          <label className="input-label text-xs text-amazon-navy font-bold">Transaction ID (UTR) <span className="text-amazon-red">*</span></label>
                           <input type="text" required value={transactionId} onChange={(e) => setTransactionId(e.target.value)} placeholder="e.g. 123456789012" className="input-field text-sm" />
                           <p className="text-[10px] text-gray-500 mt-1">Enter the 12-digit UTR/Ref number after paying.</p>
                         </div>
@@ -460,8 +455,8 @@ export default function CheckoutPage() {
                   </label>
 
                   {razorpayDetails.enabled && (
-                    <label className={`flex items-center gap-3 p-3 border-2 cursor-pointer transition-all rounded-sm ${paymentMethod === 'razorpay' ? 'border-fk-blue bg-fk-blue-light' : 'border-gray-200 hover:border-gray-300'}`}>
-                      <input type="radio" name="payment" value="razorpay" checked={paymentMethod === 'razorpay'} onChange={(e) => setPaymentMethod(e.target.value)} className="w-4 h-4 text-fk-blue" />
+                    <label className={`flex items-center gap-3 p-3 border-2 cursor-pointer transition-all rounded-sm ${paymentMethod === 'razorpay' ? 'border-amazon-orange bg-yellow-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                      <input type="radio" name="payment" value="razorpay" checked={paymentMethod === 'razorpay'} onChange={(e) => setPaymentMethod(e.target.value)} className="w-4 h-4 text-amazon-orange focus:ring-amazon-orange" />
                       <div>
                         <p className="font-semibold text-sm text-gray-800">Online Payment (Razorpay)</p>
                         <p className="text-xs text-gray-500">Credit Card, Debit Card, Netbanking, or Wallet.</p>
@@ -473,18 +468,7 @@ export default function CheckoutPage() {
             </form>
           </div>
 
-          {/* Right Column: Order Summary */}
           <div className="lg:col-span-4">
-            {/* Coupon Section */}
-            <CouponSection 
-              couponCode={couponCode}
-              setCouponCode={setCouponCode}
-              appliedCoupon={appliedCoupon}
-              couponError={couponError}
-              applying={applying}
-              applyCoupon={handleApplyCoupon}
-              removeCoupon={removeCoupon}
-            />
 
             <div className="bg-white p-4 md:p-6 shadow-card sticky top-24 mt-2">
               <h2 className="text-sm font-bold text-gray-900 uppercase mb-4">Price Details</h2>
@@ -528,12 +512,6 @@ export default function CheckoutPage() {
                   <span>Price ({cartItems.length} items)</span>
                   <span>{formatPrice(cartTotal)}</span>
                 </div>
-                {discountAmount > 0 && (
-                  <div className="flex justify-between text-fk-green font-medium">
-                    <span>Coupon Savings ({appliedCoupon?.code})</span>
-                    <span>−{formatPrice(discountAmount)}</span>
-                  </div>
-                )}
                 {isGiftWrap && (
                   <div className="flex justify-between text-gray-600">
                     <span>Gift Wrap Charge</span>
@@ -542,7 +520,7 @@ export default function CheckoutPage() {
                 )}
                 <div className="flex justify-between text-gray-600">
                   <span>Delivery Charges</span>
-                  <span className={deliveryCharge > 0 ? "text-gray-900" : "text-fk-green font-medium"}>
+                  <span className={deliveryCharge > 0 ? "text-gray-900" : "text-amazon-green font-semibold"}>
                     {deliveryCharge > 0 ? formatPrice(deliveryCharge) : "FREE"}
                   </span>
                 </div>
@@ -550,9 +528,6 @@ export default function CheckoutPage() {
                   <span>Total Amount</span>
                   <span className="text-base">{formatPrice(grandTotal)}</span>
                 </div>
-                {discountAmount > 0 && (
-                  <p className="text-[10px] text-fk-green text-right">You save {formatPrice(discountAmount)}! 🎉</p>
-                )}
               </div>
 
               {/* Desktop Place Order */}
@@ -560,7 +535,7 @@ export default function CheckoutPage() {
                 type="submit" 
                 form="checkout-form"
                 disabled={submitting}
-                className="w-full bg-fk-yellow hover:bg-fk-yellow-dark text-white font-bold py-3.5 rounded-sm text-sm uppercase mt-4 transition-colors shadow-sm"
+                className="w-full bg-amazon-orange hover:bg-amazon-orange/90 text-amazon-dark font-bold py-3 rounded-full text-sm uppercase mt-4 transition-colors shadow-sm"
               >
                 {submitting ? (
                   <><Loader2 className="w-4 h-4 animate-spin mr-2 inline" /> Processing...</>
@@ -570,7 +545,7 @@ export default function CheckoutPage() {
               </button>
               
               <p className="text-[10px] text-center text-gray-400 mt-2 flex items-center justify-center gap-1">
-                <ShieldCheck className="w-3 h-3 text-fk-green" /> Safe and secure payments
+                <ShieldCheck className="w-3 h-3 text-amazon-green" /> Safe and secure payments
               </p>
             </div>
           </div>
@@ -583,16 +558,13 @@ export default function CheckoutPage() {
           <p className="text-[10px] text-gray-500">Total Amount</p>
           <div>
             <p className="font-bold text-base text-gray-900">{formatPrice(grandTotal)}</p>
-            {discountAmount > 0 && (
-              <p className="text-[10px] text-fk-green">Saved {formatPrice(discountAmount)}</p>
-            )}
           </div>
         </div>
         <button 
           type="submit" 
           form="checkout-form"
           disabled={submitting}
-          className="bg-fk-yellow text-white font-bold py-4 px-6 text-sm uppercase flex-shrink-0"
+          className="bg-amazon-orange text-amazon-dark font-bold py-4 px-6 text-sm uppercase flex-shrink-0"
         >
           {submitting ? (
             <><Loader2 className="w-4 h-4 animate-spin mr-1 inline" /> Wait...</>

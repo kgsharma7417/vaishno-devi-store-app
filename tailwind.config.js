@@ -19,6 +19,18 @@ export default {
           "red-light": "#fff0f0",
           orange: "#f57224",
         },
+        // Amazon-inspired palette
+        amazon: {
+          dark: "#131921",
+          navy: "#232f3e",
+          yellow: "#febd69",
+          orange: "#ff9900",
+          accent: "#e47911",
+          bg: "#eaeded",
+          link: "#007185",
+          green: "#067D62",
+          red: "#B12704",
+        },
         // Neutral grays (Flipkart-style)
         gray: {
           50: "#f1f3f6",

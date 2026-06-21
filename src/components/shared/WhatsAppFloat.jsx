@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-const WHATSAPP_NUMBER = "919808861896";
+const WHATSAPP_NUMBER = "919058802144";
 
 export default function WhatsAppFloat() {
   const [visible, setVisible] = useState(false);
@@ -34,7 +34,7 @@ export default function WhatsAppFloat() {
 
       {/* WhatsApp Button */}
       <a
-        href={`https://wa.me/${WHATSAPP_NUMBER}?text=Hi! I need help with Radhe Bangles.`}
+        href={`https://wa.me/${WHATSAPP_NUMBER}?text=Hi! I need help with Maa Vaishno Devi Ladies Corner %26 Gift Center.`}
         target="_blank"
         rel="noopener noreferrer"
         className="w-14 h-14 bg-[#25D366] rounded-full flex items-center justify-center shadow-lg hover:shadow-xl hover:scale-110 active:scale-95 transition-all duration-200 group animate-fade-in"

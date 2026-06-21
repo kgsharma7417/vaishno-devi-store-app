@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-const SITE_NAME = "Radhe Bangles";
+const SITE_NAME = "Maa Vaishno Devi Ladies Corner";
 
 /**
  * useSEO — Dynamically update page title and meta description

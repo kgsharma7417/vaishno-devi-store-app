@@ -115,3 +115,21 @@ export function truncateText(text, maxLength = 80) {
   if (!text || text.length <= maxLength) return text;
   return text.substring(0, maxLength).trim() + "...";
 }
+
+/**
+ * Generate a unique SKU for a product
+ * Format: MVD-{CATCODE}-{RANDOM4}
+ * @param {string} category - Product category
+ * @returns {string} SKU string e.g. "MVD-FJ-7X2K"
+ */
+export function generateSKU(category = "") {
+  const catMap = {
+    "फैंसी ज्वेलरी (Fancy Jewellery)": "FJ",
+    "बर्थ डे का सामान (Birthday Items)": "BD",
+    "गिफ्ट्स (Gifts)": "GF",
+    "लेडीज कार्नर (Cosmetics & Accessories)": "LC",
+  };
+  const catCode = catMap[category] || "XX";
+  const random = Math.random().toString(36).toUpperCase().substring(2, 6);
+  return `MVD-${catCode}-${random}`;
+}

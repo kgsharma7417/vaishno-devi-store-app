@@ -151,90 +151,124 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 font-body pb-16 md:pb-0">
+    <div className="min-h-screen bg-amazon-bg font-body pb-16 md:pb-0">
 
-      {/* SEO: structured data passed via title */}
-      
-      {/* ===== FLIPKART-STYLE HEADER ===== */}
-      <header className="bg-fk-blue sticky top-0 z-50 shadow-header">
-        {/* Top Row: Logo + Search + Icons */}
-        <div className="px-3 pt-2 pb-1 md:px-6 md:py-2">
-          <div className="max-w-7xl mx-auto flex items-center gap-3">
+      {/* ===== AMAZON-STYLE HEADER ===== */}
+      <header className="sticky top-0 z-50 shadow-md">
+        {/* Top Header Row (Amazon Dark) */}
+        <div className="bg-amazon-dark px-3 py-2 md:px-6 md:py-2.5 text-white">
+          <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 md:gap-6">
             
             {/* Logo */}
-            <Link to="/" className="flex-shrink-0 flex flex-col items-center">
-              <span className="text-white font-bold text-lg md:text-xl tracking-tight leading-none">
-                Radhe<span className="italic text-fk-yellow">Bangles</span>
+            <Link to="/" className="flex-shrink-0 flex flex-col hover:outline hover:outline-1 hover:outline-white p-1 rounded-sm">
+              <span className="text-white font-black text-base md:text-xl tracking-tight leading-none">
+                Maa Vaishno Devi
               </span>
-              <span className="hidden md:flex items-center gap-1 text-[10px] text-white/80 italic mt-0.5">
-                Explore <span className="text-fk-yellow">Plus</span>
+              <span className="text-amazon-yellow text-[11px] md:text-xs font-bold tracking-wider leading-none mt-0.5">
+                Ladies Corner
               </span>
             </Link>
 
-            {/* Search Bar */}
-            <div className="flex-1 relative">
+            {/* Delivery Location Indicator (Amazon style - desktop only) */}
+            <div className="hidden lg:flex items-center gap-1.5 hover:outline hover:outline-1 hover:outline-white p-1 rounded-sm text-left">
+              <span className="text-sm">📍</span>
+              <div className="flex flex-col">
+                <span className="text-[11px] text-gray-300 leading-none">Deliver to</span>
+                <span className="text-xs font-bold leading-none mt-0.5">India</span>
+              </div>
+            </div>
+
+            {/* Search Bar (Amazon Style) */}
+            <div className="flex-1 flex items-stretch">
               <input
                 type="text"
-                placeholder="Search for bangles, jewellery & more"
+                placeholder="Search Maa Vaishno Devi Ladies Corner..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') scrollToShop();
                 }}
-                className="w-full pl-10 pr-4 py-2 md:py-2.5 bg-white rounded-sm text-sm text-gray-800 placeholder-gray-400 focus:outline-none"
+                className="w-full px-3 py-2 bg-white rounded-l-md text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amazon-orange"
               />
-              <Search className="w-4 h-4 text-fk-blue absolute left-3 top-1/2 -translate-y-1/2" />
+              <button 
+                onClick={scrollToShop}
+                className="bg-amazon-yellow hover:bg-amazon-orange transition-colors px-5 rounded-r-md flex items-center justify-center text-amazon-dark font-bold"
+              >
+                <Search className="w-5 h-5" />
+              </button>
             </div>
 
-            {/* Right Icons */}
-            <div className="flex items-center gap-1 md:gap-3">
-              <Link 
-                to="/my-orders" 
-                className="hidden md:flex items-center gap-1.5 text-white text-sm font-medium hover:text-white/80 transition-colors px-2"
-              >
-                <User className="w-4 h-4" />
-                <span>My Orders</span>
-              </Link>
+            {/* Right Side Info */}
+            <div className="flex items-center gap-2 md:gap-4">
               
-              <button 
-                onClick={() => setIsCartOpen(true)}
-                className="relative p-2 text-white hover:text-white/80 transition-colors"
-              >
-                <ShoppingCart className="w-5 h-5 md:w-6 md:h-6" />
-                {cartCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 md:w-5 md:h-5 bg-fk-yellow text-white text-[10px] md:text-xs font-bold rounded-full flex items-center justify-center">
-                    {cartCount}
-                  </span>
-                )}
-              </button>
-
-              {/* Account Button — Google Login */}
+              {/* Account / Login (Amazon Style) */}
               <button
                 onClick={() => setIsLoginModalOpen(true)}
-                className="hidden md:flex items-center gap-1.5 text-white text-sm font-medium hover:text-white/80 transition-colors px-2"
+                className="hover:outline hover:outline-1 hover:outline-white p-1 rounded-sm flex flex-col text-left"
               >
-                {currentUser && userProfile?.photo ? (
-                  <img
-                    src={userProfile.photo}
-                    alt={userProfile.name}
-                    className="w-7 h-7 rounded-full border-2 border-white/50"
-                  />
-                ) : (
-                  <User className="w-4 h-4" />
-                )}
-                <span className="max-w-[80px] truncate">
-                  {currentUser ? userProfile?.name?.split(" ")[0] : "Login"}
+                <span className="text-[11px] text-gray-300 leading-none">
+                  Hello, {currentUser ? userProfile?.name?.split(" ")[0] : "Sign in"}
+                </span>
+                <span className="text-xs font-bold leading-none mt-1">
+                  Account & Lists
                 </span>
               </button>
+
+              {/* Returns & Orders */}
+              <Link 
+                to="/my-orders" 
+                className="hover:outline hover:outline-1 hover:outline-white p-1 rounded-sm flex flex-col text-left"
+              >
+                <span className="text-[11px] text-gray-300 leading-none">Returns</span>
+                <span className="text-xs font-bold leading-none mt-1">& Orders</span>
+              </Link>
+              
+              {/* Cart Button */}
+              <button 
+                onClick={() => setIsCartOpen(true)}
+                className="hover:outline hover:outline-1 hover:outline-white p-1.5 rounded-sm flex items-center gap-1.5 relative"
+              >
+                <div className="relative">
+                  <ShoppingCart className="w-6 h-6 text-white" />
+                  {cartCount > 0 && (
+                    <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-amazon-orange text-amazon-dark text-[11px] font-black px-1.5 rounded-full min-w-[18px] text-center">
+                      {cartCount}
+                    </span>
+                  )}
+                </div>
+                <span className="hidden md:inline text-xs font-bold mt-2">Cart</span>
+              </button>
             </div>
+
+          </div>
+        </div>
+
+        {/* Sub Header Row (Amazon Navy) */}
+        <div className="bg-amazon-navy text-white text-xs px-3 py-1.5 md:px-6">
+          <div className="max-w-7xl mx-auto flex items-center gap-4 overflow-x-auto scrollbar-hide">
+            <span className="font-bold flex items-center gap-1 cursor-pointer hover:outline hover:outline-1 hover:outline-white px-1.5 py-0.5 rounded-sm">
+              ☰ All
+            </span>
+            <a href="#shop-section" className="hover:outline hover:outline-1 hover:outline-white px-1.5 py-0.5 rounded-sm whitespace-nowrap">Today's Deals</a>
+            <Link to="/my-orders" className="hover:outline hover:outline-1 hover:outline-white px-1.5 py-0.5 rounded-sm whitespace-nowrap">My Orders</Link>
+            <Link to="/track-order" className="hover:outline hover:outline-1 hover:outline-white px-1.5 py-0.5 rounded-sm whitespace-nowrap">Track Order</Link>
+            <a 
+              href={`https://wa.me/919058802144?text=Hello! I am shopping on Maa Vaishno Devi Ladies Corner and need assistance.`} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="hover:outline hover:outline-1 hover:outline-white px-1.5 py-0.5 rounded-sm text-amazon-yellow font-bold whitespace-nowrap"
+            >
+              📞 Customer Help
+            </a>
           </div>
         </div>
       </header>
 
-      {/* ===== CATEGORY STRIP (Horizontal Scroll) ===== */}
-      <div className="bg-white border-b border-gray-100 shadow-sm">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex overflow-x-auto scrollbar-hide gap-1 px-2 py-3 md:py-4 md:gap-2 md:px-4 md:justify-center">
+      {/* ===== CATEGORY STRIP (Amazon Style) ===== */}
+      <div className="bg-white border-b border-gray-200 shadow-sm py-3">
+        <div className="max-w-7xl mx-auto px-4">
+          <h3 className="text-sm font-bold text-gray-800 mb-2">Shop by Category</h3>
+          <div className="flex overflow-x-auto scrollbar-hide gap-3">
             {CATEGORIES.map((category, index) => {
               const IconComponent = CATEGORY_ICONS[category] || Gem;
               const colorClass = CATEGORY_COLORS[index % CATEGORY_COLORS.length];
@@ -242,12 +276,12 @@ export default function HomePage() {
                 <a
                   key={category}
                   href="#shop-section"
-                  className="flex flex-col items-center gap-1.5 min-w-[70px] md:min-w-[80px] px-1 group"
+                  className="flex flex-col items-center gap-1.5 min-w-[75px] md:min-w-[85px] group bg-gray-50 hover:bg-gray-100 p-2 rounded-md border border-gray-200 transition-colors"
                 >
-                  <div className={`w-12 h-12 md:w-14 md:h-14 rounded-full ${colorClass} flex items-center justify-center transition-transform group-hover:scale-110 group-hover:shadow-md`}>
-                    <IconComponent className="w-5 h-5 md:w-6 md:h-6" />
+                  <div className={`w-10 h-10 rounded-full ${colorClass} flex items-center justify-center transition-transform group-hover:scale-105`}>
+                    <IconComponent className="w-5 h-5" />
                   </div>
-                  <span className="text-[10px] md:text-xs text-gray-700 font-medium text-center leading-tight line-clamp-2">
+                  <span className="text-[10px] md:text-xs text-gray-700 font-semibold text-center leading-tight line-clamp-1">
                     {category}
                   </span>
                 </a>
@@ -428,6 +462,14 @@ export default function HomePage() {
                     {currentUser ? "My Account" : "Sign In"}
                   </button>
                 </li>
+                <li>
+                  <Link
+                    to="/admin/login"
+                    className="hover:text-amazon-yellow text-gray-500 flex items-center gap-1"
+                  >
+                    🔐 Admin Panel
+                  </Link>
+                </li>
               </ul>
             </div>
             <div>
@@ -494,38 +536,36 @@ export default function HomePage() {
             <div>
               <h4 className="text-xs font-bold text-gray-400 uppercase mb-3">Contact Us</h4>
               <p className="text-xs text-gray-300 leading-relaxed">
-                <span className="text-white font-semibold">Mukul Dubey</span><br />
-                Radhe Bangles Store<br />
-                Near Bus Stand, Ramnagar<br />
-                Khandauli, Agra
+                <span className="text-white font-semibold">Pro. Mukul Sharma (Khagesh)</span><br />
+                Maa Vaishno Devi Ladies Corner & Gift Center<br />
+                Shri Mankameshwar Nath Market,<br />
+                Jalesar Road, Tedi Bagiya Tiraha, Agra - 6
               </p>
 
               {/* Phone */}
-              <div className="mt-3 flex items-center gap-2">
-                <span className="text-sm">📞</span>
-                <a href="tel:9808861896" className="text-xs text-fk-yellow font-bold hover:text-white transition-colors">
-                  9808861896
-                </a>
+              <div className="mt-3 flex flex-col gap-1 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">📞</span>
+                  <a href="tel:9058802144" className="text-amazon-yellow font-bold hover:text-white transition-colors">
+                    9058802144
+                  </a>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">📞</span>
+                  <a href="tel:8218442702" className="text-amazon-yellow font-bold hover:text-white transition-colors">
+                    8218442702
+                  </a>
+                </div>
               </div>
 
               {/* WhatsApp */}
               <a 
-                href="https://wa.me/919808861896" 
+                href="https://wa.me/919058802144" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="mt-2 inline-flex items-center gap-1.5 text-xs text-green-400 font-medium hover:text-green-300 transition-colors"
               >
                 <span className="text-sm">💬</span> WhatsApp पर बात करें
-              </a>
-
-              {/* Instagram */}
-              <a 
-                href="https://instagram.com/radhe__bangles" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="mt-2 flex items-center gap-1.5 text-xs text-pink-400 font-medium hover:text-pink-300 transition-colors"
-              >
-                <span className="text-sm">📸</span> @radhe__bangles
               </a>
 
               {/* Timings */}
@@ -538,7 +578,7 @@ export default function HomePage() {
             </div>
           </div>
           <div className="border-t border-gray-700 mt-6 pt-4 text-center text-xs text-gray-500">
-            © {new Date().getFullYear()} Radhe Bangles — Mukul Dubey. All rights reserved.
+            © {new Date().getFullYear()} Maa Vaishno Devi Ladies Corner & Gift Center. All rights reserved.
           </div>
         </div>
       </footer>
@@ -601,6 +641,16 @@ export default function HomePage() {
         isOpen={isLoginModalOpen}
         onClose={() => setIsLoginModalOpen(false)}
       />
+
+      {/* ===== FLOATING ADMIN ACCESS BUTTON ===== */}
+      <Link
+        to="/admin/login"
+        title="Admin Panel Login"
+        className="hidden md:flex fixed bottom-6 right-6 z-40 items-center gap-2 bg-gray-900 hover:bg-gray-700 text-white text-xs font-semibold px-4 py-2.5 rounded-full shadow-lg border border-gray-700 hover:border-gray-500 transition-all group"
+      >
+        <span className="text-base">🔐</span>
+        <span className="group-hover:text-amazon-yellow transition-colors">Admin Panel</span>
+      </Link>
     </div>
   );
 }

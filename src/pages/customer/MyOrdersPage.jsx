@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../../config/firebase";
-import { PackageOpen, ArrowLeft, Loader2, ChevronRight } from "lucide-react";
+import { PackageOpen, ArrowLeft, Loader2, ChevronRight, Truck } from "lucide-react";
 import { formatPrice } from "../../utils/helpers";
 import { useSEO } from "../../hooks/useSEO";
 import { useAuth } from "../../hooks/useAuth";
@@ -12,7 +12,7 @@ export default function MyOrdersPage() {
   const [loading, setLoading] = useState(true);
   const { userProfile } = useAuth();
 
-  useSEO({ title: "My Orders", description: "View all your Radhe Bangles orders. Track status, view items, and manage your purchases." });
+  useSEO({ title: "My Orders", description: "View all your Maa Vaishno Devi Ladies Corner & Gift Center orders. Track status, view items, and manage your purchases." });
 
   useEffect(() => {
     fetchMyOrders();
@@ -83,23 +83,25 @@ export default function MyOrdersPage() {
     const s = status?.toLowerCase() || '';
     if (s === 'pending') return 'bg-amber-100 text-amber-800';
     if (s === 'processing') return 'bg-blue-100 text-blue-800';
+    if (s === 'packed') return 'bg-indigo-100 text-indigo-800';
     if (s === 'shipped') return 'bg-purple-100 text-purple-800';
-    if (s === 'delivered') return 'bg-fk-green-light text-fk-green';
-    if (s === 'cancelled') return 'bg-fk-red-light text-fk-red';
+    if (s === 'out for delivery') return 'bg-orange-100 text-orange-800';
+    if (s === 'delivered') return 'bg-green-50 text-amazon-green';
+    if (s === 'cancelled') return 'bg-red-50 text-amazon-red';
     return 'bg-gray-100 text-gray-800';
   };
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 font-body animate-fade-in">
       {/* Header */}
-      <header className="bg-fk-blue sticky top-0 z-40">
+      <header className="bg-amazon-dark sticky top-0 z-40 shadow-md">
         <div className="max-w-7xl mx-auto px-3 md:px-6">
           <div className="flex items-center h-12 md:h-14 gap-3">
-            <Link to="/" className="text-white p-1">
+            <Link to="/" className="text-white p-1 hover:outline hover:outline-1 hover:outline-white rounded-sm">
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <h1 className="text-white font-bold text-base flex-1">My Orders</h1>
-            <Link to="/track-order" className="text-white text-xs font-bold uppercase hover:text-white/80">
+            <Link to="/track-order" className="text-white text-xs font-bold uppercase hover:text-amazon-yellow">
               Track Order
             </Link>
           </div>
@@ -110,7 +112,7 @@ export default function MyOrdersPage() {
 
         {loading ? (
           <div className="flex justify-center py-20">
-            <Loader2 className="w-8 h-8 animate-spin text-fk-blue" />
+            <Loader2 className="w-8 h-8 animate-spin text-amazon-orange" />
           </div>
         ) : orders.length === 0 ? (
           <div className="bg-white p-8 md:p-12 text-center shadow-card animate-fade-in">
@@ -120,8 +122,8 @@ export default function MyOrdersPage() {
             <h2 className="text-base font-bold text-gray-800 mb-2">No Orders Yet</h2>
             <p className="text-sm text-gray-500 mb-6">You haven't placed any orders on this device.</p>
             <div className="flex justify-center gap-3">
-              <Link to="/" className="bg-fk-blue text-white font-bold py-2.5 px-5 rounded-sm text-xs uppercase">Shop Now</Link>
-              <Link to="/track-order" className="bg-white text-fk-blue font-bold py-2.5 px-5 rounded-sm text-xs uppercase border border-gray-200">Track Order</Link>
+              <Link to="/" className="bg-amazon-orange hover:bg-amazon-orange/90 text-amazon-dark font-bold py-2.5 px-5 rounded-full text-xs uppercase">Shop Now</Link>
+              <Link to="/track-order" className="bg-white text-amazon-link font-bold py-2.5 px-5 rounded-full text-xs uppercase border border-gray-200">Track Order</Link>
             </div>
           </div>
         ) : (
@@ -141,7 +143,7 @@ export default function MyOrdersPage() {
                       
                       {/* Details */}
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-gray-800 font-medium group-hover:text-fk-blue transition-colors line-clamp-2">{item.name}</p>
+                        <p className="text-sm text-gray-800 font-medium group-hover:text-amazon-link transition-colors line-clamp-2">{item.name}</p>
                         <p className="text-[10px] text-gray-500 mt-0.5">Size: {item.size} | Color: {item.color} | Qty: {item.quantity}</p>
                         <p className="font-bold text-sm text-gray-900 mt-1">{formatPrice(item.price)}</p>
                       </div>
@@ -156,25 +158,48 @@ export default function MyOrdersPage() {
                   </div>
                 ))}
 
+                {/* Courier / Shipping Details */}
+                {(order.courierName || order.trackingNumber) && (
+                  <div className="px-3 md:px-4 py-3 border-t border-gray-100 bg-blue-50/30">
+                    <p className="text-xs text-gray-700 font-medium flex items-center gap-1.5">
+                      <Truck className="w-3.5 h-3.5 text-blue-600" />
+                      {order.courierName ? `Shipped via ${order.courierName}` : 'Shipped via Courier'}
+                    </p>
+                    {order.trackingNumber && (
+                      <p className="text-xs text-gray-600 mt-1 ml-5">
+                        Tracking ID / URL: <span className="font-bold font-mono text-gray-800 bg-white px-1.5 py-0.5 rounded border border-gray-200 inline-block mt-0.5">{order.trackingNumber}</span>
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 {/* Order Footer */}
                 <div className="px-3 md:px-4 py-2.5 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
                   <div>
-                    <p className="text-[10px] text-gray-500">
-                      Order #{order.id.slice(-8)} • {order.paymentMethod?.toUpperCase()}
+                    <p className="text-[10px] text-gray-500 mb-0.5">
+                      Order #{order.id.slice(-8)}
                     </p>
                     <p className="text-[10px] text-gray-400">
                       {order.createdAt?.toDate().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) || ''}
                     </p>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="font-bold text-sm text-gray-900">{formatPrice(order.totalAmount)}</span>
-                    <Link 
-                      to="/track-order" 
-                      state={{ orderId: order.id }}
-                      className="text-fk-blue text-xs font-bold flex items-center gap-0.5 hover:underline"
-                    >
-                      TRACK <ChevronRight className="w-3 h-3" />
-                    </Link>
+                  <div className="text-right">
+                    <p className="text-xs font-bold text-gray-800 mb-0.5">
+                      {order.paymentMethod?.toUpperCase() === 'COD' ? 'Cash on Delivery' : 'Online Payment'} 
+                      <span className={`ml-1 px-1.5 py-0.5 rounded text-[9px] ${order.paymentStatus?.includes('Received') || order.paymentStatus?.includes('Paid') ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>
+                        {order.paymentStatus?.includes('Received') || order.paymentStatus?.includes('Paid') ? 'PAID' : 'PENDING'}
+                      </span>
+                    </p>
+                    <div className="flex items-center justify-end gap-3 mt-1">
+                      <span className="font-bold text-sm text-gray-900">{formatPrice(order.totalAmount)}</span>
+                      <Link 
+                        to="/track-order" 
+                        state={{ orderId: order.id }}
+                        className="text-amazon-link text-xs font-bold flex items-center gap-0.5 hover:underline"
+                      >
+                        TRACK <ChevronRight className="w-3 h-3" />
+                      </Link>
+                    </div>
                   </div>
                 </div>
               </div>

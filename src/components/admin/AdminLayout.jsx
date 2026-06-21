@@ -74,8 +74,8 @@ export default function AdminLayout() {
               <Sparkles className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-heading font-bold text-slate-800">
-                RADHE BANGLES
+              <h1 className="text-sm font-heading font-bold text-slate-800 tracking-tight leading-tight">
+                MAA VAISHNO DEVI
               </h1>
               <p className="text-xs text-slate-400">Admin Panel</p>
             </div>

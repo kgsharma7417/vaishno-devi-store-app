@@ -15,7 +15,7 @@ import { useSEO } from "../../hooks/useSEO";
 import { 
   ArrowLeft, Check, Share2,
   Ruler, Truck, ShieldCheck, Video, ShoppingCart, 
-  Heart, ChevronRight, Zap, MapPin, RotateCcw, Star
+  Heart, ChevronRight, Zap, MapPin, RotateCcw, Star, XCircle
 } from "lucide-react";
 
 export default function ProductPage() {
@@ -33,7 +33,7 @@ export default function ProductPage() {
   useSEO({
     title: product ? product.productName : "Product Details",
     description: product
-      ? `Buy ${product.productName} at ₹${product.finalPrice}. ${product.description?.slice(0, 100) || ''} — Radhe Bangles`
+      ? `Buy ${product.productName} at ${formatPrice(product.finalPrice)}. ${product.description?.slice(0, 100) || ''} — Maa Vaishno Devi Ladies Corner & Gift Center`
       : undefined,
     image: product?.imageUrls?.[0],
   });
@@ -100,16 +100,19 @@ export default function ProductPage() {
       addToast({ type: "error", message: "This product is currently out of stock." });
       return false;
     }
-    if (!selectedColor) {
+    
+    if (product.colors && product.colors.length > 0 && !selectedColor) {
       addToast({ type: "warning", message: "Please select a color first." });
       return false;
     }
-    if (!selectedSize) {
+    
+    const availableSizes = Object.keys(product.sizesAndStock || {});
+    if (availableSizes.length > 0 && !selectedSize) {
       addToast({ type: "warning", message: "Please select a size first." });
       return false;
     }
 
-    addToCart(product, selectedSize, selectedColor, 1, clickEvent);
+    addToCart(product, selectedSize || "Standard", selectedColor || "Default", 1, clickEvent);
     if (navigateToCheckout) {
       setTimeout(() => navigate('/checkout'), 300);
     }
@@ -120,7 +123,7 @@ export default function ProductPage() {
     try {
       await navigator.share({
         title: product.productName,
-        text: `Check out ${product.productName} on Radhe Bangles!`,
+        text: `Check out ${product.productName} on Maa Vaishno Devi Ladies Corner & Gift Center!`,
         url: window.location.href,
       });
     } catch (err) {
@@ -152,25 +155,25 @@ export default function ProductPage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-20 md:pb-4 font-body animate-fade-in">
       
-      {/* Top Nav — Flipkart style */}
-      <header className="bg-fk-blue sticky top-0 z-40">
+      {/* Top Nav — Amazon style */}
+      <header className="bg-amazon-dark sticky top-0 z-40 shadow-md">
         <div className="max-w-7xl mx-auto px-3 md:px-6">
           <div className="flex items-center h-12 md:h-14 gap-3">
-            <Link to="/" className="text-white p-1">
+            <Link to="/" className="text-white p-1 hover:outline hover:outline-1 hover:outline-white rounded-sm">
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div className="flex-1 min-w-0">
-              <p className="text-white text-sm font-medium truncate">{product.productName}</p>
-              <p className="text-white/70 text-[10px]">{product.category}</p>
+              <p className="text-white text-sm font-bold truncate">{product.productName}</p>
+              <p className="text-amazon-yellow text-[10px] font-semibold">{product.category}</p>
             </div>
             <div className="flex items-center gap-1">
-              <button onClick={handleShare} className="p-2 text-white/80 hover:text-white">
+              <button onClick={handleShare} className="p-2 text-white/90 hover:text-white hover:outline hover:outline-1 hover:outline-white rounded-sm">
                 <Share2 className="w-5 h-5" />
               </button>
-              <button onClick={() => setIsCartOpen(true)} className="p-2 text-white/80 hover:text-white relative">
+              <button onClick={() => setIsCartOpen(true)} className="p-2 text-white/90 hover:text-white hover:outline hover:outline-1 hover:outline-white rounded-sm relative">
                 <ShoppingCart className="w-5 h-5" />
                 {cartCount > 0 && (
-                  <span className="absolute top-0 right-0 w-4 h-4 bg-fk-yellow text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                  <span className="absolute top-0.5 right-0.5 bg-amazon-orange text-amazon-dark text-[10px] font-black px-1 rounded-full">
                     {cartCount}
                   </span>
                 )}
@@ -196,10 +199,10 @@ export default function ProductPage() {
               {/* Badges */}
               <div className="absolute top-3 left-3 flex flex-col gap-1 z-10">
                 {product.isFeatured && (
-                  <span className="bg-fk-yellow text-white text-[10px] font-bold px-2 py-0.5 rounded-sm">TRENDING</span>
+                  <span className="bg-amazon-orange text-amazon-dark text-[10px] font-bold px-2 py-0.5 rounded-sm">BEST SELLER</span>
                 )}
                 {product.discountPercentage > 0 && (
-                  <span className="bg-fk-green text-white text-[10px] font-bold px-2 py-0.5 rounded-sm">{product.discountPercentage}% OFF</span>
+                  <span className="bg-amazon-red text-white text-[10px] font-bold px-2 py-0.5 rounded-sm">-{product.discountPercentage}% DEAL</span>
                 )}
               </div>
 
@@ -217,7 +220,7 @@ export default function ProductPage() {
                     key={index}
                     onClick={() => setMainImageIndex(index)}
                     className={`w-14 h-14 md:w-16 md:h-16 flex-shrink-0 border-2 overflow-hidden transition-all
-                      ${mainImageIndex === index ? "border-fk-blue" : "border-gray-200 opacity-70 hover:opacity-100"}`}
+                      ${mainImageIndex === index ? "border-amazon-orange" : "border-gray-200 opacity-70 hover:opacity-100"}`}
                   >
                     <img src={url} alt={`View ${index + 1}`} className="w-full h-full object-cover" />
                   </button>
@@ -237,17 +240,24 @@ export default function ProductPage() {
               {product.productName}
             </h1>
 
-            {/* Rating — only show if product has rating data */}
-            {product.rating && (
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1 bg-fk-green text-white text-xs font-bold px-2 py-0.5 rounded-sm">
-                  {product.rating.toFixed(1)} <Star className="w-3 h-3 fill-white" />
-                </span>
-                {product.reviewCount && (
-                  <span className="text-xs text-gray-500">{product.reviewCount} Ratings</span>
-                )}
+            {/* Rating — Amazon Stars */}
+            <div className="flex items-center gap-1.5">
+              <div className="flex items-center">
+                {[...Array(5)].map((_, i) => (
+                  <Star 
+                    key={i} 
+                    className={`w-3.5 h-3.5 ${
+                      i < Math.floor(product.rating || 4.2) 
+                        ? "text-amazon-orange fill-amazon-orange" 
+                        : "text-gray-300 fill-gray-200"
+                    }`} 
+                  />
+                ))}
               </div>
-            )}
+              <span className="text-xs text-amazon-link hover:underline">
+                {product.reviewCount || 15} reviews
+              </span>
+            </div>
 
             {/* Special offer tag */}
             <div className="flex items-center gap-1.5 text-fk-green text-sm font-medium">
@@ -255,20 +265,22 @@ export default function ProductPage() {
               <span>Special Price</span>
             </div>
 
-            {/* Pricing — Flipkart style */}
-            <div className="flex items-baseline gap-3">
-              <span className="text-2xl md:text-3xl font-bold text-gray-900">
-                {formatPrice(product.finalPrice)}
-              </span>
+            {/* Pricing — Amazon style */}
+            <div className="flex flex-col gap-1">
+              <div className="flex items-baseline gap-3">
+                <span className="text-3xl font-bold text-gray-900">
+                  {formatPrice(product.finalPrice)}
+                </span>
+                {product.discountPercentage > 0 && (
+                  <span className="text-sm text-amazon-red font-semibold">
+                    -{product.discountPercentage}% Deal
+                  </span>
+                )}
+              </div>
               {product.discountPercentage > 0 && (
-                <>
-                  <span className="text-base text-gray-400 line-through">
-                    {formatPrice(product.mrp)}
-                  </span>
-                  <span className="text-sm font-medium text-fk-green">
-                    {product.discountPercentage}% off
-                  </span>
-                </>
+                <p className="text-xs text-gray-500">
+                  M.R.P.: <span className="line-through">{formatPrice(product.mrp)}</span> (Save {formatPrice(discountAmt)})
+                </p>
               )}
             </div>
 
@@ -281,97 +293,104 @@ export default function ProductPage() {
             <hr className="border-gray-100" />
 
             {/* Color Selection */}
-            <div>
-              <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider mb-3">
-                Color: <span className="font-normal text-gray-500 capitalize">{selectedColor}</span>
-              </h3>
-              <div className="flex flex-wrap gap-2.5">
-                {product.colors?.map(color => {
-                  const isActive = selectedColor === color;
-                  const swatch = COLOR_SWATCHES[color];
-                  const isGradient = swatch?.includes("gradient");
+            {product.colors && product.colors.length > 0 && (
+              <>
+                <div>
+                  <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider mb-3">
+                    Color: <span className="font-normal text-gray-500 capitalize">{selectedColor}</span>
+                  </h3>
+                  <div className="flex flex-wrap gap-2.5">
+                    {product.colors?.map(color => {
+                      const isActive = selectedColor === color;
+                      const swatch = COLOR_SWATCHES[color];
+                      const isGradient = swatch?.includes("gradient");
 
-                  return (
-                    <button
-                      key={color}
-                      onClick={() => setSelectedColor(color)}
-                      className={`relative w-9 h-9 rounded-full border-2 transition-all duration-200
-                        ${isActive ? "border-fk-blue ring-2 ring-offset-1 ring-fk-blue/30 scale-110" : "border-gray-200 hover:scale-110"}`}
-                      style={{
-                        background: isGradient ? swatch : swatch,
-                        backgroundColor: isGradient ? undefined : swatch,
-                      }}
-                    >
-                      {isActive && (
-                        <span className="absolute inset-0 flex items-center justify-center mix-blend-difference">
-                          <Check className="w-4 h-4 text-white" />
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <hr className="border-gray-100" />
+                      return (
+                        <button
+                          key={color}
+                          onClick={() => setSelectedColor(color)}
+                          className={`relative w-9 h-9 rounded-full border-2 transition-all duration-200
+                            ${isActive ? "border-amazon-orange ring-2 ring-offset-1 ring-amazon-orange/30 scale-110" : "border-gray-200 hover:scale-110"}`}
+                          style={{
+                            background: isGradient ? swatch : swatch,
+                            backgroundColor: isGradient ? undefined : swatch,
+                          }}
+                        >
+                          {isActive && (
+                            <span className="absolute inset-0 flex items-center justify-center mix-blend-difference">
+                              <Check className="w-4 h-4 text-white" />
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <hr className="border-gray-100" />
+              </>
+            )}
 
             {/* Size Selection */}
-            <div>
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider">Select Size</h3>
-                {!(availableSizes.length === 1 && (availableSizes[0] === "Free Size" || availableSizes[0] === "Standard Size")) && (
-                  <button 
-                    onClick={() => setIsSizeGuideOpen(true)}
-                    className="text-xs font-bold text-fk-blue flex items-center gap-1 hover:underline"
-                  >
-                    <Ruler className="w-3 h-3" /> SIZE GUIDE
-                  </button>
-                )}
-              </div>
-              
-              {availableSizes.length === 1 && (availableSizes[0] === "Free Size" || availableSizes[0] === "Standard Size") ? (
-                <div className="inline-flex items-center gap-1.5 bg-sage-50 text-sage-700 text-sm font-semibold px-4 py-2 rounded border border-sage-100">
-                  ✨ Standard Free Size (No sizing required)
+            {availableSizes.length > 0 && (
+              <>
+                <div>
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider">Select Size</h3>
+                    {!(availableSizes.length === 1 && (availableSizes[0] === "Free Size" || availableSizes[0] === "Standard Size")) && (
+                      <button 
+                        onClick={() => setIsSizeGuideOpen(true)}
+                        className="text-xs font-bold text-amazon-link flex items-center gap-1 hover:underline"
+                      >
+                        <Ruler className="w-3 h-3" /> SIZE GUIDE
+                      </button>
+                    )}
+                  </div>
+                  
+                  {availableSizes.length === 1 && (availableSizes[0] === "Free Size" || availableSizes[0] === "Standard Size") ? (
+                    <div className="inline-flex items-center gap-1.5 bg-sage-50 text-sage-700 text-sm font-semibold px-4 py-2 rounded border border-sage-100">
+                      ✨ Standard Free Size (No sizing required)
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {availableSizes.map(size => {
+                        const stock = product.sizesAndStock[size];
+                        const isOutOfStock = stock === 0;
+                        const isLowStock = stock > 0 && stock <= 2;
+                        const isActive = selectedSize === size;
+
+                        return (
+                          <div key={size} className="relative">
+                            <button
+                              disabled={isOutOfStock}
+                              onClick={() => setSelectedSize(size)}
+                              className={`w-12 h-10 rounded-sm text-sm font-semibold border-2 transition-all
+                                ${isActive 
+                                  ? "bg-amazon-orange text-amazon-dark border-amazon-orange" 
+                                  : isOutOfStock 
+                                    ? "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed line-through" 
+                                    : "bg-white text-gray-700 border-gray-200 hover:border-amazon-orange"}`}
+                            >
+                              {size}
+                            </button>
+                            {isLowStock && !isOutOfStock && (
+                              <span className="absolute -top-1 -right-1 w-2 h-2 bg-fk-red rounded-full" />
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {selectedSize && product.sizesAndStock[selectedSize] <= 2 && product.sizesAndStock[selectedSize] > 0 && (
+                    <p className="text-xs text-fk-red mt-2 font-medium flex items-center gap-1">
+                      <Zap className="w-3 h-3" /> Hurry, only {product.sizesAndStock[selectedSize]} left!
+                    </p>
+                  )}
                 </div>
-              ) : (
-                <div className="flex flex-wrap gap-2">
-                  {availableSizes.map(size => {
-                    const stock = product.sizesAndStock[size];
-                    const isOutOfStock = stock === 0;
-                    const isLowStock = stock > 0 && stock <= 2;
-                    const isActive = selectedSize === size;
 
-                    return (
-                      <div key={size} className="relative">
-                        <button
-                          disabled={isOutOfStock}
-                          onClick={() => setSelectedSize(size)}
-                          className={`w-12 h-10 rounded-sm text-sm font-semibold border-2 transition-all
-                            ${isActive 
-                              ? "bg-fk-blue text-white border-fk-blue" 
-                              : isOutOfStock 
-                                ? "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed line-through" 
-                                : "bg-white text-gray-700 border-gray-200 hover:border-fk-blue"}`}
-                        >
-                          {size}
-                        </button>
-                        {isLowStock && !isOutOfStock && (
-                          <span className="absolute -top-1 -right-1 w-2 h-2 bg-fk-red rounded-full" />
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              {selectedSize && product.sizesAndStock[selectedSize] <= 2 && product.sizesAndStock[selectedSize] > 0 && (
-                <p className="text-xs text-fk-red mt-2 font-medium flex items-center gap-1">
-                  <Zap className="w-3 h-3" /> Hurry, only {product.sizesAndStock[selectedSize]} left!
-                </p>
-              )}
-            </div>
-
-            <hr className="border-gray-100" />
+                <hr className="border-gray-100" />
+              </>
+            )}
 
             {/* Delivery & Services — Flipkart style */}
             <div className="space-y-3">
@@ -379,13 +398,15 @@ export default function ProductPage() {
               
               <div className="space-y-2">
                 {[
-                  { icon: Truck, text: "Free Delivery on orders above ₹299" },
-                  { icon: RotateCcw, text: "Easy 7-day Returns & Exchange" },
-                  { icon: ShieldCheck, text: "100% Genuine & Quality Assured" },
+                  { icon: Truck, text: "Free Delivery on orders above ₹299", color: "text-gray-500" },
+                  product.isReturnable !== false 
+                    ? { icon: RotateCcw, text: "Easy 7-day Returns & Exchange", color: "text-gray-500" }
+                    : { icon: XCircle, text: "Non-returnable item", color: "text-fk-red" },
+                  { icon: ShieldCheck, text: "100% Genuine & Quality Assured", color: "text-gray-500" },
                 ].map((item, i) => (
                   <div key={i} className="flex items-start gap-2.5">
-                    <item.icon className="w-4 h-4 text-gray-500 flex-shrink-0 mt-0.5" />
-                    <p className="text-sm text-gray-600">{item.text}</p>
+                    <item.icon className={`w-4 h-4 ${item.color} flex-shrink-0 mt-0.5`} />
+                    <p className={`text-sm ${item.color === 'text-fk-red' ? 'text-fk-red font-medium' : 'text-gray-600'}`}>{item.text}</p>
                   </div>
                 ))}
               </div>
@@ -429,7 +450,7 @@ export default function ProductPage() {
                 <Link 
                   key={item.id} 
                   to={`/product/${item.id}`}
-                  className="flex gap-3 items-center p-3 border border-gray-100 hover:border-fk-blue/40 rounded transition-all"
+                  className="flex gap-3 items-center p-3 border border-gray-100 hover:border-amazon-orange/45 rounded transition-all"
                 >
                   <div className="w-14 h-16 bg-gray-50 overflow-hidden flex-shrink-0">
                     <img src={item.imageUrls?.[0]} alt={item.productName} className="w-full h-full object-cover" />
@@ -437,7 +458,7 @@ export default function ProductPage() {
                   <div className="min-w-0">
                     <p className="text-xs font-semibold text-gray-800 line-clamp-1">{item.productName}</p>
                     <p className="text-xs font-bold text-gray-900 mt-1">{formatPrice(item.finalPrice)}</p>
-                    <span className="text-[9px] text-fk-blue font-bold uppercase mt-0.5 inline-block">View Match</span>
+                    <span className="text-[9px] text-amazon-link font-bold uppercase mt-0.5 inline-block">View Match</span>
                   </div>
                 </Link>
               ))}
@@ -457,7 +478,7 @@ export default function ProductPage() {
           onClick={(e) => handleAddToCart(false, e)}
           disabled={product.isOutOfStock}
           className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-bold uppercase border-r border-gray-200 transition-colors
-            ${product.isOutOfStock ? 'bg-gray-100 text-gray-400' : 'bg-white text-fk-blue hover:bg-fk-blue-light'}`}
+            ${product.isOutOfStock ? 'bg-gray-100 text-gray-400' : 'bg-white text-amazon-dark hover:bg-gray-50'}`}
         >
           <ShoppingCart className="w-4 h-4" />
           {product.isOutOfStock ? "Out of Stock" : "Add to Cart"}
@@ -465,8 +486,8 @@ export default function ProductPage() {
         <button 
           onClick={(e) => handleAddToCart(true, e)}
           disabled={product.isOutOfStock}
-          className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-bold uppercase transition-colors animate-sparkle-shine
-            ${product.isOutOfStock ? 'bg-gray-300 text-gray-500' : 'bg-fk-yellow text-white hover:bg-fk-yellow-dark'}`}
+          className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-bold uppercase transition-colors
+            ${product.isOutOfStock ? 'bg-gray-300 text-gray-500' : 'bg-amazon-orange text-amazon-dark hover:bg-amazon-orange/95'}`}
         >
           <Zap className="w-4 h-4" />
           Buy Now
@@ -479,8 +500,8 @@ export default function ProductPage() {
           <button 
             onClick={(e) => handleAddToCart(false, e)}
             disabled={product.isOutOfStock}
-            className={`flex-1 flex items-center justify-center gap-2 py-4 text-base font-bold uppercase rounded-sm transition-colors
-              ${product.isOutOfStock ? 'bg-gray-300 text-gray-500' : 'bg-fk-yellow text-white hover:bg-fk-yellow-dark'}`}
+            className={`flex-1 flex items-center justify-center gap-2 py-4 text-base font-bold uppercase rounded-full transition-colors
+              ${product.isOutOfStock ? 'bg-gray-300 text-gray-500' : 'bg-amazon-yellow text-amazon-dark hover:bg-amazon-yellow/90'}`}
           >
             <ShoppingCart className="w-5 h-5" />
             {product.isOutOfStock ? "Out of Stock" : "Add to Cart"}
@@ -488,8 +509,8 @@ export default function ProductPage() {
           <button 
             onClick={(e) => handleAddToCart(true, e)}
             disabled={product.isOutOfStock}
-            className={`flex-1 flex items-center justify-center gap-2 py-4 text-base font-bold uppercase rounded-sm transition-colors animate-sparkle-shine
-              ${product.isOutOfStock ? 'bg-gray-200 text-gray-400' : 'bg-fk-orange text-white hover:opacity-90'}`}
+            className={`flex-1 flex items-center justify-center gap-2 py-4 text-base font-bold uppercase rounded-full transition-colors
+              ${product.isOutOfStock ? 'bg-gray-200 text-gray-400' : 'bg-amazon-orange text-amazon-dark hover:bg-amazon-orange/90'}`}
           >
             <Zap className="w-5 h-5" />
             Buy Now
