@@ -276,11 +276,10 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* ===== CATEGORY STRIP (Amazon Style) ===== */}
-      <div className="bg-white border-b border-gray-200 shadow-sm py-3">
-        <div className="max-w-7xl mx-auto px-4">
-          <h3 className="text-sm font-bold text-gray-800 mb-2">Shop by Category</h3>
-          <div className="flex overflow-x-auto scrollbar-hide gap-3">
+      {/* ===== CATEGORY STRIP (Clean & Compact) ===== */}
+      <div className="bg-white border-b border-gray-200 shadow-[0_2px_4px_rgba(0,0,0,0.02)] py-2 sm:py-3 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4">
+          <div className="flex overflow-x-auto scrollbar-hide gap-3 sm:gap-6 snap-x pb-1">
             {CATEGORIES.map((category, index) => {
               const IconComponent = CATEGORY_ICONS[category] || Gem;
               const colorClass = CATEGORY_COLORS[index % CATEGORY_COLORS.length];
@@ -288,12 +287,12 @@ export default function HomePage() {
                 <a
                   key={category}
                   href="#shop-section"
-                  className="flex flex-col items-center gap-1.5 min-w-[75px] md:min-w-[85px] group bg-gray-50 hover:bg-white hover:shadow-md hover:-translate-y-1 p-2 rounded-md border border-gray-200 hover:border-fk-blue/30 transition-all duration-300"
+                  className="flex flex-col items-center gap-1 min-w-[60px] sm:min-w-[72px] group snap-start transition-transform active:scale-95"
                 >
-                  <div className={`w-10 h-10 rounded-full ${colorClass} flex items-center justify-center transition-transform group-hover:scale-105`}>
-                    <IconComponent className="w-5 h-5" />
+                  <div className={`w-11 h-11 sm:w-14 sm:h-14 rounded-full ${colorClass} flex items-center justify-center shadow-sm border border-black/5 group-hover:shadow-md transition-all duration-300 group-hover:-translate-y-0.5`}>
+                    <IconComponent className="w-5 h-5 sm:w-6 sm:h-6 opacity-80 group-hover:opacity-100" />
                   </div>
-                  <span className="text-[10px] md:text-xs text-gray-700 font-semibold text-center leading-tight line-clamp-1">
+                  <span className="text-[10px] sm:text-[11px] text-gray-700 font-medium text-center leading-[1.1] line-clamp-2 px-0.5">
                     {category}
                   </span>
                 </a>
