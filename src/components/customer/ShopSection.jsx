@@ -143,7 +143,7 @@ export default function ShopSection({ externalSearch = "" }) {
               <div className="relative">
                 <button 
                   onClick={() => setShowSortDropdown(!showSortDropdown)}
-                  className="flex items-center gap-1 px-2.5 py-1.5 md:px-3 md:py-2 bg-white border border-gray-200 rounded-sm text-xs md:text-sm text-gray-700 hover:bg-gray-50"
+                  className="flex items-center gap-1 px-2.5 py-1.5 md:px-3 md:py-2 bg-white border border-gray-200 rounded-sm text-xs md:text-sm text-gray-700 hover:bg-gray-50 active:scale-95 transition-all duration-200"
                 >
                   <span className="hidden md:inline">Sort by:</span>
                   <span className="font-medium text-gray-900">{sortOptions.find(o => o.value === sortBy)?.label.split(' ')[0]}</span>
@@ -158,7 +158,7 @@ export default function ShopSection({ externalSearch = "" }) {
                         <button
                           key={opt.value}
                           onClick={() => { setSortBy(opt.value); setShowSortDropdown(false); }}
-                          className={`w-full text-left px-3 py-2 text-sm hover:bg-yellow-50 transition-colors ${
+                          className={`w-full text-left px-3 py-2 text-sm hover:bg-yellow-50 hover:pl-4 transition-all duration-200 ${
                             sortBy === opt.value ? 'text-amazon-orange font-bold bg-yellow-50' : 'text-gray-700'
                           }`}
                         >
@@ -173,7 +173,7 @@ export default function ShopSection({ externalSearch = "" }) {
               {/* Mobile Filter Toggle */}
               <button 
                 onClick={() => setIsMobileFilterOpen(true)}
-                className="lg:hidden flex items-center gap-1 px-2.5 py-1.5 bg-white border border-gray-200 rounded-sm text-xs text-gray-700 hover:bg-gray-50 relative"
+                className="lg:hidden flex items-center gap-1 px-2.5 py-1.5 bg-white border border-gray-200 rounded-sm text-xs text-gray-700 hover:bg-gray-50 active:scale-95 transition-all duration-200 relative"
               >
                 <SlidersHorizontal className="w-3.5 h-3.5" />
                 <span>Filters</span>

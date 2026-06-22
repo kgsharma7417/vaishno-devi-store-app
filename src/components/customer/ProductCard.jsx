@@ -26,7 +26,7 @@ export default function ProductCard({ product }) {
   return (
     <>
       <div
-        className={`bg-white h-full flex flex-col overflow-hidden relative transition-all duration-200 hover:shadow-card-hover border border-transparent hover:border-gray-200 group ${
+        className={`bg-white h-full flex flex-col overflow-hidden relative transition-all duration-300 hover:-translate-y-1 hover:shadow-lg border border-transparent hover:border-gray-200 group ${
           product.isOutOfStock ? "opacity-60" : ""
         }`}
       >

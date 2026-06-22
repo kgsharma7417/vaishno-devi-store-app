@@ -204,7 +204,7 @@ export default function HomePage() {
               />
               <button 
                 onClick={scrollToShop}
-                className="bg-amazon-yellow hover:bg-amazon-orange transition-colors px-4 md:px-5 rounded-r-md flex items-center justify-center text-amazon-dark font-bold"
+                className="bg-amazon-yellow hover:bg-amazon-orange active:scale-95 transition-all px-4 md:px-5 rounded-r-md flex items-center justify-center text-amazon-dark font-bold"
               >
                 <Search className="w-5 h-5" />
               </button>
@@ -288,7 +288,7 @@ export default function HomePage() {
                 <a
                   key={category}
                   href="#shop-section"
-                  className="flex flex-col items-center gap-1.5 min-w-[75px] md:min-w-[85px] group bg-gray-50 hover:bg-gray-100 p-2 rounded-md border border-gray-200 transition-colors"
+                  className="flex flex-col items-center gap-1.5 min-w-[75px] md:min-w-[85px] group bg-gray-50 hover:bg-white hover:shadow-md hover:-translate-y-1 p-2 rounded-md border border-gray-200 hover:border-fk-blue/30 transition-all duration-300"
                 >
                   <div className={`w-10 h-10 rounded-full ${colorClass} flex items-center justify-center transition-transform group-hover:scale-105`}>
                     <IconComponent className="w-5 h-5" />
@@ -428,7 +428,7 @@ export default function HomePage() {
                 <Link
                   key={item.id}
                   to={`/product/${item.id}`}
-                  className="flex-shrink-0 w-28 md:w-32 group"
+                  className="flex-shrink-0 w-28 md:w-32 group hover:-translate-y-1 transition-transform duration-300"
                 >
                   <div className="aspect-[3/4] bg-gray-50 overflow-hidden rounded-sm mb-1.5">
                     <img
@@ -658,7 +658,7 @@ export default function HomePage() {
       <Link
         to="/admin/login"
         title="Admin Panel Login"
-        className="hidden md:flex fixed bottom-6 right-6 z-40 items-center gap-2 bg-gray-900 hover:bg-gray-700 text-white text-xs font-semibold px-4 py-2.5 rounded-full shadow-lg border border-gray-700 hover:border-gray-500 transition-all group"
+        className="hidden md:flex fixed bottom-6 right-6 z-40 items-center gap-2 bg-gray-900 hover:bg-gray-700 hover:-translate-y-1 hover:shadow-glow text-white text-xs font-semibold px-4 py-2.5 rounded-full shadow-lg border border-gray-700 hover:border-gray-500 transition-all duration-300 group"
       >
         <span className="text-base">🔐</span>
         <span className="group-hover:text-amazon-yellow transition-colors">Admin Panel</span>
