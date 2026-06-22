@@ -147,9 +147,9 @@ export default function OrdersPage() {
           <div key={order.id} className={`bg-white rounded-2xl overflow-hidden border-2 transition-all shadow-sm ${order.paymentMethod === 'cod' && order.orderStatus === 'Pending' ? 'border-amber-300 shadow-[0_0_15px_rgba(251,191,36,0.15)]' : 'border-slate-100'}`}>
             
             {/* Header */}
-            <div className={`p-4 sm:p-5 border-b flex flex-wrap justify-between items-center gap-4 ${order.paymentMethod === 'cod' && order.orderStatus === 'Pending' ? 'bg-amber-50 border-amber-200' : 'bg-slate-50 border-slate-100'}`}>
+            <div className={`p-4 sm:p-5 border-b flex flex-col md:flex-row md:justify-between md:items-center gap-4 sm:gap-6 ${order.paymentMethod === 'cod' && order.orderStatus === 'Pending' ? 'bg-amber-50 border-amber-200' : 'bg-slate-50 border-slate-100'}`}>
               <div>
-                <div className="flex items-center gap-2 mb-1">
+                <div className="flex items-center gap-2 mb-1.5">
                   <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Order ID</p>
                   {order.paymentMethod === 'cod' && order.orderStatus === 'Pending' && (
                     <span className="text-[10px] font-bold bg-amber-500 text-white px-2 py-0.5 rounded-full uppercase tracking-widest animate-pulse">
@@ -157,24 +157,24 @@ export default function OrdersPage() {
                     </span>
                   )}
                 </div>
-                <div className="flex items-center gap-2">
-                  <p className="font-mono font-bold text-slate-800 text-lg">{order.id}</p>
-                  <button onClick={() => {navigator.clipboard.writeText(order.id); addToast({type:'success', message:'Order ID copied'})}} className="p-1.5 bg-white border border-slate-200 rounded-md text-slate-400 hover:text-violet-600 hover:border-violet-200 transition-colors" title="Copy ID">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="font-mono font-bold text-slate-800 text-base sm:text-lg break-all">{order.id}</p>
+                  <button onClick={() => {navigator.clipboard.writeText(order.id); addToast({type:'success', message:'Order ID copied'})}} className="p-1.5 bg-white border border-slate-200 rounded-md text-slate-400 hover:text-violet-600 hover:border-violet-200 transition-colors flex-shrink-0" title="Copy ID">
                     <Copy className="w-3.5 h-3.5" />
                   </button>
                 </div>
-                <p className="text-xs text-slate-500 mt-1 flex items-center gap-1.5 font-medium">
+                <p className="text-xs text-slate-500 mt-2 flex items-center gap-1.5 font-medium">
                   <Clock className="w-3.5 h-3.5" /> {order.createdAt?.toDate().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) || 'Unknown'}
                 </p>
               </div>
               
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="relative group">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto mt-2 md:mt-0 pt-4 md:pt-0 border-t border-slate-200/60 md:border-t-0">
+                <div className="relative w-full sm:w-auto">
                   <select 
                     disabled={updatingId === order.id}
                     value={order.paymentStatus}
                     onChange={(e) => handleStatusChange(order.id, "paymentStatus", e.target.value)}
-                    className={`text-xs font-bold border rounded-xl px-3 py-2 cursor-pointer outline-none shadow-sm appearance-none pr-8 transition-all hover:brightness-95 ${getPaymentColor(order.paymentStatus)}`}
+                    className={`w-full text-xs sm:text-sm font-bold border rounded-xl px-4 py-3 sm:py-2 cursor-pointer outline-none shadow-sm appearance-none pr-8 transition-all hover:brightness-95 ${getPaymentColor(order.paymentStatus)}`}
                   >
                     <option value="Pending (COD)">Payment: Pending (COD)</option>
                     <option value="Pending (UPI)">Payment: Pending (UPI)</option>
@@ -184,12 +184,12 @@ export default function OrdersPage() {
                   </select>
                 </div>
 
-                <div className="relative group">
+                <div className="relative w-full sm:w-auto">
                   <select 
                     disabled={updatingId === order.id}
                     value={order.orderStatus}
                     onChange={(e) => handleStatusChange(order.id, "orderStatus", e.target.value)}
-                    className={`text-sm font-bold border rounded-xl px-4 py-2 cursor-pointer outline-none shadow-sm appearance-none pr-8 transition-all hover:brightness-95 ${getStatusColor(order.orderStatus)}`}
+                    className={`w-full text-xs sm:text-sm font-bold border rounded-xl px-4 py-3 sm:py-2 cursor-pointer outline-none shadow-sm appearance-none pr-8 transition-all hover:brightness-95 ${getStatusColor(order.orderStatus)}`}
                   >
                     <option value="Pending">🕒 Pending</option>
                     <option value="Processing">⚙️ Processing</option>
@@ -201,7 +201,7 @@ export default function OrdersPage() {
                   </select>
                 </div>
                 
-                {updatingId === order.id && <Loader2 className="w-5 h-5 animate-spin text-violet-600" />}
+                {updatingId === order.id && <Loader2 className="w-5 h-5 animate-spin text-violet-600 self-center" />}
               </div>
             </div>
 
@@ -288,19 +288,19 @@ export default function OrdersPage() {
                       ))}
                     </div>
                     
-                    <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-between items-end">
+                    <div className="p-4 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 sm:gap-0">
                       <div>
                         <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium mb-1">
                           {order.paymentMethod === 'cod' ? <ShieldCheck className="w-4 h-4 text-amber-600"/> : <CreditCard className="w-4 h-4 text-blue-600"/>}
                           Method: <span className="uppercase font-bold text-slate-700">{order.paymentMethod}</span>
                         </div>
                         {order.transactionId && (
-                          <p className="text-xs text-slate-500 font-medium flex items-center gap-2">
-                            Txn ID: <span className="font-mono text-violet-700 font-bold bg-violet-100 px-2 py-0.5 rounded border border-violet-200">{order.transactionId}</span>
+                          <p className="text-xs text-slate-500 font-medium flex flex-wrap items-center gap-2">
+                            Txn ID: <span className="font-mono text-violet-700 font-bold bg-violet-100 px-2 py-0.5 rounded border border-violet-200 break-all">{order.transactionId}</span>
                           </p>
                         )}
                       </div>
-                      <div className="text-right">
+                      <div className="text-left sm:text-right w-full sm:w-auto pt-3 sm:pt-0 border-t sm:border-none border-slate-200/60 mt-1 sm:mt-0">
                         <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-0.5">Grand Total</p>
                         <p className="text-2xl font-black text-violet-600">{formatPrice(order.totalAmount)}</p>
                       </div>

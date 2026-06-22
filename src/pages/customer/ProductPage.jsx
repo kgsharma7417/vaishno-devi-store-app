@@ -13,7 +13,7 @@ import { formatPrice } from "../../utils/helpers";
 import { COLOR_SWATCHES } from "../../utils/constants";
 import { useSEO } from "../../hooks/useSEO";
 import { 
-  ArrowLeft, Check, Share2,
+  ArrowLeft, Check, Share2, Sparkles,
   Ruler, Truck, ShieldCheck, Video, ShoppingCart, 
   Heart, ChevronRight, Zap, MapPin, RotateCcw, Star, XCircle
 } from "lucide-react";
