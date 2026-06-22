@@ -6,7 +6,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { useSEO } from "../../hooks/useSEO";
 import { formatPrice } from "../../utils/helpers";
 import { db } from "../../config/firebase";
-import { collection, addDoc, serverTimestamp, doc, getDoc, writeBatch } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, doc, getDoc, writeBatch, setDoc } from "firebase/firestore";
 import { ArrowLeft, MapPin, CreditCard, ShieldCheck, PackageCheck, Loader2, ChevronRight, Tag, Info } from "lucide-react";
 import { QRCodeSVG } from 'qrcode.react';
 import { launchConfetti } from "../../utils/confetti";
@@ -202,46 +202,53 @@ export default function CheckoutPage() {
         createdAt: serverTimestamp()
       };
 
-      // Create a batch to update stock and save order
-      const batch = writeBatch(db);
+      // Save order first to guarantee order placement
+      const orderRef = doc(collection(db, "orders"));
+      await setDoc(orderRef, orderData);
 
-      // Update inventory for each item
-      for (const item of cartItems) {
-        const productRef = doc(db, "products", item.id);
-        const pSnap = await getDoc(productRef);
-        
-        if (pSnap.exists()) {
-          const pData = pSnap.data();
-          let updates = {};
+      // Try to update stock safely (best-effort)
+      try {
+        const batch = writeBatch(db);
+        let hasUpdates = false;
+
+        // Update inventory for each item
+        for (const item of cartItems) {
+          const productRef = doc(db, "products", item.id);
+          const pSnap = await getDoc(productRef);
           
-          if (pData.sizesAndStock && item.size && pData.sizesAndStock[item.size] !== undefined) {
-            const currentSizeStock = pData.sizesAndStock[item.size];
-            updates[`sizesAndStock.${item.size}`] = Math.max(0, currentSizeStock - item.quantity);
-            // Also deduct from total stock if it exists
-            if (pData.stockQuantity !== undefined) {
+          if (pSnap.exists()) {
+            const pData = pSnap.data();
+            let updates = {};
+            
+            if (pData.sizesAndStock && item.size && pData.sizesAndStock[item.size] !== undefined) {
+              const currentSizeStock = pData.sizesAndStock[item.size];
+              updates[`sizesAndStock.${item.size}`] = Math.max(0, currentSizeStock - item.quantity);
+              // Also deduct from total stock if it exists
+              if (pData.stockQuantity !== undefined) {
+                updates.stockQuantity = Math.max(0, pData.stockQuantity - item.quantity);
+              }
+            } else if (pData.stockQuantity !== undefined) {
               updates.stockQuantity = Math.max(0, pData.stockQuantity - item.quantity);
             }
-          } else if (pData.stockQuantity !== undefined) {
-            updates.stockQuantity = Math.max(0, pData.stockQuantity - item.quantity);
-          }
 
-          // If stock falls to 0, mark out of stock
-          if (updates.stockQuantity === 0 || (pData.stockQuantity !== undefined && pData.stockQuantity - item.quantity <= 0)) {
-            updates.isOutOfStock = true;
-          }
-          
-          if (Object.keys(updates).length > 0) {
-            batch.update(productRef, updates);
+            // If stock falls to 0, mark out of stock
+            if (updates.stockQuantity === 0 || (pData.stockQuantity !== undefined && pData.stockQuantity - item.quantity <= 0)) {
+              updates.isOutOfStock = true;
+            }
+            
+            if (Object.keys(updates).length > 0) {
+              batch.update(productRef, updates);
+              hasUpdates = true;
+            }
           }
         }
+
+        if (hasUpdates) {
+          await batch.commit();
+        }
+      } catch (stockErr) {
+        console.warn("Non-critical: Failed to update stock automatically:", stockErr);
       }
-
-      // Add order document to batch
-      const orderRef = doc(collection(db, "orders"));
-      batch.set(orderRef, orderData);
-
-      // Commit all changes
-      await batch.commit();
 
       setPlacedOrderId(orderRef.id);
       setOrderPlaced(true);

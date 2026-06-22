@@ -28,16 +28,19 @@ service cloud.firestore {
     match /products/{productId} {
       // Anyone can view products
       allow read: if true;
-      // Only admins can add, update, or delete products
-      allow write: if isAdmin();
+      // Admins can do anything. Normal users can ONLY update stock fields during checkout.
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || (
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stockQuantity', 'sizesAndStock', 'isOutOfStock'])
+      );
     }
 
     // Orders Collection
     match /orders/{orderId} {
-      // Admins can read all orders
-      // Customers can read their own orders. 
-      // Note: Because guest users track via phone number, we have to allow read for guests if they know the phone number/order ID.
-      allow read: if true; 
+      // Guest users need to read specific orders they placed (via localStorage IDs)
+      allow get: if true;
+      // Logged in users can list their own orders. Admins can list all.
+      allow list: if isAdmin() || (request.auth != null && request.auth.token.email != null && resource.data.customerDetails.email == request.auth.token.email);
       
       // Anyone can create a new order (checkout)
       allow create: if true;
