@@ -77,19 +77,19 @@ export default function QuickViewModal({ product, onClose }) {
               />
             </div>
             {product.discountPercentage > 0 && (
-              <span className="absolute top-2 left-2 bg-fk-green text-white text-[10px] font-bold px-1.5 py-0.5 rounded-sm">
+              <span className="absolute top-3 left-3 bg-rose-500 text-white text-[10px] font-black tracking-widest uppercase px-2 py-1 rounded-md shadow-sm">
                 {product.discountPercentage}% OFF
               </span>
             )}
             {/* Thumbnails */}
             {product.imageUrls?.length > 1 && (
-              <div className="flex gap-1 p-2 overflow-x-auto">
+              <div className="flex gap-2 p-3 overflow-x-auto scrollbar-hide">
                 {product.imageUrls.map((url, i) => (
                   <button
                     key={i}
                     onClick={() => setMainImg(i)}
-                    className={`w-10 h-10 flex-shrink-0 border-2 overflow-hidden transition-all ${
-                      mainImg === i ? "border-fk-blue" : "border-gray-200 opacity-60"
+                    className={`w-12 h-14 flex-shrink-0 border-2 overflow-hidden transition-all rounded-lg ${
+                      mainImg === i ? "border-violet-600 shadow-md" : "border-transparent opacity-60 hover:opacity-100 hover:border-slate-300"
                     }`}
                   >
                     <img src={url} alt="" className="w-full h-full object-cover" />
@@ -100,25 +100,25 @@ export default function QuickViewModal({ product, onClose }) {
           </div>
 
           {/* Info */}
-          <div className="flex-1 p-4 space-y-3">
+          <div className="flex-1 p-5 md:p-6 space-y-4">
             <div>
-              <p className="text-[10px] text-gray-400 uppercase font-bold">{product.category}</p>
-              <h3 className="text-sm font-semibold text-gray-800 leading-snug mt-0.5">
+              <p className="text-[11px] text-slate-400 uppercase font-black tracking-widest mb-1">{product.category}</p>
+              <h3 className="text-lg font-black text-slate-900 leading-snug">
                 {product.productName}
               </h3>
             </div>
 
             {/* Price */}
-            <div className="flex items-baseline gap-2">
-              <span className="text-xl font-bold text-gray-900">
+            <div className="flex items-end gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
+              <span className="text-2xl font-black text-slate-900">
                 {formatPrice(product.finalPrice)}
               </span>
               {product.discountPercentage > 0 && (
                 <>
-                  <span className="text-sm text-gray-400 line-through">
+                  <span className="text-sm font-medium text-slate-400 line-through mb-1">
                     {formatPrice(product.mrp)}
                   </span>
-                  <span className="text-xs text-fk-green font-medium">
+                  <span className="text-[11px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100 mb-1">
                     {product.discountPercentage}% off
                   </span>
                 </>
@@ -128,10 +128,10 @@ export default function QuickViewModal({ product, onClose }) {
             {/* Color */}
             {product.colors?.length > 0 && (
               <div>
-                <p className="text-xs font-bold text-gray-700 uppercase mb-1.5">
-                  Color: <span className="font-normal text-gray-500 capitalize">{selectedColor}</span>
+                <p className="text-xs font-black text-slate-800 uppercase tracking-widest mb-2.5">
+                  Color: <span className="font-bold text-slate-500 capitalize">{selectedColor}</span>
                 </p>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-3">
                   {product.colors.map((color) => {
                     const swatch = COLOR_SWATCHES[color];
                     const isGrad = swatch?.includes("gradient");
@@ -139,10 +139,10 @@ export default function QuickViewModal({ product, onClose }) {
                       <button
                         key={color}
                         onClick={() => setSelectedColor(color)}
-                        className={`relative w-7 h-7 rounded-full border-2 transition-all ${
+                        className={`relative w-8 h-8 rounded-full border-2 transition-all shadow-sm ${
                           selectedColor === color
-                            ? "border-fk-blue scale-110 ring-2 ring-fk-blue/30 ring-offset-1"
-                            : "border-gray-200 hover:scale-110"
+                            ? "border-violet-600 scale-110 ring-4 ring-violet-50 ring-offset-0"
+                            : "border-slate-200 hover:scale-110 hover:border-slate-300"
                         }`}
                         style={{
                           background: isGrad ? swatch : swatch,
@@ -152,7 +152,7 @@ export default function QuickViewModal({ product, onClose }) {
                       >
                         {selectedColor === color && (
                           <span className="absolute inset-0 flex items-center justify-center mix-blend-difference">
-                            <Check className="w-3 h-3 text-white" />
+                            <Check className="w-3.5 h-3.5 text-white" />
                           </span>
                         )}
                       </button>
@@ -165,13 +165,13 @@ export default function QuickViewModal({ product, onClose }) {
             {/* Size */}
             {availableSizes.length > 0 && (
               <div>
-                <p className="text-xs font-bold text-gray-700 uppercase mb-1.5">Size</p>
+                <p className="text-xs font-black text-slate-800 uppercase tracking-widest mb-2.5">Size</p>
                 {availableSizes.length === 1 && (availableSizes[0] === "Free Size" || availableSizes[0] === "Standard Size") ? (
-                  <div className="inline-block bg-sage-50 text-sage-700 text-xs font-semibold px-3 py-1.5 rounded border border-sage-100">
+                  <div className="inline-block bg-violet-50 text-violet-700 text-xs font-black uppercase tracking-widest px-4 py-2 rounded-xl border border-violet-100">
                     ✨ Free Size / Fits All
                   </div>
                 ) : (
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="flex flex-wrap gap-2">
                     {availableSizes.map((size) => {
                       const stock = product.sizesAndStock[size];
                       const oos = stock === 0;
@@ -180,12 +180,12 @@ export default function QuickViewModal({ product, onClose }) {
                           key={size}
                           disabled={oos}
                           onClick={() => setSelectedSize(size)}
-                          className={`w-10 h-8 text-xs font-semibold border-2 rounded-sm transition-all ${
+                          className={`min-w-[44px] h-10 px-3 text-xs font-bold border-2 rounded-xl transition-all ${
                             selectedSize === size
-                              ? "bg-fk-blue text-white border-fk-blue"
+                              ? "bg-violet-600 text-white border-violet-600 shadow-md shadow-violet-200"
                               : oos
-                              ? "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed line-through"
-                              : "bg-white text-gray-700 border-gray-200 hover:border-fk-blue"
+                              ? "bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed line-through"
+                              : "bg-white text-slate-600 border-slate-200 hover:border-violet-400 hover:text-violet-600"
                           }`}
                         >
                           {size}
@@ -198,24 +198,24 @@ export default function QuickViewModal({ product, onClose }) {
             )}
 
             {/* Actions */}
-            <div className="flex gap-2 pt-1">
+            <div className="flex gap-3 pt-3 mt-auto">
               <button
                 onClick={handleAddToCart}
                 disabled={product.isOutOfStock}
-                className="flex-1 flex items-center justify-center gap-1.5 bg-fk-yellow text-white font-bold py-2.5 rounded-sm text-sm uppercase hover:bg-fk-yellow-dark transition-colors disabled:opacity-50"
+                className="flex-1 flex items-center justify-center gap-2 bg-violet-600 text-white font-black py-3.5 rounded-xl text-sm uppercase tracking-wider hover:bg-violet-700 transition-all shadow-md shadow-violet-200 disabled:opacity-50 disabled:shadow-none active:scale-95"
               >
                 <ShoppingCart className="w-4 h-4" />
                 Add to Cart
               </button>
               <button
                 onClick={() => toggleWishlist(product)}
-                className={`w-10 h-10 rounded-sm border-2 flex items-center justify-center transition-all ${
+                className={`w-12 h-12 rounded-xl border-2 flex items-center justify-center transition-all active:scale-90 ${
                   wishlisted
-                    ? "border-fk-red bg-fk-red-light text-fk-red"
-                    : "border-gray-200 text-gray-400 hover:border-fk-red hover:text-fk-red"
+                    ? "border-rose-200 bg-rose-50 text-rose-500 shadow-inner"
+                    : "border-slate-200 text-slate-400 hover:border-rose-200 hover:text-rose-500 hover:bg-rose-50"
                 }`}
               >
-                <Heart className={`w-4 h-4 ${wishlisted ? "fill-fk-red" : ""}`} />
+                <Heart className={`w-5 h-5 ${wishlisted ? "fill-rose-500" : ""}`} />
               </button>
             </div>
 
@@ -223,9 +223,9 @@ export default function QuickViewModal({ product, onClose }) {
             <Link
               to={`/product/${product.id}`}
               onClick={onClose}
-              className="text-xs text-fk-blue font-medium flex items-center gap-0.5 hover:underline"
+              className="text-xs text-violet-600 font-black uppercase tracking-widest flex items-center justify-center gap-1.5 hover:text-violet-800 hover:bg-violet-50 py-2 rounded-lg transition-colors mt-2"
             >
-              View Full Details <ChevronRight className="w-3 h-3" />
+              View Full Details <ChevronRight className="w-3.5 h-3.5" />
             </Link>
           </div>
         </div>

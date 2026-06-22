@@ -211,23 +211,23 @@ export default function ReviewsSection({ productId }) {
     : "0";
 
   return (
-    <div id="review-form-anchor" className="bg-white p-4 md:p-6 shadow-card space-y-6">
-      <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+    <div id="review-form-anchor" className="bg-white p-6 md:p-8 shadow-xl rounded-3xl border border-slate-100 space-y-8 animate-fade-in">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-6">
         <div>
-          <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Customer Reviews</h3>
-          <p className="text-xs text-gray-500 mt-1">{reviews.length} Ratings & Reviews</p>
+          <h3 className="text-base font-black text-slate-900 uppercase tracking-widest">Customer Reviews</h3>
+          <p className="text-sm font-medium text-slate-500 mt-1">{reviews.length} Ratings & Reviews</p>
         </div>
         {reviews.length > 0 && (
-          <div className="flex items-center gap-2">
-            <span className="text-2xl font-black text-gray-900">{averageRating}</span>
-            <div className="flex flex-col">
+          <div className="flex items-center gap-4 bg-slate-50 px-5 py-3 rounded-2xl border border-slate-100">
+            <span className="text-4xl font-black text-slate-900">{averageRating}</span>
+            <div className="flex flex-col gap-1">
               <div className="flex text-amber-400">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} className={`w-3.5 h-3.5 ${i < Math.round(Number(averageRating)) ? "fill-current" : ""}`} />
+                  <Star key={i} className={`w-4 h-4 ${i < Math.round(Number(averageRating)) ? "fill-current" : ""}`} />
                 ))}
               </div>
-              <span className="text-[10px] text-fk-green font-semibold flex items-center gap-0.5">
-                <CheckCircle className="w-2.5 h-2.5" /> 100% Certified
+              <span className="text-[11px] text-emerald-600 font-black tracking-widest uppercase flex items-center gap-1">
+                <CheckCircle className="w-3 h-3" /> 100% Certified
               </span>
             </div>
           </div>
@@ -236,20 +236,20 @@ export default function ReviewsSection({ productId }) {
 
       {/* Write review */}
       {checkingEligibility ? (
-        <div className="text-xs text-gray-400 py-2">Verifying order status...</div>
+        <div className="text-sm text-slate-400 py-4 flex items-center gap-2 font-medium"><Loader2 className="w-4 h-4 animate-spin" /> Verifying order status...</div>
       ) : canReview ? (
-        <form onSubmit={handleSubmit} className="bg-gray-50 p-4 border border-gray-200 space-y-3 rounded-sm">
-          <p className="text-xs font-bold text-gray-800">{editingId ? "Edit your review" : "Rate this product"}</p>
+        <form onSubmit={handleSubmit} className="bg-slate-50/50 p-6 border border-slate-200 shadow-sm space-y-5 rounded-2xl">
+          <p className="text-sm font-black text-slate-800 uppercase tracking-widest">{editingId ? "Edit your review" : "Rate this product"}</p>
           
-          <div className="flex gap-1.5">
+          <div className="flex gap-2">
             {[1, 2, 3, 4, 5].map((star) => (
               <button
                 key={star}
                 type="button"
                 onClick={() => setRating(star)}
-                className="text-amber-400 focus:outline-none"
+                className="text-amber-400 focus:outline-none transition-transform hover:scale-110"
               >
-                <Star className={`w-6 h-6 hover:scale-110 transition-transform ${rating >= star ? "fill-current" : ""}`} />
+                <Star className={`w-8 h-8 ${rating >= star ? "fill-current drop-shadow-sm" : "opacity-30"}`} />
               </button>
             ))}
           </div>
@@ -257,16 +257,16 @@ export default function ReviewsSection({ productId }) {
           <div>
             <textarea
               required
-              rows="2"
+              rows="3"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               placeholder="Write your experience with this jewellery set..."
-              className="input-field text-sm resize-none bg-white"
+              className="w-full p-4 rounded-xl border border-slate-200 focus:border-violet-600 focus:ring-2 focus:ring-violet-100 outline-none transition-all text-sm font-medium text-slate-900 bg-white resize-none shadow-sm"
             />
           </div>
 
           {/* Image upload section */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <input 
               type="file" 
               accept="image/*"
@@ -278,30 +278,30 @@ export default function ReviewsSection({ productId }) {
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={uploadingImage}
-              className="btn-secondary py-1.5 px-3 text-xs flex items-center gap-1.5"
+              className="bg-white border-2 border-slate-200 hover:border-violet-400 hover:text-violet-700 text-slate-600 font-bold py-2 px-4 rounded-xl text-xs uppercase tracking-wider flex items-center gap-2 transition-all shadow-sm"
             >
-              {uploadingImage ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Camera className="w-3.5 h-3.5" />}
+              {uploadingImage ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
               {imageUrl ? "Change Photo" : "Add Photo"}
             </button>
             {imageUrl && (
-              <div className="relative w-12 h-12 border border-gray-200 rounded overflow-hidden">
+              <div className="relative w-16 h-16 border-2 border-slate-200 rounded-xl overflow-hidden shadow-sm">
                 <img src={imageUrl} alt="Review upload" className="w-full h-full object-cover" />
                 <button 
                   type="button" 
                   onClick={() => setImageUrl("")}
-                  className="absolute top-0 right-0 p-0.5 bg-black/75 text-white rounded-bl"
+                  className="absolute top-1 right-1 p-1 bg-black/50 hover:bg-black/80 text-white rounded-md backdrop-blur-sm transition-colors"
                 >
-                  <X className="w-2.5 h-2.5" />
+                  <X className="w-3 h-3" />
                 </button>
               </div>
             )}
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-3 pt-2">
             <button
               type="submit"
               disabled={submitting}
-              className="bg-fk-blue hover:bg-fk-blue-dark text-white font-bold px-4 py-2 text-xs uppercase tracking-wider rounded-sm"
+              className="bg-violet-600 hover:bg-violet-700 text-white font-black px-6 py-3 text-xs uppercase tracking-widest rounded-xl shadow-md shadow-violet-200 transition-all active:scale-95 disabled:opacity-50"
             >
               {submitting ? "Saving..." : editingId ? "Update Review" : "Submit Review"}
             </button>
@@ -314,7 +314,7 @@ export default function ReviewsSection({ productId }) {
                   setRating(5);
                   setImageUrl("");
                 }}
-                className="btn-secondary py-2 px-4 text-xs uppercase tracking-wider rounded-sm"
+                className="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-3 px-6 text-xs uppercase tracking-widest rounded-xl transition-colors"
               >
                 Cancel
               </button>
@@ -322,56 +322,58 @@ export default function ReviewsSection({ productId }) {
           </div>
         </form>
       ) : (
-        <div className="bg-gray-50 p-4 border border-dashed border-gray-200 rounded-sm text-center">
-          <p className="text-xs text-gray-500 font-medium">
+        <div className="bg-amber-50 p-5 border border-dashed border-amber-200 rounded-2xl text-center shadow-inner">
+          <p className="text-sm text-amber-800 font-medium flex items-center justify-center gap-2">
             🔒 Only customers who purchased this product and got it **Delivered** can write reviews.
           </p>
         </div>
       )}
 
       {/* Reviews list */}
-      <div className="space-y-4">
+      <div className="space-y-6 pt-4">
         {loading ? (
-          <p className="text-xs text-gray-400">Loading reviews...</p>
+          <p className="text-sm text-slate-400 font-medium flex items-center justify-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Loading reviews...</p>
         ) : reviews.length === 0 ? (
-          <div className="text-center py-6">
-            <MessageSquare className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-            <p className="text-xs text-gray-500 font-medium">No reviews yet. Be the first to write one!</p>
+          <div className="text-center py-10 bg-slate-50 rounded-3xl border border-slate-100">
+            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
+              <MessageSquare className="w-8 h-8 text-slate-300" />
+            </div>
+            <p className="text-sm text-slate-500 font-bold uppercase tracking-widest">No reviews yet. Be the first to write one!</p>
           </div>
         ) : (
           reviews.map((rev) => {
             const myReview = isMyReview(rev);
             return (
-              <div key={rev.id} className="border-b border-gray-100 pb-4 space-y-2">
+              <div key={rev.id} className="border border-slate-100 bg-white rounded-2xl p-5 shadow-sm space-y-4 transition-all hover:shadow-md">
                 <div className="flex justify-between items-start">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 bg-fk-blue-light text-fk-blue rounded-full flex items-center justify-center">
-                      <User className="w-4.5 h-4.5" />
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-violet-100 text-violet-700 rounded-full flex items-center justify-center shadow-sm">
+                      <User className="w-5 h-5" />
                     </div>
                     <div>
-                      <div className="flex items-center gap-1.5">
-                        <p className="text-xs font-bold text-gray-800">{rev.userName}</p>
-                        {myReview && <span className="bg-fk-blue/10 text-fk-blue text-[9px] px-1 rounded-sm font-semibold">You</span>}
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="text-sm font-black text-slate-900">{rev.userName}</p>
+                        {myReview && <span className="bg-violet-100 border border-violet-200 text-violet-700 text-[10px] font-black tracking-widest uppercase px-1.5 py-0.5 rounded-md">You</span>}
                       </div>
                       <div className="flex text-amber-400">
                         {[...Array(5)].map((_, i) => (
-                          <Star key={i} className={`w-2.5 h-2.5 ${i < rev.rating ? "fill-current" : ""}`} />
+                          <Star key={i} className={`w-3 h-3 ${i < rev.rating ? "fill-current" : ""}`} />
                         ))}
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
                     {myReview && (
                       <button
                         onClick={() => handleEditInit(rev)}
-                        className="p-1 text-gray-400 hover:text-fk-blue transition-colors"
+                        className="p-1.5 text-slate-400 hover:text-violet-600 hover:bg-violet-50 rounded-md transition-colors"
                         title="Edit Review"
                       >
-                        <Edit className="w-3.5 h-3.5" />
+                        <Edit className="w-4 h-4" />
                       </button>
                     )}
-                    <div className="flex items-center gap-1 text-gray-400 text-[10px]">
-                      <Calendar className="w-3 h-3" />
+                    <div className="flex items-center gap-1.5 text-slate-400 text-[11px] font-bold uppercase tracking-widest bg-slate-50 px-2 py-1 rounded-lg">
+                      <Calendar className="w-3.5 h-3.5" />
                       <span>
                         {rev.createdAt?.toDate ? rev.createdAt.toDate().toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : "Just now"}
                       </span>
@@ -379,13 +381,13 @@ export default function ReviewsSection({ productId }) {
                   </div>
                 </div>
                 
-                <p className="text-xs text-gray-600 leading-relaxed pl-9">{rev.comment}</p>
+                <p className="text-sm text-slate-600 font-medium leading-relaxed pl-14">{rev.comment}</p>
                 
                 {rev.imageUrl && (
-                  <div className="pl-9 mt-1.5">
-                    <div className="relative w-20 h-24 border border-gray-100 rounded overflow-hidden shadow-sm bg-gray-50">
+                  <div className="pl-14 mt-3">
+                    <div className="relative w-24 h-32 border border-slate-200 rounded-xl overflow-hidden shadow-sm bg-slate-50">
                       <a href={rev.imageUrl} target="_blank" rel="noopener noreferrer">
-                        <img src={rev.imageUrl} alt="Review upload" className="w-full h-full object-cover hover:scale-105 transition-transform" />
+                        <img src={rev.imageUrl} alt="Review upload" className="w-full h-full object-cover hover:scale-110 transition-transform duration-500" />
                       </a>
                     </div>
                   </div>
