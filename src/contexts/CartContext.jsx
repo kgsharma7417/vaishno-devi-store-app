@@ -13,7 +13,7 @@ export function CartProvider({ children }) {
   // Initialize from LocalStorage
   const [cartItems, setCartItems] = useState(() => {
     try {
-      const localData = localStorage.getItem("bangleStoreCart");
+      const localData = localStorage.getItem("vaishnoStoreCart");
       return localData ? JSON.parse(localData) : [];
     } catch (e) {
       console.error("Error parsing cart data", e);
@@ -25,7 +25,7 @@ export function CartProvider({ children }) {
 
   // Sync with LocalStorage
   useEffect(() => {
-    localStorage.setItem("bangleStoreCart", JSON.stringify(cartItems));
+    localStorage.setItem("vaishnoStoreCart", JSON.stringify(cartItems));
   }, [cartItems]);
 
   const cartTotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);

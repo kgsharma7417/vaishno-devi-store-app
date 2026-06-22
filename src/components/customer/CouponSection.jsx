@@ -7,13 +7,13 @@ import { useAuth } from "../../hooks/useAuth";
 // Valid coupons — in production, fetch from Firestore
 // Valid coupons — in production, fetch from Firestore
 export const VALID_COUPONS = {
-  "RADHE10": { discount: 10, type: "percent", minOrder: 299, maxDiscount: 30, desc: "10% off (up to ₹30) on orders above ₹299" }, // Min 299, Max 30
-  "RADHE12": { discount: 12, type: "percent", minOrder: 399, maxDiscount: 50, desc: "12% off (up to ₹50) on orders above ₹399" }, // Min 399, Max 50
+  "VAISHNO10": { discount: 10, type: "percent", minOrder: 299, maxDiscount: 30, desc: "10% off (up to ₹30) on orders above ₹299" }, // Min 299, Max 30
+  "VAISHNO12": { discount: 12, type: "percent", minOrder: 399, maxDiscount: 50, desc: "12% off (up to ₹50) on orders above ₹399" }, // Min 399, Max 50
   "NEWUSER": { discount: 50, type: "flat", minOrder: 499, desc: "Flat ₹50 off on orders above ₹499" },
   "BRIDAL20": { discount: 20, type: "percent", minOrder: 499, desc: "20% off on bridal collection" },
   "FESTIVE": { discount: 15, type: "percent", minOrder: 399, desc: "15% off this festive season" },
   "HALDI50": { discount: 50, type: "flat", minOrder: 249, desc: "Flat ₹50 off on Haldi special" },
-  "RADHE100": { discount: 100, type: "flat", minOrder: 999, desc: "Flat ₹100 off on orders above ₹999" },
+  "VAISHNO100": { discount: 100, type: "flat", minOrder: 999, desc: "Flat ₹100 off on orders above ₹999" },
 };
 
 export function useCoupon(cartTotal) {
@@ -141,9 +141,9 @@ export default function CouponSection({
 
   // Available coupon hints
   const hints = [
-    { code: "RADHE100", label: "₹100 OFF (Min ₹999)" },
-    { code: "RADHE12", label: "12% OFF (Min ₹399, Max ₹50)" },
-    { code: "RADHE10", label: "10% OFF (Min ₹299, Max ₹30)" },
+    { code: "VAISHNO100", label: "₹100 OFF (Min ₹999)" },
+    { code: "VAISHNO12", label: "12% OFF (Min ₹399, Max ₹50)" },
+    { code: "VAISHNO10", label: "10% OFF (Min ₹299, Max ₹30)" },
   ];
 
   return (

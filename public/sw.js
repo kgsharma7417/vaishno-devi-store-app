@@ -1,4 +1,4 @@
-const CACHE_NAME = 'radhe-bangles-cache-v4';
+const CACHE_NAME = 'vaishnodevi-cache-v1';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',

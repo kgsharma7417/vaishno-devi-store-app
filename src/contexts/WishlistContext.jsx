@@ -12,14 +12,14 @@ export function WishlistProvider({ children }) {
 
   const [wishlistItems, setWishlistItems] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem("radhe_wishlist") || "[]");
+      return JSON.parse(localStorage.getItem("vaishno_wishlist") || "[]");
     } catch {
       return [];
     }
   });
 
   useEffect(() => {
-    localStorage.setItem("radhe_wishlist", JSON.stringify(wishlistItems));
+    localStorage.setItem("vaishno_wishlist", JSON.stringify(wishlistItems));
   }, [wishlistItems]);
 
   const isWishlisted = (productId) =>

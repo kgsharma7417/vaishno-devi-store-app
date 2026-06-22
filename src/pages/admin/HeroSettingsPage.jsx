@@ -316,7 +316,7 @@ export default function HeroSettingsPage() {
                 type="text"
                 value={payeeName}
                 onChange={(e) => setPayeeName(e.target.value)}
-                placeholder="e.g. Radhe Bangles"
+                placeholder="e.g. Vaishno Devi Corner"
                 className="input-field"
               />
               <p className="text-xs text-earth-400 mt-2">The business name that will appear when customers scan the QR.</p>

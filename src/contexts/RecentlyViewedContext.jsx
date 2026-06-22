@@ -11,14 +11,14 @@ const MAX_ITEMS = 8;
 export function RecentlyViewedProvider({ children }) {
   const [recentItems, setRecentItems] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem("radhe_recently_viewed") || "[]");
+      return JSON.parse(localStorage.getItem("vaishno_recently_viewed") || "[]");
     } catch {
       return [];
     }
   });
 
   useEffect(() => {
-    localStorage.setItem("radhe_recently_viewed", JSON.stringify(recentItems));
+    localStorage.setItem("vaishno_recently_viewed", JSON.stringify(recentItems));
   }, [recentItems]);
 
   const addRecentlyViewed = (product) => {
