@@ -40,6 +40,7 @@ export default function CheckoutPage() {
     }
   }, [userProfile]);
 
+  const [deliveryType, setDeliveryType] = useState("shipping"); // 'shipping' or 'pickup'
   const [paymentMethod, setPaymentMethod] = useState("cod"); // 'cod' or 'upi'
   const [submitting, setSubmitting] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
@@ -158,7 +159,7 @@ export default function CheckoutPage() {
 
   const [isGiftWrap, setIsGiftWrap] = useState(false);
 
-  const deliveryCharge = (cartTotal < 299 && cartTotal > 0) ? 30 : 0;
+  const deliveryCharge = (deliveryType === 'shipping' && cartTotal < 299 && cartTotal > 0) ? 30 : 0;
   const giftWrapCharge = isGiftWrap ? 30 : 0;
   const grandTotal = finalTotal + deliveryCharge + giftWrapCharge;
 
@@ -169,9 +170,15 @@ export default function CheckoutPage() {
       if (pMethod === 'razorpay') pStatus = 'Paid (Razorpay)';
 
       const orderData = {
-        customerDetails: { ...form, location: location },
+        customerDetails: deliveryType === 'pickup' ? { 
+          fullName: form.fullName, 
+          phone: form.phone, 
+          email: form.email, 
+          location: location 
+        } : { ...form, location: location },
         items: cartItems,
         subtotal: cartTotal,
+        deliveryType,
         deliveryCharge,
         giftWrapCharge,
         isGiftWrap,
@@ -230,8 +237,8 @@ export default function CheckoutPage() {
       return;
     }
 
-    // PIN code validation
-    if (!isValidPIN(form.pincode)) {
+    // PIN code validation (Only for shipping)
+    if (deliveryType === 'shipping' && !isValidPIN(form.pincode)) {
       addToast({ type: "error", message: "Please enter a valid 6-digit PIN code." });
       return;
     }
@@ -335,7 +342,29 @@ export default function CheckoutPage() {
               {/* Shipping Details */}
               <section className="bg-white p-4 md:p-6 shadow-card rounded-md border border-gray-200">
                 <h2 className="text-sm font-bold text-amazon-navy uppercase mb-4 flex items-center gap-2">
-                  <MapPin className="w-4 h-4" /> Delivery Address
+                  <PackageCheck className="w-4 h-4" /> Delivery Method
+                </h2>
+
+                <div className="flex flex-col sm:flex-row gap-3 mb-6">
+                  <label className={`flex-1 flex items-center gap-2 p-3 border-2 cursor-pointer transition-all rounded-sm ${deliveryType === 'shipping' ? 'border-amazon-orange bg-yellow-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                    <input type="radio" name="deliveryType" value="shipping" checked={deliveryType === 'shipping'} onChange={(e) => setDeliveryType(e.target.value)} className="w-4 h-4 text-amazon-orange focus:ring-amazon-orange" />
+                    <div>
+                      <p className="font-semibold text-sm text-gray-800">Ship to Address</p>
+                      <p className="text-[10px] text-gray-500">Standard courier delivery</p>
+                    </div>
+                  </label>
+
+                  <label className={`flex-1 flex items-center gap-2 p-3 border-2 cursor-pointer transition-all rounded-sm ${deliveryType === 'pickup' ? 'border-amazon-orange bg-yellow-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                    <input type="radio" name="deliveryType" value="pickup" checked={deliveryType === 'pickup'} onChange={(e) => setDeliveryType(e.target.value)} className="w-4 h-4 text-amazon-orange focus:ring-amazon-orange" />
+                    <div>
+                      <p className="font-semibold text-sm text-gray-800">Store Pickup (Free)</p>
+                      <p className="text-[10px] text-gray-500">Collect from our shop</p>
+                    </div>
+                  </label>
+                </div>
+
+                <h2 className="text-sm font-bold text-amazon-navy uppercase mb-4 flex items-center gap-2 mt-6 border-t border-gray-100 pt-6">
+                  <MapPin className="w-4 h-4" /> {deliveryType === 'pickup' ? "Contact Details" : "Delivery Address"}
                 </h2>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
@@ -362,44 +391,60 @@ export default function CheckoutPage() {
                     <label className="input-label text-xs">Email (Optional)</label>
                     <input type="email" name="email" value={form.email} onChange={handleFieldChange} className="input-field text-sm" placeholder="jane@example.com" />
                   </div>
-                  <div className="sm:col-span-2">
-                    <div className="flex justify-between items-center mb-1">
-                      <label className="input-label text-xs mb-0">Delivery Address *</label>
-                      <button 
-                        type="button" 
-                        onClick={handleGetLocation} 
-                        disabled={gettingLocation}
-                        className={`text-[10px] font-bold flex items-center gap-1 ${location ? 'text-amazon-green' : 'text-amazon-link hover:underline'}`}
-                      >
-                        {gettingLocation ? <Loader2 className="w-3 h-3 animate-spin" /> : <MapPin className="w-3 h-3" />}
-                        {location ? "Location Captured ✓" : "Use Current Location"}
-                      </button>
+                  {deliveryType === 'pickup' ? (
+                    <div className="sm:col-span-2 mt-2 p-4 bg-amazon-light/20 border border-amazon-link/20 rounded-md">
+                      <p className="text-sm font-bold text-amazon-dark mb-1">🏪 Pickup Location:</p>
+                      <p className="text-xs text-gray-700 leading-relaxed">
+                        Maa Vaishno Devi Ladies Corner & Gift Center<br />
+                        Shri Mankameshwar Nath Market,<br />
+                        Jalesar Road, Tedi Bagiya Tiraha, Agra - 6
+                      </p>
+                      <p className="text-[10px] text-amazon-orange font-bold mt-2">
+                        * Please show your Order ID at the counter when you visit.
+                      </p>
                     </div>
-                    <textarea required name="address" value={form.address} onChange={handleFieldChange} rows="2" className="input-field resize-none text-sm" placeholder="Flat No, Building, Street..." />
-                  </div>
-                  <div>
-                    <label className="input-label text-xs">City *</label>
-                    <input required type="text" name="city" value={form.city} onChange={handleFieldChange} className="input-field text-sm" placeholder="Mumbai" />
-                  </div>
-                  <div>
-                    <label className="input-label text-xs">State *</label>
-                    <input required type="text" name="state" value={form.state} onChange={handleFieldChange} className="input-field text-sm" placeholder="Maharashtra" />
-                  </div>
-                  <div>
-                    <label className="input-label text-xs">PIN Code *</label>
-                    <input
-                      required
-                      type="text"
-                      name="pincode"
-                      value={form.pincode}
-                      onChange={handleFieldChange}
-                      className="input-field text-sm"
-                      placeholder="400001"
-                      pattern="[1-9][0-9]{5}"
-                      maxLength={6}
-                      title="Enter a valid 6-digit PIN code"
-                    />
-                  </div>
+                  ) : (
+                    <>
+                      <div className="sm:col-span-2">
+                        <div className="flex justify-between items-center mb-1">
+                          <label className="input-label text-xs mb-0">Delivery Address *</label>
+                          <button 
+                            type="button" 
+                            onClick={handleGetLocation} 
+                            disabled={gettingLocation}
+                            className={`text-[10px] font-bold flex items-center gap-1 ${location ? 'text-amazon-green' : 'text-amazon-link hover:underline'}`}
+                          >
+                            {gettingLocation ? <Loader2 className="w-3 h-3 animate-spin" /> : <MapPin className="w-3 h-3" />}
+                            {location ? "Location Captured ✓" : "Use Current Location"}
+                          </button>
+                        </div>
+                        <textarea required={deliveryType === 'shipping'} name="address" value={form.address} onChange={handleFieldChange} rows="2" className="input-field resize-none text-sm" placeholder="Flat No, Building, Street..." />
+                      </div>
+                      <div>
+                        <label className="input-label text-xs">City *</label>
+                        <input required={deliveryType === 'shipping'} type="text" name="city" value={form.city} onChange={handleFieldChange} className="input-field text-sm" placeholder="Mumbai" />
+                      </div>
+                      <div>
+                        <label className="input-label text-xs">State *</label>
+                        <input required={deliveryType === 'shipping'} type="text" name="state" value={form.state} onChange={handleFieldChange} className="input-field text-sm" placeholder="Maharashtra" />
+                      </div>
+                      <div>
+                        <label className="input-label text-xs">PIN Code *</label>
+                        <input
+                          required={deliveryType === 'shipping'}
+                          type="text"
+                          name="pincode"
+                          value={form.pincode}
+                          onChange={handleFieldChange}
+                          className="input-field text-sm"
+                          placeholder="400001"
+                          pattern={deliveryType === 'shipping' ? "[1-9][0-9]{5}" : ".*"}
+                          maxLength={6}
+                          title="Enter a valid 6-digit PIN code"
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
               </section>
 

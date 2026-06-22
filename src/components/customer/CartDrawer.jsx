@@ -51,7 +51,7 @@ export default function CartDrawer() {
             ) : (
               <div>
                 <p className="text-xs text-gray-600 mb-1.5">
-                  Add <span className="font-bold text-amazon-link">{formatPrice(299 - cartTotal)}</span> more for **Free Delivery**!
+                  Add <span className="font-bold text-amazon-link">{formatPrice(299 - cartTotal)}</span> more for **Free Delivery** (or choose Store Pickup for Free)!
                 </p>
                 <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
                   <div 

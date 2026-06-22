@@ -32,13 +32,28 @@ export function CartProvider({ children }) {
   const cartCount = cartItems.reduce((count, item) => count + item.quantity, 0);
 
   const addToCart = (product, selectedSize, selectedColor, quantity = 1, clickEvent = null) => {
+    // Calculate max stock available
+    const maxStock = product.sizesAndStock && selectedSize 
+      ? (product.sizesAndStock[selectedSize] || 0) 
+      : (product.stockQuantity !== undefined ? product.stockQuantity : 999);
+
+    const existingItemIndex = cartItems.findIndex(
+      item => item.id === product.id && item.size === selectedSize && item.color === selectedColor
+    );
+
+    const currentQty = existingItemIndex >= 0 ? cartItems[existingItemIndex].quantity : 0;
+
+    // Check if adding exceeds stock
+    if (currentQty + quantity > maxStock) {
+      addToast({ type: "error", message: `Only ${maxStock} item(s) available in stock!` });
+      return;
+    }
+
     // Fly-to-Cart bubble trigger animation logic
     if (clickEvent) {
       const btn = clickEvent.currentTarget || clickEvent.target;
       if (btn) {
         const rect = btn.getBoundingClientRect();
-        // Target: Header's cart icon (usually top right)
-        // Find cart button in DOM
         const cartBtn = document.querySelector('header .lucide-shopping-cart') || document.querySelector('header a[href="/cart"]');
         let targetX = window.innerWidth - 60 - rect.left;
         let targetY = 20 - rect.top;
@@ -63,10 +78,6 @@ export function CartProvider({ children }) {
         }, 1000);
       }
     }
-
-    const existingItemIndex = cartItems.findIndex(
-      item => item.id === product.id && item.size === selectedSize && item.color === selectedColor
-    );
 
     if (existingItemIndex >= 0) {
       addToast({ type: "success", message: `Updated quantity for ${product.productName}` });
@@ -95,7 +106,8 @@ export function CartProvider({ children }) {
           mrp: product.mrp,
           size: selectedSize,
           color: selectedColor,
-          quantity: quantity
+          quantity: quantity,
+          maxStock: maxStock
         }];
       }
     });
@@ -115,6 +127,13 @@ export function CartProvider({ children }) {
       removeFromCart(id, size, color);
       return;
     }
+
+    const item = cartItems.find(i => i.id === id && i.size === size && i.color === color);
+    if (item && item.maxStock !== undefined && newQuantity > item.maxStock) {
+      addToast({ type: "error", message: `Only ${item.maxStock} item(s) available!` });
+      return;
+    }
+
     setCartItems(prev => prev.map(item => 
       (item.id === id && item.size === size && item.color === color) 
         ? { ...item, quantity: newQuantity } 
