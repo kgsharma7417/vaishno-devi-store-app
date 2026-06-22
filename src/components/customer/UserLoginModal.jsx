@@ -81,12 +81,12 @@ export default function UserLoginModal({ isOpen, onClose }) {
         <div className="bg-white rounded-lg shadow-2xl overflow-hidden">
           
           {/* Header */}
-          <div className="bg-fk-blue px-5 py-4 flex items-center justify-between">
+          <div className="bg-violet-600 px-6 py-5 flex items-center justify-between border-b border-violet-700">
             <div>
-              <h2 className="text-white font-bold text-base">
+              <h2 className="text-white font-black text-lg tracking-tight">
                 {currentUser ? "My Account" : "Sign In"}
               </h2>
-              <p className="text-white/70 text-xs mt-0.5">
+              <p className="text-violet-100 text-[11px] font-medium mt-1">
                 {currentUser
                   ? `Logged in as ${userProfile?.name?.split(" ")[0]}`
                   : "Get order updates & personalized experience"}
@@ -94,82 +94,82 @@ export default function UserLoginModal({ isOpen, onClose }) {
             </div>
             <button
               onClick={onClose}
-              className="p-1.5 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+              className="p-2 text-violet-100 hover:text-white hover:bg-violet-500 rounded-full transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
-          <div className="p-5">
+          <div className="p-6">
             {currentUser ? (
               /* Logged-in State */
               <div>
                 {/* User Info */}
-                <div className="flex items-center gap-3 mb-5 p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-4 mb-6 p-4 bg-slate-50 border border-slate-100 rounded-2xl shadow-sm">
                   {userProfile?.photo ? (
                     <img
                       src={userProfile.photo}
                       alt={userProfile.name}
-                      className="w-12 h-12 rounded-full border-2 border-fk-blue"
+                      className="w-14 h-14 rounded-full border-2 border-violet-600 shadow-sm"
                     />
                   ) : (
-                    <div className="w-12 h-12 rounded-full bg-fk-blue flex items-center justify-center">
-                      <User className="w-6 h-6 text-white" />
+                    <div className="w-14 h-14 rounded-full bg-violet-600 shadow-sm flex items-center justify-center">
+                      <User className="w-7 h-7 text-white" />
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-gray-900 text-sm truncate">{userProfile?.name}</p>
-                    <p className="text-xs text-gray-500 truncate">{userProfile?.email}</p>
+                    <p className="font-black text-slate-900 text-sm truncate">{userProfile?.name}</p>
+                    <p className="text-xs font-medium text-slate-500 truncate">{userProfile?.email}</p>
                   </div>
                 </div>
 
                 {/* Quick Links */}
-                <div className="space-y-1 mb-5">
+                <div className="space-y-2 mb-6">
                   <Link
                     to="/my-orders"
                     onClick={onClose}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors group"
+                    className="flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-100 transition-all group"
                   >
-                    <div className="w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center">
-                      <Package className="w-4 h-4 text-fk-blue" />
+                    <div className="w-10 h-10 bg-violet-50 group-hover:bg-violet-100 rounded-full flex items-center justify-center transition-colors">
+                      <Package className="w-5 h-5 text-violet-600" />
                     </div>
-                    <span className="text-sm font-medium text-gray-700">My Orders</span>
-                    <ChevronRight className="w-4 h-4 text-gray-400 ml-auto" />
+                    <span className="text-sm font-bold text-slate-700 group-hover:text-violet-700 transition-colors">My Orders</span>
+                    <ChevronRight className="w-4 h-4 text-slate-300 ml-auto group-hover:text-violet-500 transition-colors" />
                   </Link>
                   <Link
                     to="/track-order"
                     onClick={onClose}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors group"
+                    className="flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-100 transition-all group"
                   >
-                    <div className="w-8 h-8 bg-green-50 rounded-full flex items-center justify-center">
-                      <ShoppingBag className="w-4 h-4 text-fk-green" />
+                    <div className="w-10 h-10 bg-emerald-50 group-hover:bg-emerald-100 rounded-full flex items-center justify-center transition-colors">
+                      <ShoppingBag className="w-5 h-5 text-emerald-600" />
                     </div>
-                    <span className="text-sm font-medium text-gray-700">Track Order</span>
-                    <ChevronRight className="w-4 h-4 text-gray-400 ml-auto" />
+                    <span className="text-sm font-bold text-slate-700 group-hover:text-emerald-700 transition-colors">Track Order</span>
+                    <ChevronRight className="w-4 h-4 text-slate-300 ml-auto group-hover:text-emerald-500 transition-colors" />
                   </Link>
                   {isAdmin ? (
                     <Link
                       to="/admin/dashboard"
                       onClick={onClose}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors group"
+                      className="flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-100 transition-all group"
                     >
-                      <div className="w-8 h-8 bg-amber-50 rounded-full flex items-center justify-center">
-                        <LogIn className="w-4 h-4 text-amber-600" />
+                      <div className="w-10 h-10 bg-amber-50 group-hover:bg-amber-100 rounded-full flex items-center justify-center transition-colors">
+                        <LogIn className="w-5 h-5 text-amber-600" />
                       </div>
-                      <span className="text-sm font-medium text-gray-700">Admin Dashboard</span>
-                      <ChevronRight className="w-4 h-4 text-gray-400 ml-auto" />
+                      <span className="text-sm font-bold text-slate-700 group-hover:text-amber-700 transition-colors">Admin Dashboard</span>
+                      <ChevronRight className="w-4 h-4 text-slate-300 ml-auto group-hover:text-amber-500 transition-colors" />
                     </Link>
                   ) : (
                     <Link
                       to="/admin/login"
                       onClick={onClose}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-orange-50 hover:text-amazon-orange transition-colors group"
+                      className="flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-100 transition-all group"
                     >
-                      <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                        <LogIn className="w-4 h-4 text-amazon-orange" />
+                      <div className="w-10 h-10 bg-slate-100 group-hover:bg-violet-100 rounded-full flex items-center justify-center transition-colors">
+                        <LogIn className="w-5 h-5 text-slate-500 group-hover:text-violet-600 transition-colors" />
                       </div>
-                      <span className="text-sm font-medium text-gray-700 group-hover:text-amazon-orange">Login as Admin</span>
-                      <ChevronRight className="w-4 h-4 text-gray-400 ml-auto group-hover:text-amazon-orange" />
+                      <span className="text-sm font-bold text-slate-600 group-hover:text-violet-700 transition-colors">Login as Admin</span>
+                      <ChevronRight className="w-4 h-4 text-slate-300 ml-auto group-hover:text-violet-500 transition-colors" />
                     </Link>
                   )}
                 </div>
@@ -177,7 +177,7 @@ export default function UserLoginModal({ isOpen, onClose }) {
                 {/* Logout */}
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-red-500 transition-colors"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition-all shadow-sm"
                 >
                   <LogOut className="w-4 h-4" />
                   Sign Out
@@ -186,11 +186,11 @@ export default function UserLoginModal({ isOpen, onClose }) {
             ) : (
               /* Logged-out State */
               <div>
-                <div className="text-center mb-6">
-                  <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <User className="w-8 h-8 text-fk-blue" />
+                <div className="text-center mb-8">
+                  <div className="w-20 h-20 bg-violet-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-violet-100 shadow-sm">
+                    <User className="w-10 h-10 text-violet-600" />
                   </div>
-                  <p className="text-sm text-gray-600 leading-relaxed">
+                  <p className="text-sm font-medium text-slate-500 leading-relaxed max-w-[250px] mx-auto">
                     Sign in to track your orders, save items, and get a personalized experience.
                   </p>
                 </div>
@@ -199,36 +199,36 @@ export default function UserLoginModal({ isOpen, onClose }) {
                 <button
                   onClick={handleGoogleLogin}
                   disabled={loading}
-                  className="w-full flex items-center justify-center gap-3 px-4 py-3 border-2 border-gray-200 rounded-lg text-sm font-semibold text-gray-700 hover:border-fk-blue hover:bg-blue-50 transition-all disabled:opacity-60 disabled:cursor-not-allowed group"
+                  className="w-full flex items-center justify-center gap-3 px-4 py-3.5 border-2 border-slate-200 rounded-xl text-sm font-bold text-slate-700 hover:border-violet-600 hover:bg-violet-50 transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-sm group active:scale-95"
                 >
                   {loading ? (
-                    <div className="w-5 h-5 border-2 border-gray-300 border-t-fk-blue rounded-full animate-spin" />
+                    <div className="w-5 h-5 border-2 border-slate-300 border-t-violet-600 rounded-full animate-spin" />
                   ) : (
                     <GoogleIcon />
                   )}
                   {loading ? "Signing in..." : "Continue with Google"}
                 </button>
 
-                <div className="relative my-4">
+                <div className="relative my-6">
                   <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-100" />
+                    <div className="w-full border-t border-slate-100" />
                   </div>
                   <div className="relative flex justify-center text-xs">
-                    <span className="bg-white px-3 text-gray-400">or</span>
+                    <span className="bg-white px-4 text-slate-400 font-bold uppercase tracking-widest">or</span>
                   </div>
                 </div>
 
                 {/* Guest option */}
                 <button
                   onClick={onClose}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors"
                 >
                   Continue as Guest →
                 </button>
 
-                <div className="relative my-3">
+                <div className="relative my-4">
                   <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-100" />
+                    <div className="w-full border-t border-slate-100" />
                   </div>
                 </div>
 
@@ -236,13 +236,13 @@ export default function UserLoginModal({ isOpen, onClose }) {
                 <Link
                   to="/admin/login"
                   onClick={onClose}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm text-gray-600 hover:text-amazon-orange transition-colors font-medium border border-gray-200 rounded-lg hover:border-amazon-orange/50 hover:bg-orange-50"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm text-slate-600 hover:text-violet-700 transition-all font-bold border border-slate-200 rounded-xl hover:border-violet-300 hover:bg-violet-50"
                 >
                   <LogIn className="w-4 h-4" />
                   Login as Admin
                 </Link>
 
-                <p className="text-[10px] text-gray-400 text-center mt-3 leading-relaxed">
+                <p className="text-[10px] text-slate-400 font-medium text-center mt-4 leading-relaxed px-4">
                   By signing in, you agree to our Terms of Service and Privacy Policy.
                 </p>
               </div>

@@ -5,7 +5,8 @@ import { db } from "../../config/firebase";
 import { 
   Search, ShoppingCart, ChevronRight, ChevronLeft, 
   Loader2, Heart, Home, Grid3X3, User, Zap,
-  Sparkles, Gift, Crown, Star, Gem, Flower2, CircleDot, Palette, Clock
+  Sparkles, Gift, Crown, Star, Gem, Flower2, CircleDot, Palette, Clock,
+  PackageOpen, Phone
 } from "lucide-react";
 import ShopSection from "../../components/customer/ShopSection";
 import { useCart } from "../../contexts/CartContext";
@@ -153,124 +154,103 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-amazon-bg font-body pb-16 md:pb-0">
 
-      {/* ===== AMAZON-STYLE HEADER ===== */}
-      <header className="sticky top-0 z-50 shadow-md">
-        {/* Top Header Row (Amazon Dark) */}
-        <div className="bg-amazon-dark px-3 py-2 md:px-6 md:py-2.5 text-white">
-          <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-2 md:gap-6">
+      {/* ===== PREMIUM GLASS HEADER ===== */}
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm transition-all duration-300">
+        <div className="px-3 py-3 md:px-6 md:py-4">
+          <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-8">
             
-            {/* Top Row for Mobile (Logo + Optional items) */}
+            {/* Logo */}
             <div className="flex justify-between items-center w-full md:w-auto">
-              {/* Logo */}
-              <Link to="/" className="flex-shrink-0 flex flex-col hover:outline hover:outline-1 hover:outline-white p-1 rounded-sm">
-                <span className="text-white font-black text-lg md:text-xl tracking-tight leading-none">
+              <Link to="/" className="flex-shrink-0 flex flex-col group">
+                <span className="text-violet-900 font-black text-xl md:text-2xl tracking-tight leading-none group-hover:text-violet-700 transition-colors">
                   Maa Vaishno Devi
                 </span>
-                <span className="text-amazon-yellow text-xs font-bold tracking-wider leading-none mt-0.5">
+                <span className="text-violet-500 text-xs font-bold tracking-widest leading-none mt-1 uppercase">
                   Ladies Corner
                 </span>
               </Link>
-              
-              {/* Deliver to - Mobile Version */}
-              <div className="flex md:hidden items-center gap-1 text-left">
-                <span className="text-sm">📍</span>
-                <div className="flex flex-col">
-                  <span className="text-[9px] text-gray-300 leading-none">Deliver to</span>
-                  <span className="text-[10px] font-bold leading-none mt-0.5">India</span>
-                </div>
-              </div>
             </div>
 
-            {/* Delivery Location Indicator (Amazon style - desktop only) */}
-            <div className="hidden md:flex items-center gap-1.5 hover:outline hover:outline-1 hover:outline-white p-1 rounded-sm text-left">
-              <span className="text-sm">📍</span>
-              <div className="flex flex-col">
-                <span className="text-[11px] text-gray-300 leading-none">Deliver to</span>
-                <span className="text-xs font-bold leading-none mt-0.5">India</span>
+            {/* Search Bar */}
+            <div className="flex-1 flex items-stretch w-full relative group">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <Search className="h-5 w-5 text-slate-400 group-focus-within:text-violet-600 transition-colors" />
               </div>
-            </div>
-
-            {/* Search Bar (Amazon Style) */}
-            <div className="flex-1 flex items-stretch w-full">
               <input
                 type="text"
-                placeholder="Search products..."
+                placeholder="Search premium jewelry, bangles..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') scrollToShop();
                 }}
-                className="w-full px-3 py-2 md:py-2.5 bg-white rounded-l-md text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amazon-orange"
+                className="w-full pl-11 pr-4 py-2.5 md:py-3 bg-slate-50 hover:bg-slate-100 border border-transparent focus:border-violet-300 focus:bg-white rounded-xl text-sm text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-4 focus:ring-violet-50 transition-all shadow-inner"
               />
-              <button 
-                onClick={scrollToShop}
-                className="bg-amazon-yellow hover:bg-amazon-orange active:scale-95 transition-all px-4 md:px-5 rounded-r-md flex items-center justify-center text-amazon-dark font-bold"
-              >
-                <Search className="w-5 h-5" />
-              </button>
             </div>
 
-            {/* Right Side Info (Hidden on Mobile due to Bottom Nav) */}
-            <div className="hidden md:flex items-center gap-4">
-              
-              {/* Account / Login (Amazon Style) */}
+            {/* Right Side Icons */}
+            <div className="hidden md:flex items-center gap-6 text-slate-700">
               <button
                 onClick={() => setIsLoginModalOpen(true)}
-                className="hover:outline hover:outline-1 hover:outline-white p-1 rounded-sm flex flex-col text-left"
+                className="flex items-center gap-2 hover:text-violet-700 transition-colors group"
               >
-                <span className="text-[11px] text-gray-300 leading-none">
-                  Hello, {currentUser ? userProfile?.name?.split(" ")[0] : "Sign in"}
-                </span>
-                <span className="text-xs font-bold leading-none mt-1">
-                  Account & Lists
-                </span>
+                <div className="w-10 h-10 rounded-full bg-slate-50 group-hover:bg-violet-50 flex items-center justify-center border border-slate-200 group-hover:border-violet-200 transition-all">
+                  <User className="w-5 h-5 text-slate-600 group-hover:text-violet-600" />
+                </div>
+                <div className="flex flex-col text-left">
+                  <span className="text-[11px] text-slate-500 leading-none">
+                    {currentUser ? "Welcome back" : "Sign in"}
+                  </span>
+                  <span className="text-sm font-bold leading-none mt-1 text-slate-800 group-hover:text-violet-700">
+                    {currentUser ? userProfile?.name?.split(" ")[0] : "Account"}
+                  </span>
+                </div>
               </button>
 
-              {/* Returns & Orders */}
               <Link 
                 to="/my-orders" 
-                className="hover:outline hover:outline-1 hover:outline-white p-1 rounded-sm flex flex-col text-left"
+                className="flex items-center gap-2 hover:text-violet-700 transition-colors group"
               >
-                <span className="text-[11px] text-gray-300 leading-none">Returns</span>
-                <span className="text-xs font-bold leading-none mt-1">& Orders</span>
+                <div className="w-10 h-10 rounded-full bg-slate-50 group-hover:bg-violet-50 flex items-center justify-center border border-slate-200 group-hover:border-violet-200 transition-all">
+                  <PackageOpen className="w-5 h-5 text-slate-600 group-hover:text-violet-600" />
+                </div>
+                <div className="flex flex-col text-left">
+                  <span className="text-[11px] text-slate-500 leading-none">Returns</span>
+                  <span className="text-sm font-bold leading-none mt-1 text-slate-800 group-hover:text-violet-700">& Orders</span>
+                </div>
               </Link>
               
-              {/* Cart Button */}
               <button 
                 onClick={() => setIsCartOpen(true)}
-                className="hover:outline hover:outline-1 hover:outline-white p-1.5 rounded-sm flex items-center gap-1.5 relative"
+                className="flex items-center gap-2 hover:text-violet-700 transition-colors group relative"
               >
-                <div className="relative">
-                  <ShoppingCart className="w-6 h-6 text-white" />
+                <div className="w-10 h-10 rounded-full bg-violet-600 text-white shadow-md shadow-violet-200 flex items-center justify-center group-hover:bg-violet-700 transition-all group-hover:scale-105 group-active:scale-95">
+                  <ShoppingCart className="w-5 h-5" />
                   {cartCount > 0 && (
-                    <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-amazon-orange text-amazon-dark text-[11px] font-black px-1.5 rounded-full min-w-[18px] text-center">
+                    <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full min-w-[20px] text-center border-2 border-white shadow-sm">
                       {cartCount}
                     </span>
                   )}
                 </div>
-                <span className="text-xs font-bold mt-2">Cart</span>
+                <span className="text-sm font-bold text-slate-800 group-hover:text-violet-700">Cart</span>
               </button>
             </div>
-
           </div>
         </div>
 
-        {/* Sub Header Row (Amazon Navy) */}
-        <div className="bg-amazon-navy text-white text-xs px-3 py-1.5 md:px-6">
-          <div className="max-w-7xl mx-auto flex items-center gap-4 overflow-x-auto scrollbar-hide">
-            <span className="font-bold flex items-center gap-1 cursor-pointer hover:outline hover:outline-1 hover:outline-white px-1.5 py-0.5 rounded-sm">
-              ☰ All
-            </span>
-            <a href="#shop-section" className="hover:outline hover:outline-1 hover:outline-white px-1.5 py-0.5 rounded-sm whitespace-nowrap">Today's Deals</a>
-            <Link to="/my-orders" className="hover:outline hover:outline-1 hover:outline-white px-1.5 py-0.5 rounded-sm whitespace-nowrap">My Orders</Link>
-            <Link to="/track-order" className="hover:outline hover:outline-1 hover:outline-white px-1.5 py-0.5 rounded-sm whitespace-nowrap">Track Order</Link>
+        {/* Sub Navigation (Sleek Pills) */}
+        <div className="bg-slate-50/80 border-t border-slate-200/60 px-3 py-2 md:px-6 hidden sm:block">
+          <div className="max-w-7xl mx-auto flex items-center gap-3 overflow-x-auto scrollbar-hide">
+            <a href="#shop-section" className="text-xs font-bold px-4 py-1.5 rounded-full bg-white border border-slate-200 text-slate-700 hover:text-violet-700 hover:border-violet-300 shadow-sm transition-all whitespace-nowrap">🌟 Trending Now</a>
+            <Link to="/my-orders" className="text-xs font-semibold px-4 py-1.5 rounded-full text-slate-600 hover:text-violet-700 hover:bg-violet-50 transition-all whitespace-nowrap border border-transparent">My Orders</Link>
+            <Link to="/track-order" className="text-xs font-semibold px-4 py-1.5 rounded-full text-slate-600 hover:text-violet-700 hover:bg-violet-50 transition-all whitespace-nowrap border border-transparent">Track Order</Link>
             <a 
               href={`https://wa.me/919058802144?text=Hello! I am shopping on Maa Vaishno Devi Ladies Corner and need assistance.`} 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="hover:outline hover:outline-1 hover:outline-white px-1.5 py-0.5 rounded-sm text-amazon-yellow font-bold whitespace-nowrap"
+              className="ml-auto text-xs font-bold px-4 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 transition-all whitespace-nowrap flex items-center gap-1.5"
             >
-              📞 Customer Help
+              <Phone className="w-3.5 h-3.5" /> Need Help?
             </a>
           </div>
         </div>
@@ -323,9 +303,9 @@ export default function HomePage() {
                       className="w-full h-40 md:h-52 object-cover"
                     />
                     {/* Overlay gradient */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                    <div className="absolute bottom-3 left-4 right-4">
-                      <span className="bg-fk-yellow text-white text-[10px] font-bold px-2 py-0.5 rounded-sm uppercase">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                    <div className="absolute bottom-4 left-5 right-5">
+                      <span className="bg-amber-400 text-slate-900 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase shadow-sm">
                         {slide.subtitle}
                       </span>
                       <h3 className="text-white font-bold text-sm md:text-lg mt-1 leading-tight drop-shadow-lg">
@@ -344,8 +324,8 @@ export default function HomePage() {
                     onClick={() => setCurrentSlide(idx)}
                     className={`rounded-full transition-all duration-300 ${
                       idx === currentSlide 
-                        ? 'w-5 h-1.5 bg-fk-blue' 
-                        : 'w-1.5 h-1.5 bg-white/60'
+                        ? 'w-6 h-1.5 bg-violet-500' 
+                        : 'w-1.5 h-1.5 bg-white/60 hover:bg-white/80'
                     }`}
                     aria-label={`Go to slide ${idx + 1}`}
                   />
@@ -371,41 +351,45 @@ export default function HomePage() {
       </div>
 
       {/* ===== DEALS STRIP ===== */}
-      <div className="bg-fk-blue mx-2 md:mx-auto md:max-w-7xl mt-2 md:mt-3 rounded-sm overflow-hidden">
-        <div className="flex items-center justify-between px-3 py-2.5 md:px-6 md:py-3">
-          <div className="flex items-center gap-2">
-            <Zap className="w-4 h-4 md:w-5 md:h-5 text-fk-yellow fill-fk-yellow" />
-            <span className="text-white font-bold text-sm md:text-base">Deals of the Day</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-0.5">
-              <span className="bg-white text-fk-blue font-bold text-xs px-1.5 py-0.5 rounded-sm min-w-[24px] text-center">{countdown.hours}</span>
-              <span className="text-white font-bold text-xs">:</span>
-              <span className="bg-white text-fk-blue font-bold text-xs px-1.5 py-0.5 rounded-sm min-w-[24px] text-center">{countdown.minutes}</span>
-              <span className="text-white font-bold text-xs">:</span>
-              <span className="bg-white text-fk-blue font-bold text-xs px-1.5 py-0.5 rounded-sm min-w-[24px] text-center">{countdown.seconds}</span>
+      <div className="bg-gradient-to-r from-violet-900 via-violet-800 to-fuchsia-900 mx-2 md:mx-auto md:max-w-7xl mt-4 md:mt-6 rounded-2xl overflow-hidden shadow-lg border border-violet-700">
+        <div className="flex items-center justify-between px-4 py-3 md:px-6 md:py-4">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-sm">
+              <Zap className="w-4 h-4 md:w-5 md:h-5 text-amber-300 fill-amber-300" />
             </div>
-            <a href="#shop-section" className="text-white text-xs md:text-sm font-medium flex items-center gap-0.5">
-              VIEW ALL <ChevronRight className="w-3 h-3" />
+            <span className="text-white font-black text-sm md:text-base tracking-wide">Deals of the Day</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1.5">
+              <span className="bg-white/20 backdrop-blur-md text-white font-bold text-xs md:text-sm px-2 py-1 rounded-lg min-w-[28px] text-center border border-white/10 shadow-inner">{countdown.hours}</span>
+              <span className="text-violet-300 font-bold text-xs md:text-sm">:</span>
+              <span className="bg-white/20 backdrop-blur-md text-white font-bold text-xs md:text-sm px-2 py-1 rounded-lg min-w-[28px] text-center border border-white/10 shadow-inner">{countdown.minutes}</span>
+              <span className="text-violet-300 font-bold text-xs md:text-sm">:</span>
+              <span className="bg-white/20 backdrop-blur-md text-white font-bold text-xs md:text-sm px-2 py-1 rounded-lg min-w-[28px] text-center border border-white/10 shadow-inner">{countdown.seconds}</span>
+            </div>
+            <a href="#shop-section" className="text-violet-200 hover:text-white text-xs md:text-sm font-bold flex items-center gap-1 transition-colors bg-white/10 px-3 py-1.5 rounded-full">
+              VIEW ALL <ChevronRight className="w-3.5 h-3.5" />
             </a>
           </div>
         </div>
       </div>
 
       {/* ===== TRUST BADGES ===== */}
-      <div className="bg-white mt-2 border-y border-gray-100">
-        <div className="max-w-7xl mx-auto px-3 py-3 md:px-6 md:py-4 flex gap-4 md:gap-8 overflow-x-auto scrollbar-hide">
+      <div className="bg-white mt-4 border-y border-slate-100 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 py-4 md:px-6 md:py-6 flex gap-6 md:gap-12 justify-between overflow-x-auto scrollbar-hide">
           {[
             { icon: "🔒", label: "100% Genuine", sub: "Products" },
             { icon: "🚚", label: "Free Delivery", sub: "On ₹299+" },
             { icon: "↩️", label: "Easy Returns", sub: "7 Days" },
             { icon: "💎", label: "Premium", sub: "Quality" },
           ].map((item, i) => (
-            <div key={i} className="flex items-center gap-2 min-w-fit">
-              <span className="text-lg md:text-xl">{item.icon}</span>
+            <div key={i} className="flex items-center gap-3 min-w-fit group">
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-slate-50 flex items-center justify-center text-xl md:text-2xl group-hover:bg-violet-50 group-hover:scale-110 transition-all">
+                {item.icon}
+              </div>
               <div>
-                <p className="text-xs md:text-sm font-semibold text-gray-800 whitespace-nowrap">{item.label}</p>
-                <p className="text-[10px] md:text-xs text-gray-500">{item.sub}</p>
+                <p className="text-sm md:text-base font-bold text-slate-800 whitespace-nowrap">{item.label}</p>
+                <p className="text-[11px] md:text-xs font-medium text-slate-500">{item.sub}</p>
               </div>
             </div>
           ))}
@@ -414,38 +398,40 @@ export default function HomePage() {
 
       {/* ===== RECENTLY VIEWED PRODUCTS ===== */}
       {recentItems.length > 0 && (
-        <div className="bg-white mt-2 border-b border-gray-100">
-          <div className="max-w-7xl mx-auto px-3 py-3 md:px-6 md:py-4">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm md:text-base font-bold text-gray-800 flex items-center gap-2">
-                <Clock className="w-4 h-4 text-fk-blue" />
+        <div className="bg-white mt-4 mb-4 rounded-2xl shadow-sm border border-slate-100 mx-2 md:mx-auto md:max-w-7xl">
+          <div className="px-4 py-4 md:px-6 md:py-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg md:text-xl font-black text-slate-800 flex items-center gap-2">
+                <Clock className="w-5 h-5 text-violet-600" />
                 Recently Viewed
               </h2>
             </div>
-            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+            <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2">
               {recentItems.slice(0, 6).map((item) => (
                 <Link
                   key={item.id}
                   to={`/product/${item.id}`}
-                  className="flex-shrink-0 w-28 md:w-32 group hover:-translate-y-1 transition-transform duration-300"
+                  className="flex-shrink-0 w-32 md:w-40 group"
                 >
-                  <div className="aspect-[3/4] bg-gray-50 overflow-hidden rounded-sm mb-1.5">
+                  <div className="aspect-[3/4] bg-slate-50 overflow-hidden rounded-xl mb-2.5 relative border border-slate-100 group-hover:border-violet-200 transition-colors">
                     <img
                       src={item.image}
                       alt={item.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       loading="lazy"
                     />
+                    {item.discount > 0 && (
+                      <span className="absolute top-2 left-2 bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md shadow-sm">
+                        {item.discount}% OFF
+                      </span>
+                    )}
                   </div>
-                  <p className="text-[10px] md:text-xs text-gray-700 line-clamp-2 leading-snug font-medium">
+                  <p className="text-xs md:text-sm text-slate-700 line-clamp-2 leading-snug font-medium group-hover:text-violet-700 transition-colors">
                     {item.name}
                   </p>
-                  <p className="text-xs font-bold text-gray-900 mt-0.5">
+                  <p className="text-sm md:text-base font-black text-slate-900 mt-1">
                     {formatPrice(item.price)}
                   </p>
-                  {item.discount > 0 && (
-                    <p className="text-[10px] text-fk-green font-medium">{item.discount}% off</p>
-                  )}
                 </Link>
               ))}
             </div>
@@ -457,12 +443,12 @@ export default function HomePage() {
       <ShopSection externalSearch={searchQuery} />
 
       {/* ===== FOOTER ===== */}
-      <footer className="bg-gray-800 text-white mt-4">
-        <div className="max-w-7xl mx-auto px-4 py-6 md:py-10">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+      <footer className="bg-slate-900 text-white mt-8 border-t-4 border-violet-600">
+        <div className="max-w-7xl mx-auto px-4 py-8 md:py-12">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div>
-              <h4 className="text-xs font-bold text-gray-400 uppercase mb-3">About</h4>
-              <ul className="space-y-2 text-xs text-gray-300">
+              <h4 className="text-sm font-black text-slate-300 uppercase tracking-widest mb-4">About</h4>
+              <ul className="space-y-2.5 text-sm font-medium text-slate-400">
                 <li><Link to="/my-orders" className="hover:text-white">My Orders</Link></li>
                 <li><Link to="/track-order" className="hover:text-white">Track Order</Link></li>
                 <li>

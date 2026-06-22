@@ -26,8 +26,8 @@ export default function ProductCard({ product }) {
   return (
     <>
       <div
-        className={`bg-white h-full flex flex-col overflow-hidden relative transition-all duration-300 hover:-translate-y-1 hover:shadow-lg border border-transparent hover:border-gray-200 group ${
-          product.isOutOfStock ? "opacity-60" : ""
+        className={`bg-white h-full flex flex-col overflow-hidden relative transition-all duration-300 rounded-2xl shadow-sm hover:shadow-xl border border-slate-100 hover:border-violet-200 group ${
+          product.isOutOfStock ? "opacity-60 grayscale-[0.5]" : ""
         }`}
       >
         {/* Image Container */}
@@ -41,19 +41,19 @@ export default function ProductCard({ product }) {
             />
 
             {/* Badges — Top Left stack */}
-            <div className="absolute top-0 left-0 flex flex-col gap-0.5">
+            <div className="absolute top-2 left-2 flex flex-col gap-1.5 z-10">
               {product.discountPercentage > 0 && (
-                <span className="bg-fk-green text-white text-[10px] md:text-xs font-bold px-1.5 py-0.5 rounded-br-sm">
+                <span className="bg-rose-500 text-white text-[10px] md:text-xs font-bold px-2 py-0.5 rounded-full shadow-sm w-fit">
                   {product.discountPercentage}% OFF
                 </span>
               )}
               {newProduct && (
-                <span className="bg-fk-blue text-white text-[10px] font-bold px-1.5 py-0.5">
+                <span className="bg-violet-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm w-fit">
                   NEW ✨
                 </span>
               )}
               {product.isFeatured && !newProduct && (
-                <span className="bg-fk-yellow text-white text-[10px] font-bold px-1.5 py-0.5">
+                <span className="bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm w-fit">
                   🔥 HOT
                 </span>
               )}
@@ -69,21 +69,21 @@ export default function ProductCard({ product }) {
             )}
 
             {/* Action buttons — appear on hover */}
-            <div className="absolute top-2 right-2 flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <div className="absolute top-3 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-4 group-hover:translate-x-0 z-10">
               {/* Wishlist */}
               <button
                 onClick={(e) => {
                   e.preventDefault();
                   toggleWishlist(product);
                 }}
-                className={`w-7 h-7 rounded-full shadow-md flex items-center justify-center transition-all hover:scale-110 ${
+                className={`w-8 h-8 rounded-full shadow-md flex items-center justify-center transition-all hover:scale-110 ${
                   wishlisted
-                    ? "bg-fk-red text-white"
-                    : "bg-white text-gray-400 hover:text-fk-red"
+                    ? "bg-rose-500 text-white"
+                    : "bg-white/90 backdrop-blur-sm text-slate-400 hover:text-rose-500 hover:bg-white"
                 }`}
               >
                 <Heart
-                  className={`w-3.5 h-3.5 ${wishlisted ? "fill-white" : ""}`}
+                  className={`w-4 h-4 ${wishlisted ? "fill-white" : ""}`}
                 />
               </button>
 
@@ -94,10 +94,10 @@ export default function ProductCard({ product }) {
                     e.preventDefault();
                     setShowQuickView(true);
                   }}
-                  className="w-7 h-7 bg-white rounded-full shadow-md flex items-center justify-center text-gray-400 hover:text-fk-blue hover:scale-110 transition-all"
+                  className="w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full shadow-md flex items-center justify-center text-slate-400 hover:text-violet-600 hover:bg-white hover:scale-110 transition-all"
                   title="Quick View"
                 >
-                  <Eye className="w-3.5 h-3.5" />
+                  <Eye className="w-4 h-4" />
                 </button>
               )}
             </div>
@@ -109,9 +109,9 @@ export default function ProductCard({ product }) {
                   e.preventDefault();
                   toggleWishlist(product);
                 }}
-                className="absolute top-2 right-2 w-7 h-7 bg-fk-red rounded-full shadow-md flex items-center justify-center group-hover:hidden"
+                className="absolute top-3 right-3 w-8 h-8 bg-rose-500 rounded-full shadow-md flex items-center justify-center group-hover:hidden z-10"
               >
-                <Heart className="w-3.5 h-3.5 fill-white text-white" />
+                <Heart className="w-4 h-4 fill-white text-white" />
               </button>
             )}
           </div>
@@ -119,70 +119,76 @@ export default function ProductCard({ product }) {
 
         {/* Product Info */}
         <Link to={`/product/${product.id}`} className="flex-1 flex flex-col bg-white">
-          <div className="p-2.5 md:p-3 flex flex-col flex-1">
+          <div className="p-3 md:p-4 flex flex-col flex-1">
             {/* Brand / Category */}
-            <div className="text-[10px] md:text-xs font-semibold text-amazon-link hover:underline mb-0.5">
+            <div className="text-[9px] md:text-[10px] font-black text-violet-500 uppercase tracking-widest mb-1.5">
               {product.category}
             </div>
 
             {/* Product Name */}
-            <h3 className="text-xs md:text-sm text-gray-800 hover:text-amazon-link leading-snug mb-1.5 flex-1 line-clamp-2">
+            <h3 className="text-xs md:text-sm text-slate-800 hover:text-violet-700 font-medium leading-snug mb-2 flex-1 line-clamp-2 transition-colors">
               {product.productName}
             </h3>
 
             {/* Real Rating */}
             {product.reviewCount > 0 && (
-              <div className="flex items-center gap-1 mb-1.5">
+              <div className="flex items-center gap-1.5 mb-2.5">
                 <div className="flex items-center">
                   {[...Array(5)].map((_, i) => (
                     <Star 
                       key={i} 
-                      className={`w-3 h-3 ${
+                      className={`w-3.5 h-3.5 ${
                         i < Math.floor(product.rating) 
-                          ? "text-amazon-orange fill-amazon-orange" 
-                          : "text-gray-300 fill-gray-200"
+                          ? "text-amber-400 fill-amber-400" 
+                          : "text-slate-200 fill-slate-100"
                       }`} 
                     />
                   ))}
                 </div>
-                <span className="text-[11px] text-amazon-link hover:underline">
-                  {product.reviewCount}
+                <span className="text-[11px] font-medium text-slate-500 hover:text-slate-800">
+                  ({product.reviewCount})
                 </span>
               </div>
             )}
 
-            {/* Pricing — Amazon style */}
-            <div className="flex flex-col gap-0.5">
-              <div className="flex items-baseline gap-1.5 flex-wrap">
-                <span className="text-xs text-amazon-red font-medium">
-                  -{product.discountPercentage || 0}%
-                </span>
-                <span className="font-bold text-gray-900 text-base md:text-lg">
+            {/* Pricing */}
+            <div className="flex flex-col gap-1 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+              <div className="flex items-baseline gap-2 flex-wrap">
+                <span className="font-black text-slate-900 text-base md:text-lg">
                   {formatPrice(product.finalPrice)}
                 </span>
+                {product.discountPercentage > 0 && (
+                  <span className="text-[10px] md:text-xs text-rose-500 font-bold bg-rose-50 px-1.5 py-0.5 rounded-md">
+                    {product.discountPercentage}% OFF
+                  </span>
+                )}
               </div>
               {product.discountPercentage > 0 && (
-                <p className="text-[11px] text-gray-500">
-                  M.R.P.: <span className="line-through">{formatPrice(product.mrp)}</span>
+                <p className="text-[10px] text-slate-400 font-medium">
+                  MRP: <span className="line-through">{formatPrice(product.mrp)}</span>
                 </p>
               )}
             </div>
 
             {/* Stock Urgency Tag */}
             {product.stockQuantity > 0 && product.stockQuantity <= 5 && (
-              <p className="text-[10px] text-fk-red font-bold mt-1">
-                Only {product.stockQuantity} left in stock - Hurry!
+              <p className="text-[10px] text-rose-600 font-bold mt-2.5 flex items-center gap-1">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+                </span>
+                Only {product.stockQuantity} left!
               </p>
             )}
 
-            {/* Amazon Delivery Tag */}
-            <p className="text-[10px] text-gray-600 mt-1.5">
+            {/* Delivery Tag */}
+            <p className="text-[10px] font-medium text-slate-500 mt-2">
               {product.finalPrice >= 299 ? (
-                <>
-                  <span className="font-bold text-amazon-green">FREE Delivery</span> by <span className="font-bold">Tomorrow</span>
-                </>
+                <span className="flex items-center gap-1 text-emerald-600 bg-emerald-50 w-fit px-2 py-0.5 rounded-md border border-emerald-100">
+                  ✨ FREE Delivery
+                </span>
               ) : (
-                "Delivery charges apply"
+                "Standard Delivery"
               )}
             </p>
           </div>

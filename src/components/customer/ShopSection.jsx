@@ -122,19 +122,19 @@ export default function ShopSection({ externalSearch = "" }) {
                   placeholder="Search..." 
                   value={internalSearch}
                   onChange={(e) => setInternalSearch(e.target.value)}
-                  className="w-full pl-8 pr-3 py-1.5 bg-gray-50 border border-gray-200 rounded-sm text-sm focus:outline-none focus:border-amazon-orange"
+                  className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-full text-sm focus:outline-none focus:border-violet-600 focus:ring-1 focus:ring-violet-600 transition-all"
                 />
-                <Search className="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 {internalSearch && (
-                  <button onClick={() => setInternalSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                    <X className="w-3.5 h-3.5" />
+                  <button onClick={() => setInternalSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 bg-slate-200 rounded-full p-0.5">
+                    <X className="w-3 h-3" />
                   </button>
                 )}
               </div>
               )}
               {externalSearch && (
-                <div className="hidden md:flex items-center gap-1.5 bg-yellow-50 text-amazon-orange text-xs font-medium px-3 py-1.5 rounded-sm border border-amazon-orange/20">
-                  <Search className="w-3 h-3" />
+                <div className="hidden md:flex items-center gap-2 bg-violet-50 text-violet-700 text-xs font-bold px-4 py-2 rounded-full border border-violet-100 shadow-sm">
+                  <Search className="w-3.5 h-3.5" />
                   Searching: "{externalSearch}"
                 </div>
               )}
@@ -143,23 +143,23 @@ export default function ShopSection({ externalSearch = "" }) {
               <div className="relative">
                 <button 
                   onClick={() => setShowSortDropdown(!showSortDropdown)}
-                  className="flex items-center gap-1 px-2.5 py-1.5 md:px-3 md:py-2 bg-white border border-gray-200 rounded-sm text-xs md:text-sm text-gray-700 hover:bg-gray-50 active:scale-95 transition-all duration-200"
+                  className="flex items-center gap-1.5 px-3 py-2 md:px-4 md:py-2 bg-white border border-slate-200 rounded-full text-xs md:text-sm text-slate-700 hover:bg-slate-50 hover:border-slate-300 active:scale-95 transition-all duration-200 shadow-sm"
                 >
-                  <span className="hidden md:inline">Sort by:</span>
-                  <span className="font-medium text-gray-900">{sortOptions.find(o => o.value === sortBy)?.label.split(' ')[0]}</span>
-                  <ChevronDown className="w-3 h-3 md:w-4 md:h-4" />
+                  <span className="hidden md:inline font-medium">Sort by:</span>
+                  <span className="font-bold text-slate-900">{sortOptions.find(o => o.value === sortBy)?.label.split(' ')[0]}</span>
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
                 </button>
                 
                 {showSortDropdown && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setShowSortDropdown(false)} />
-                    <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-sm shadow-medium z-50">
+                    <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-slate-100 rounded-2xl shadow-xl z-50 overflow-hidden">
                       {sortOptions.map(opt => (
                         <button
                           key={opt.value}
                           onClick={() => { setSortBy(opt.value); setShowSortDropdown(false); }}
-                          className={`w-full text-left px-3 py-2 text-sm hover:bg-yellow-50 hover:pl-4 transition-all duration-200 ${
-                            sortBy === opt.value ? 'text-amazon-orange font-bold bg-yellow-50' : 'text-gray-700'
+                          className={`w-full text-left px-4 py-3 text-sm transition-all duration-200 ${
+                            sortBy === opt.value ? 'text-violet-700 font-bold bg-violet-50/50' : 'text-slate-600 hover:bg-slate-50 hover:pl-5'
                           }`}
                         >
                           {opt.label}
@@ -173,12 +173,12 @@ export default function ShopSection({ externalSearch = "" }) {
               {/* Mobile Filter Toggle */}
               <button 
                 onClick={() => setIsMobileFilterOpen(true)}
-                className="lg:hidden flex items-center gap-1 px-2.5 py-1.5 bg-white border border-gray-200 rounded-sm text-xs text-gray-700 hover:bg-gray-50 active:scale-95 transition-all duration-200 relative"
+                className="lg:hidden flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200 rounded-full text-xs font-bold text-slate-700 hover:bg-slate-50 active:scale-95 transition-all duration-200 relative shadow-sm"
               >
                 <SlidersHorizontal className="w-3.5 h-3.5" />
                 <span>Filters</span>
                 {hasActiveFilters && (
-                  <span className="w-1.5 h-1.5 bg-amazon-orange rounded-full absolute -top-0.5 -right-0.5" />
+                  <span className="w-2.5 h-2.5 bg-rose-500 rounded-full absolute -top-1 -right-1 border-2 border-white shadow-sm" />
                 )}
               </button>
             </div>
@@ -186,34 +186,34 @@ export default function ShopSection({ externalSearch = "" }) {
 
           {/* Active filter pills */}
           {hasActiveFilters && (
-            <div className="px-3 pb-2 md:px-6 flex gap-1.5 overflow-x-auto scrollbar-hide">
+            <div className="px-4 pb-3 md:px-6 flex gap-2 overflow-x-auto scrollbar-hide">
               {filters.categories.map(c => (
-                <span key={c} className="inline-flex items-center gap-1 bg-yellow-50 text-amazon-orange text-[10px] font-medium px-2 py-0.5 rounded-sm whitespace-nowrap border border-amazon-orange/10">
+                <span key={c} className="inline-flex items-center gap-1.5 bg-violet-50 text-violet-700 text-[11px] font-bold px-2.5 py-1 rounded-lg whitespace-nowrap border border-violet-100">
                   {c}
-                  <button onClick={() => setFilters(prev => ({ ...prev, categories: prev.categories.filter(x => x !== c) }))}>
-                    <X className="w-2.5 h-2.5" />
+                  <button onClick={() => setFilters(prev => ({ ...prev, categories: prev.categories.filter(x => x !== c) }))} className="hover:bg-violet-200 rounded-full p-0.5 transition-colors">
+                    <X className="w-3 h-3" />
                   </button>
                 </span>
               ))}
               {filters.colors.map(c => (
-                <span key={c} className="inline-flex items-center gap-1 bg-yellow-50 text-amazon-orange text-[10px] font-medium px-2 py-0.5 rounded-sm whitespace-nowrap border border-amazon-orange/10">
+                <span key={c} className="inline-flex items-center gap-1.5 bg-violet-50 text-violet-700 text-[11px] font-bold px-2.5 py-1 rounded-lg whitespace-nowrap border border-violet-100">
                   {c}
-                  <button onClick={() => setFilters(prev => ({ ...prev, colors: prev.colors.filter(x => x !== c) }))}>
-                    <X className="w-2.5 h-2.5" />
+                  <button onClick={() => setFilters(prev => ({ ...prev, colors: prev.colors.filter(x => x !== c) }))} className="hover:bg-violet-200 rounded-full p-0.5 transition-colors">
+                    <X className="w-3 h-3" />
                   </button>
                 </span>
               ))}
               {filters.sizes.map(s => (
-                <span key={s} className="inline-flex items-center gap-1 bg-yellow-50 text-amazon-orange text-[10px] font-medium px-2 py-0.5 rounded-sm whitespace-nowrap border border-amazon-orange/10">
+                <span key={s} className="inline-flex items-center gap-1.5 bg-violet-50 text-violet-700 text-[11px] font-bold px-2.5 py-1 rounded-lg whitespace-nowrap border border-violet-100">
                   Size: {s}
-                  <button onClick={() => setFilters(prev => ({ ...prev, sizes: prev.sizes.filter(x => x !== s) }))}>
-                    <X className="w-2.5 h-2.5" />
+                  <button onClick={() => setFilters(prev => ({ ...prev, sizes: prev.sizes.filter(x => x !== s) }))} className="hover:bg-violet-200 rounded-full p-0.5 transition-colors">
+                    <X className="w-3 h-3" />
                   </button>
                 </span>
               ))}
               <button 
                 onClick={() => setFilters({ categories: [], sizes: [], colors: [] })}
-                className="text-[10px] text-amazon-link font-bold whitespace-nowrap px-1 hover:underline"
+                className="text-[11px] text-rose-600 font-bold whitespace-nowrap px-2 hover:underline tracking-widest uppercase"
               >
                 CLEAR ALL
               </button>
@@ -231,26 +231,26 @@ export default function ShopSection({ externalSearch = "" }) {
           />
           
           {/* Product Grid */}
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 bg-slate-50">
             {loading ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-px bg-gray-100">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 p-3">
                 {Array.from({ length: 10 }).map((_, i) => (
                   <ProductCardSkeleton key={i} />
                 ))}
               </div>
             ) : filteredProducts.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-[1px] md:gap-[1px] bg-gray-100">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 p-3">
                 {filteredProducts.map(product => (
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>
             ) : (
-              <div className="text-center py-16 bg-white">
-                <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Search className="w-6 h-6 text-gray-400" />
+              <div className="text-center py-20 bg-white m-3 rounded-3xl border border-slate-100 shadow-sm">
+                <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-slate-100">
+                  <Search className="w-8 h-8 text-slate-300" />
                 </div>
-                <h3 className="text-base font-semibold text-gray-800 mb-1">No products found</h3>
-                <p className="text-sm text-gray-500 max-w-sm mx-auto mb-4">
+                <h3 className="text-xl font-black text-slate-900 mb-2">No products found</h3>
+                <p className="text-sm font-medium text-slate-500 max-w-sm mx-auto mb-6">
                   Try adjusting your filters or search terms.
                 </p>
                 <button 
@@ -258,7 +258,7 @@ export default function ShopSection({ externalSearch = "" }) {
                     setFilters({ categories: [], sizes: [], colors: [] });
                     setInternalSearch("");
                   }}
-                  className="text-amazon-link font-medium text-sm hover:underline"
+                  className="bg-violet-600 hover:bg-violet-700 text-white font-bold px-6 py-2.5 rounded-xl shadow-md shadow-violet-200 transition-all hover:-translate-y-0.5 text-sm"
                 >
                   Clear all filters
                 </button>
