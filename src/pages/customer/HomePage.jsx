@@ -6,7 +6,7 @@ import {
   Search, ShoppingCart, ChevronRight, ChevronLeft, 
   Loader2, Heart, Home, Grid3X3, User, Zap,
   Sparkles, Gift, Crown, Star, Gem, Flower2, CircleDot, Palette, Clock,
-  PackageOpen, Phone
+  PackageOpen, Phone, PackageCheck
 } from "lucide-react";
 import ShopSection from "../../components/customer/ShopSection";
 import { useCart } from "../../contexts/CartContext";
@@ -459,14 +459,7 @@ export default function HomePage() {
                     {currentUser ? "My Account" : "Sign In"}
                   </button>
                 </li>
-                <li>
-                  <Link
-                    to="/admin/login"
-                    className="hover:text-amazon-yellow text-gray-500 flex items-center gap-1"
-                  >
-                    🔐 Admin Panel
-                  </Link>
-                </li>
+
               </ul>
             </div>
             <div>
@@ -474,7 +467,7 @@ export default function HomePage() {
               <ul className="space-y-2 text-xs text-gray-300">
                 <li>
                   <a
-                    href={`https://wa.me/919808861896?text=Hi, I need help with my order`}
+                    href={`https://wa.me/919058802144?text=Hi, I need help with my order`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="hover:text-white"
@@ -484,7 +477,7 @@ export default function HomePage() {
                 </li>
                 <li>
                   <a
-                    href={`https://wa.me/919808861896?text=Hi, I have a shipping question`}
+                    href={`https://wa.me/919058802144?text=Hi, I have a shipping question`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="hover:text-white"
@@ -500,7 +493,7 @@ export default function HomePage() {
               <ul className="space-y-2 text-xs text-gray-300">
                 <li>
                   <a
-                    href={`https://wa.me/919808861896?text=Hi, I want to return/exchange my order`}
+                    href={`https://wa.me/919058802144?text=Hi, I want to return/exchange my order`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="hover:text-white"
@@ -510,7 +503,7 @@ export default function HomePage() {
                 </li>
                 <li>
                   <a
-                    href={`https://wa.me/919808861896?text=Hi, I have a query about terms`}
+                    href={`https://wa.me/919058802144?text=Hi, I have a query about terms`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="hover:text-white"
@@ -520,7 +513,7 @@ export default function HomePage() {
                 </li>
                 <li>
                   <a
-                    href={`https://wa.me/919808861896?text=Hi, I have a privacy query`}
+                    href={`https://wa.me/919058802144?text=Hi, I have a privacy query`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="hover:text-white"
@@ -545,12 +538,6 @@ export default function HomePage() {
                   <span className="text-sm">📞</span>
                   <a href="tel:9058802144" className="text-amazon-yellow font-bold hover:text-white transition-colors">
                     9058802144
-                  </a>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm">📞</span>
-                  <a href="tel:8218442702" className="text-amazon-yellow font-bold hover:text-white transition-colors">
-                    8218442702
                   </a>
                 </div>
               </div>
@@ -587,7 +574,7 @@ export default function HomePage() {
             { id: "home", icon: Home, label: "Home", href: "/" },
             { id: "categories", icon: Grid3X3, label: "Categories", href: "#shop-section" },
             { id: "cart", icon: ShoppingCart, label: "Cart", action: () => setIsCartOpen(true), count: cartCount },
-            { id: "orders", icon: Heart, label: "Orders", href: "/my-orders" },
+            { id: "orders", icon: PackageCheck, label: "Orders", href: "/my-orders" },
             { id: "account", icon: User, label: "Account", action: () => setIsLoginModalOpen(true), photo: currentUser ? userProfile?.photo : null },
           ].map(item => (
             item.action ? (
