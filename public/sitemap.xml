@@ -2,32 +2,22 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://www.vaishnodevicorner.in/</loc>
-    <lastmod>2026-06-22</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://www.vaishnodevicorner.in/track-order</loc>
-    <lastmod>2026-06-22</lastmod>
-    <changefreq>weekly</changefreq>
+    <loc>https://www.vaishnodevicorner.in/products</loc>
+    <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.vaishnodevicorner.in/my-orders</loc>
-    <lastmod>2026-06-22</lastmod>
-    <changefreq>weekly</changefreq>
+    <loc>https://www.vaishnodevicorner.in/about</loc>
+    <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.vaishnodevicorner.in/checkout</loc>
-    <lastmod>2026-06-22</lastmod>
+    <loc>https://www.vaishnodevicorner.in/contact</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://www.vaishnodevicorner.in/product/McqE0TfPo2PY9P7F8UE5</loc>
-    <lastmod>2026-06-22</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.7</priority>
   </url>
 </urlset>

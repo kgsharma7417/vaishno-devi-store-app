@@ -14,7 +14,7 @@ import { COLOR_SWATCHES } from "../../utils/constants";
 import { useSEO } from "../../hooks/useSEO";
 import { 
   ArrowLeft, Check, Share2, Sparkles,
-  Ruler, Truck, ShieldCheck, Video, ShoppingCart, 
+  Ruler, Truck, ShieldCheck, Video, ShoppingCart, CreditCard,
   Heart, ChevronRight, Zap, MapPin, RotateCcw, Star, XCircle
 } from "lucide-react";
 
@@ -159,9 +159,9 @@ export default function ProductPage() {
       <header className="bg-white/80 backdrop-blur-md sticky top-0 z-40 shadow-sm border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 md:px-6">
           <div className="flex items-center h-14 md:h-16 gap-4">
-            <Link to="/" className="text-slate-600 p-2 hover:bg-slate-100 hover:text-violet-600 rounded-full transition-colors">
+            <button onClick={() => navigate(-1)} className="text-slate-600 p-2 hover:bg-slate-100 hover:text-violet-600 rounded-full transition-colors">
               <ArrowLeft className="w-5 h-5" />
-            </Link>
+            </button>
             <div className="flex-1 min-w-0">
               <p className="text-slate-900 text-base md:text-lg font-bold truncate tracking-tight">{product.productName}</p>
               <p className="text-violet-500 text-[10px] md:text-xs font-black uppercase tracking-widest">{product.category}</p>

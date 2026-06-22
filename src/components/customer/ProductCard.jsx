@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Heart, Star, Eye } from "lucide-react";
+import { Heart, Star, Eye, ShoppingCart } from "lucide-react";
 import { formatPrice } from "../../utils/helpers";
 import { useWishlist } from "../../contexts/WishlistContext";
+import { useCart } from "../../contexts/CartContext";
 import QuickViewModal from "./QuickViewModal";
 
 // Products created in last 7 days are "New"
@@ -15,9 +16,28 @@ function isNew(product) {
 
 export default function ProductCard({ product }) {
   const { isWishlisted, toggleWishlist } = useWishlist();
+  const { addToCart } = useCart();
   const [showQuickView, setShowQuickView] = useState(false);
   const wishlisted = isWishlisted(product.id);
   const newProduct = isNew(product);
+
+  // Determine if product needs selection (size/color) before adding to cart
+  const needsSelection = (
+    (product.colors && product.colors.length > 1) ||
+    (Object.keys(product.sizesAndStock || {}).length > 1)
+  );
+
+  const handleQuickAdd = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (needsSelection) {
+      setShowQuickView(true);
+    } else {
+      const size = Object.keys(product.sizesAndStock || {})[0] || "Standard";
+      const color = product.colors?.[0] || "Default";
+      addToCart(product, size, color, 1, e);
+    }
+  };
 
   const mainImage =
     product.imageUrls?.[0] ||
@@ -193,6 +213,19 @@ export default function ProductCard({ product }) {
             </p>
           </div>
         </Link>
+
+        {/* Add to Cart Button */}
+        {!product.isOutOfStock && (
+          <div className="px-3 pb-3 md:px-4 md:pb-4">
+            <button
+              onClick={handleQuickAdd}
+              className="w-full flex items-center justify-center gap-2 py-2.5 bg-violet-600 hover:bg-violet-700 text-white text-xs font-black uppercase rounded-xl transition-all shadow-sm shadow-violet-200 hover:shadow-md hover:-translate-y-0.5 active:scale-95"
+            >
+              <ShoppingCart className="w-3.5 h-3.5" />
+              {needsSelection ? "Select Options" : "Add to Cart"}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Quick View Modal */}
