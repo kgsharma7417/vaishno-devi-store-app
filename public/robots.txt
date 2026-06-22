@@ -3,4 +3,4 @@ Allow: /
 Disallow: /admin/
 Disallow: /checkout
 
-Sitemap: https://radhe-bangles.web.app/sitemap.xml
+Sitemap: https://www.vaishnodevicorner.in/sitemap.xml
