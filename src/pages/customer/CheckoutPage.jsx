@@ -7,7 +7,7 @@ import { useSEO } from "../../hooks/useSEO";
 import { formatPrice } from "../../utils/helpers";
 import { db } from "../../config/firebase";
 import { collection, addDoc, serverTimestamp, doc, getDoc } from "firebase/firestore";
-import { ArrowLeft, MapPin, CreditCard, ShieldCheck, PackageCheck, Loader2, ChevronRight, Tag } from "lucide-react";
+import { ArrowLeft, MapPin, CreditCard, ShieldCheck, PackageCheck, Loader2, ChevronRight, Tag, Info } from "lucide-react";
 import { QRCodeSVG } from 'qrcode.react';
 import { launchConfetti } from "../../utils/confetti";
 
@@ -490,8 +490,20 @@ export default function CheckoutPage() {
                         <p className="text-xs font-mono font-bold text-gray-800 bg-white px-3 py-1 rounded-sm border border-gray-200 mb-4">{upiDetails.upiId}</p>
                         
                         <div className="w-full text-left bg-white p-3 rounded-sm border border-gray-200">
-                          <label className="input-label text-xs text-amazon-navy font-bold">Transaction ID (UTR) <span className="text-amazon-red">*</span></label>
-                          <input type="text" required value={transactionId} onChange={(e) => setTransactionId(e.target.value)} placeholder="e.g. 123456789012" className="input-field text-sm" />
+                          <label className="input-label text-xs text-amazon-navy font-bold flex items-center gap-1.5 relative">
+                            Transaction ID (UTR) <span className="text-amazon-red">*</span>
+                            <div className="group relative flex items-center cursor-help">
+                              <Info className="w-3.5 h-3.5 text-blue-500" />
+                              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 sm:w-64 p-3 bg-gray-900 text-white text-[10px] rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                                <p className="font-bold mb-1 border-b border-gray-700 pb-1">Where to find UTR/Ref No?</p>
+                                <p className="mb-0.5">• <strong>PhonePe:</strong> "UTR" (12 digits) in History.</p>
+                                <p className="mb-0.5">• <strong>GPay:</strong> "UPI transaction ID" in details.</p>
+                                <p>• <strong>Paytm:</strong> "UPI Ref No" in History.</p>
+                                <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                              </div>
+                            </div>
+                          </label>
+                          <input type="text" required value={transactionId} onChange={(e) => setTransactionId(e.target.value)} placeholder="e.g. 123456789012" className="input-field text-sm mt-1" />
                           <p className="text-[10px] text-gray-500 mt-1">Enter the 12-digit UTR/Ref number after paying.</p>
                         </div>
                       </div>

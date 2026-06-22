@@ -392,23 +392,25 @@ export default function ProductPage() {
               </>
             )}
 
-            {/* Delivery & Services — Flipkart style */}
-            <div className="space-y-3">
-              <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider">Available Offers</h3>
-              
-              <div className="space-y-2">
-                {[
-                  { icon: Truck, text: "Free Delivery on orders above ₹299", color: "text-gray-500" },
-                  product.isReturnable !== false 
-                    ? { icon: RotateCcw, text: "Easy 7-day Returns & Exchange", color: "text-gray-500" }
-                    : { icon: XCircle, text: "Non-returnable item", color: "text-fk-red" },
-                  { icon: ShieldCheck, text: "100% Genuine & Quality Assured", color: "text-gray-500" },
-                ].map((item, i) => (
-                  <div key={i} className="flex items-start gap-2.5">
-                    <item.icon className={`w-4 h-4 ${item.color} flex-shrink-0 mt-0.5`} />
-                    <p className={`text-sm ${item.color === 'text-fk-red' ? 'text-fk-red font-medium' : 'text-gray-600'}`}>{item.text}</p>
-                  </div>
-                ))}
+            {/* Trust Badges */}
+            <div className="grid grid-cols-3 gap-2 py-3">
+              <div className="flex flex-col items-center text-center gap-1.5 p-2 bg-gray-50 rounded-xl border border-gray-100">
+                <div className="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+                  <Truck className="w-4 h-4" />
+                </div>
+                <span className="text-[10px] font-semibold text-gray-700 leading-tight">Free Delivery<br/><span className="font-normal text-gray-500">Above ₹299</span></span>
+              </div>
+              <div className="flex flex-col items-center text-center gap-1.5 p-2 bg-gray-50 rounded-xl border border-gray-100">
+                <div className="w-9 h-9 rounded-full bg-green-50 flex items-center justify-center text-green-600">
+                  <ShieldCheck className="w-4 h-4" />
+                </div>
+                <span className="text-[10px] font-semibold text-gray-700 leading-tight">Secure<br/><span className="font-normal text-gray-500">Payment</span></span>
+              </div>
+              <div className="flex flex-col items-center text-center gap-1.5 p-2 bg-gray-50 rounded-xl border border-gray-100">
+                <div className="w-9 h-9 rounded-full bg-orange-50 flex items-center justify-center text-orange-600">
+                  <RotateCcw className="w-4 h-4" />
+                </div>
+                <span className="text-[10px] font-semibold text-gray-700 leading-tight">Easy<br/><span className="font-normal text-gray-500">Returns</span></span>
               </div>
             </div>
 

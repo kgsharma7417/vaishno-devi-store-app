@@ -654,15 +654,6 @@ export default function HomePage() {
         onClose={() => setIsLoginModalOpen(false)}
       />
 
-      {/* ===== FLOATING ADMIN ACCESS BUTTON ===== */}
-      <Link
-        to="/admin/login"
-        title="Admin Panel Login"
-        className="hidden md:flex fixed bottom-6 right-6 z-40 items-center gap-2 bg-gray-900 hover:bg-gray-700 hover:-translate-y-1 hover:shadow-glow text-white text-xs font-semibold px-4 py-2.5 rounded-full shadow-lg border border-gray-700 hover:border-gray-500 transition-all duration-300 group"
-      >
-        <span className="text-base">🔐</span>
-        <span className="group-hover:text-amazon-yellow transition-colors">Admin Panel</span>
-      </Link>
     </div>
   );
 }

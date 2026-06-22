@@ -166,6 +166,13 @@ export default function ProductCard({ product }) {
               )}
             </div>
 
+            {/* Stock Urgency Tag */}
+            {product.stockQuantity > 0 && product.stockQuantity <= 5 && (
+              <p className="text-[10px] text-fk-red font-bold mt-1">
+                Only {product.stockQuantity} left in stock - Hurry!
+              </p>
+            )}
+
             {/* Amazon Delivery Tag */}
             <p className="text-[10px] text-gray-600 mt-1.5">
               {product.finalPrice >= 299 ? (
