@@ -42,6 +42,8 @@ import {
   Barcode,
   CalendarDays,
   Layers,
+  ArrowLeft,
+  ChevronRight,
 } from "lucide-react";
 
 // ─── Initial State ─────────────────────────────────────────────────────────────
@@ -134,6 +136,7 @@ export default function ProductForm({ editId }) {
   const [submitting, setSubmitting] = useState(false);
   const [loadingInitial, setLoadingInitial] = useState(!!editId);
   const [isDuplicate, setIsDuplicate] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
   const fileInputRef = useRef(null);
   const printRef = useRef(null);
   const { addToast } = useToast();
@@ -464,11 +467,31 @@ export default function ProductForm({ editId }) {
       )}
 
       <form onSubmit={handleSubmit}>
-        {/* ═══ 2-COLUMN GRID (desktop) ═══════════════════════════════════════ */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* ═══ STEPPER UI ═══════════════════════════════════════════════════ */}
+        <div className="mb-10 max-w-2xl mx-auto relative px-4">
+          <div className="flex items-center justify-between relative z-10">
+            {[1, 2, 3].map((step) => (
+              <div key={step} className="flex flex-col items-center gap-2 cursor-pointer bg-slate-50 px-2" onClick={() => setCurrentStep(step)}>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${currentStep === step ? "bg-violet-600 text-white shadow-lg scale-110" : currentStep > step ? "bg-violet-100 text-violet-600 border border-violet-200" : "bg-white text-slate-400 border-2 border-slate-200"}`}>
+                  {currentStep > step ? <CheckCircle2 className="w-5 h-5" /> : step}
+                </div>
+                <span className={`text-[11px] sm:text-xs font-bold tracking-wide ${currentStep === step ? "text-violet-700" : "text-slate-500"}`}>
+                  {step === 1 ? "BASIC DETAILS" : step === 2 ? "PRICING & TYPE" : "IMAGES & EXTRAS"}
+                </span>
+              </div>
+            ))}
+          </div>
+          {/* Progress Line */}
+          <div className="absolute top-5 left-10 right-10 h-1 bg-slate-200 -z-0 rounded-full">
+            <div className="h-full bg-violet-500 rounded-full transition-all duration-500" style={{ width: `${((currentStep - 1) / 2) * 100}%` }} />
+          </div>
+        </div>
 
-          {/* ──────────── LEFT COLUMN ──────────── */}
-          <div className="space-y-6">
+        {/* ═══ FORM CONTENT (Single Column Wizard) ══════════════════════════════════ */}
+        <div className="max-w-3xl mx-auto space-y-6">
+
+          {/* STEP 1: Basic Information */}
+          <div className={`space-y-6 transition-all duration-500 ${currentStep === 1 ? 'block animate-fade-in' : 'hidden'}`}>
 
             {/* ── SECTION 1: Basic Info ── */}
             <SectionCard icon={Tag} title="Basic Information" accentColor="violet">
@@ -579,6 +602,10 @@ export default function ProductForm({ editId }) {
                 </div>
               </div>
             </SectionCard>
+          </div>
+
+          {/* STEP 2: Sale vs Rent Toggle */}
+          <div className={`space-y-6 transition-all duration-500 ${currentStep === 2 ? 'block animate-fade-in' : 'hidden'}`}>
 
             {/* ── SECTION 2: Sale vs Rent Toggle ── */}
             <SectionCard icon={form.isRental ? Key : ShoppingBag} title="Item Type — Sale ya Rent?" accentColor={form.isRental ? "rose" : "emerald"}>
@@ -758,8 +785,8 @@ export default function ProductForm({ editId }) {
             </SectionCard>
           </div>
 
-          {/* ──────────── RIGHT COLUMN ──────────── */}
-          <div className="space-y-6">
+          {/* STEP 3: Images & Extras */}
+          <div className={`space-y-6 transition-all duration-500 ${currentStep === 3 ? 'block animate-fade-in' : 'hidden'}`}>
 
             {/* ── SECTION 3: Images ── */}
             <SectionCard icon={ImageIcon} title="Product Images" accentColor="blue">
@@ -940,34 +967,35 @@ export default function ProductForm({ editId }) {
         </div>
 
         {/* ── STICKY SAVE BAR ────────────────────────────────────────────────── */}
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-t border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
-          <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
+          <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <button type="button"
-                onClick={() => { setForm(buildInitialForm()); setImages([]); setIsDuplicate(false); }}
-                disabled={submitting}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-medium transition-all disabled:opacity-50">
-                <RotateCcw className="w-4 h-4" /> Clear
-              </button>
-              {isLowStock && (
-                <span className="flex items-center gap-1.5 text-amber-600 text-xs font-semibold bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200">
-                  <AlertTriangle className="w-3.5 h-3.5" /> Low Stock Warning
-                </span>
-              )}
-              {isOverdue && (
-                <span className="flex items-center gap-1.5 text-rose-600 text-xs font-semibold bg-rose-50 px-3 py-1.5 rounded-lg border border-rose-200">
-                  <Clock className="w-3.5 h-3.5" /> Overdue Item
-                </span>
+              {currentStep > 1 ? (
+                <button type="button" onClick={() => setCurrentStep(prev => prev - 1)} className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 text-sm font-semibold transition-all">
+                  <ArrowLeft className="w-4 h-4" /> Back
+                </button>
+              ) : (
+                <button type="button" onClick={() => { setForm(buildInitialForm()); setImages([]); setIsDuplicate(false); }} disabled={submitting} className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 text-sm font-semibold transition-all disabled:opacity-50">
+                  <RotateCcw className="w-4 h-4" /> Clear Form
+                </button>
               )}
             </div>
-            <button type="submit" disabled={submitting}
-              className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-semibold text-sm shadow-md hover:shadow-lg transition-all disabled:opacity-70 disabled:cursor-not-allowed">
-              {submitting ? (
-                <><Loader2 className="w-4 h-4 animate-spin" />{uploading ? "Images upload ho rahi hain..." : "Save ho raha hai..."}</>
+            
+            <div className="flex items-center gap-3">
+              {currentStep < 3 ? (
+                <button type="button" onClick={() => setCurrentStep(prev => prev + 1)} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-semibold text-sm shadow-md hover:shadow-lg transition-all active:scale-95">
+                  Next Step <ChevronRight className="w-4 h-4" />
+                </button>
               ) : (
-                <>{editId && !isDuplicate ? "✏️ Update Product" : "💾 Save Product"}</>
+                <button type="submit" disabled={submitting} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-semibold text-sm shadow-md hover:shadow-lg transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed">
+                  {submitting ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" />{uploading ? "Uploading..." : "Saving..."}</>
+                  ) : (
+                    <>{editId && !isDuplicate ? "✏️ Update Product" : "🚀 Publish Product"}</>
+                  )}
+                </button>
               )}
-            </button>
+            </div>
           </div>
         </div>
       </form>
