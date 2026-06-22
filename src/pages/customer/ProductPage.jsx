@@ -241,23 +241,27 @@ export default function ProductPage() {
             </h1>
 
             {/* Rating — Amazon Stars */}
-            <div className="flex items-center gap-1.5">
-              <div className="flex items-center">
-                {[...Array(5)].map((_, i) => (
-                  <Star 
-                    key={i} 
-                    className={`w-3.5 h-3.5 ${
-                      i < Math.floor(product.rating || 4.2) 
-                        ? "text-amazon-orange fill-amazon-orange" 
-                        : "text-gray-300 fill-gray-200"
-                    }`} 
-                  />
-                ))}
+            {product.reviewCount > 0 ? (
+              <div className="flex items-center gap-1.5">
+                <div className="flex items-center">
+                  {[...Array(5)].map((_, i) => (
+                    <Star 
+                      key={i} 
+                      className={`w-3.5 h-3.5 ${
+                        i < Math.floor(product.rating) 
+                          ? "text-amazon-orange fill-amazon-orange" 
+                          : "text-gray-300 fill-gray-200"
+                      }`} 
+                    />
+                  ))}
+                </div>
+                <span className="text-xs text-amazon-link hover:underline cursor-pointer" onClick={() => document.getElementById('reviews-section')?.scrollIntoView({behavior: 'smooth'})}>
+                  {product.reviewCount} reviews
+                </span>
               </div>
-              <span className="text-xs text-amazon-link hover:underline">
-                {product.reviewCount || 15} reviews
-              </span>
-            </div>
+            ) : (
+              <div className="text-xs text-gray-500 mb-1">No reviews yet</div>
+            )}
 
             {/* Special offer tag */}
             <div className="flex items-center gap-1.5 text-fk-green text-sm font-medium">

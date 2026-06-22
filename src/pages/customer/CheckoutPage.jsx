@@ -6,7 +6,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { useSEO } from "../../hooks/useSEO";
 import { formatPrice } from "../../utils/helpers";
 import { db } from "../../config/firebase";
-import { collection, addDoc, serverTimestamp, doc, getDoc } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, doc, getDoc, writeBatch } from "firebase/firestore";
 import { ArrowLeft, MapPin, CreditCard, ShieldCheck, PackageCheck, Loader2, ChevronRight, Tag, Info } from "lucide-react";
 import { QRCodeSVG } from 'qrcode.react';
 import { launchConfetti } from "../../utils/confetti";
@@ -190,15 +190,55 @@ export default function CheckoutPage() {
         createdAt: serverTimestamp()
       };
 
-      const docRef = await addDoc(collection(db, "orders"), orderData);
-      setPlacedOrderId(docRef.id);
+      // Create a batch to update stock and save order
+      const batch = writeBatch(db);
+
+      // Update inventory for each item
+      for (const item of cartItems) {
+        const productRef = doc(db, "products", item.id);
+        const pSnap = await getDoc(productRef);
+        
+        if (pSnap.exists()) {
+          const pData = pSnap.data();
+          let updates = {};
+          
+          if (pData.sizesAndStock && item.size && pData.sizesAndStock[item.size] !== undefined) {
+            const currentSizeStock = pData.sizesAndStock[item.size];
+            updates[`sizesAndStock.${item.size}`] = Math.max(0, currentSizeStock - item.quantity);
+            // Also deduct from total stock if it exists
+            if (pData.stockQuantity !== undefined) {
+              updates.stockQuantity = Math.max(0, pData.stockQuantity - item.quantity);
+            }
+          } else if (pData.stockQuantity !== undefined) {
+            updates.stockQuantity = Math.max(0, pData.stockQuantity - item.quantity);
+          }
+
+          // If stock falls to 0, mark out of stock
+          if (updates.stockQuantity === 0 || (pData.stockQuantity !== undefined && pData.stockQuantity - item.quantity <= 0)) {
+            updates.isOutOfStock = true;
+          }
+          
+          if (Object.keys(updates).length > 0) {
+            batch.update(productRef, updates);
+          }
+        }
+      }
+
+      // Add order document to batch
+      const orderRef = doc(collection(db, "orders"));
+      batch.set(orderRef, orderData);
+
+      // Commit all changes
+      await batch.commit();
+
+      setPlacedOrderId(orderRef.id);
       setOrderPlaced(true);
 
       // Save order to localStorage for history
       try {
         const existingOrders = JSON.parse(localStorage.getItem('my_bangle_orders') || '[]');
-        if (!existingOrders.includes(docRef.id)) {
-          existingOrders.push(docRef.id);
+        if (!existingOrders.includes(orderRef.id)) {
+          existingOrders.push(orderRef.id);
           localStorage.setItem('my_bangle_orders', JSON.stringify(existingOrders));
         }
       } catch (e) {

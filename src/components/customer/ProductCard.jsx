@@ -130,24 +130,26 @@ export default function ProductCard({ product }) {
               {product.productName}
             </h3>
 
-            {/* Real Rating — Amazon Style (Stars) */}
-            <div className="flex items-center gap-1 mb-1.5">
-              <div className="flex items-center">
-                {[...Array(5)].map((_, i) => (
-                  <Star 
-                    key={i} 
-                    className={`w-3 h-3 ${
-                      i < Math.floor(product.rating || 4.2) 
-                        ? "text-amazon-orange fill-amazon-orange" 
-                        : "text-gray-300 fill-gray-200"
-                    }`} 
-                  />
-                ))}
+            {/* Real Rating */}
+            {product.reviewCount > 0 && (
+              <div className="flex items-center gap-1 mb-1.5">
+                <div className="flex items-center">
+                  {[...Array(5)].map((_, i) => (
+                    <Star 
+                      key={i} 
+                      className={`w-3 h-3 ${
+                        i < Math.floor(product.rating) 
+                          ? "text-amazon-orange fill-amazon-orange" 
+                          : "text-gray-300 fill-gray-200"
+                      }`} 
+                    />
+                  ))}
+                </div>
+                <span className="text-[11px] text-amazon-link hover:underline">
+                  {product.reviewCount}
+                </span>
               </div>
-              <span className="text-[11px] text-amazon-link hover:underline">
-                {product.reviewCount || 12}
-              </span>
-            </div>
+            )}
 
             {/* Pricing — Amazon style */}
             <div className="flex flex-col gap-0.5">
