@@ -21,7 +21,7 @@ export default function ProductCard({ product }) {
 
   const mainImage =
     product.imageUrls?.[0] ||
-    "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?q=80&w=600&auto=format&fit=crop";
+    "/hero/1.png";
 
   return (
     <>
