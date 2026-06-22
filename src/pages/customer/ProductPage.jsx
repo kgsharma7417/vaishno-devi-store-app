@@ -269,6 +269,17 @@ export default function ProductPage() {
               <span>Special Price</span>
             </div>
 
+            {/* COD Availability Badge */}
+            {product.isCodAvailable !== false ? (
+              <div className="flex items-center gap-1.5 mt-2 bg-emerald-50 text-emerald-700 text-xs font-bold px-2 py-1 rounded-sm w-fit border border-emerald-100">
+                <ShieldCheck className="w-3.5 h-3.5" /> Cash on Delivery Available
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 mt-2 bg-rose-50 text-rose-700 text-xs font-bold px-2 py-1 rounded-sm w-fit border border-rose-100">
+                <CreditCard className="w-3.5 h-3.5" /> Online Payment Only (COD Disabled)
+              </div>
+            )}
+
             {/* Pricing — Amazon style */}
             <div className="flex flex-col gap-1">
               <div className="flex items-baseline gap-3">

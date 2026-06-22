@@ -54,6 +54,14 @@ export default function CheckoutPage() {
 
   const finalTotal = cartTotal;
 
+  const hasCodDisabledItem = cartItems.some(item => item.isCodAvailable === false);
+
+  useEffect(() => {
+    if (hasCodDisabledItem && paymentMethod === 'cod') {
+      setPaymentMethod('upi');
+    }
+  }, [hasCodDisabledItem, paymentMethod]);
+
   // Load Razorpay Script
   useEffect(() => {
     const loadScript = () => {
@@ -495,10 +503,17 @@ export default function CheckoutPage() {
                 </h2>
                 
                 <div className="space-y-2">
-                  <label className={`flex items-center gap-3 p-3 border-2 cursor-pointer transition-all rounded-sm ${paymentMethod === 'cod' ? 'border-amazon-orange bg-yellow-50' : 'border-gray-200 hover:border-gray-300'}`}>
-                    <input type="radio" name="payment" value="cod" checked={paymentMethod === 'cod'} onChange={(e) => setPaymentMethod(e.target.value)} className="w-4 h-4 text-amazon-orange focus:ring-amazon-orange" />
+                  {hasCodDisabledItem && (
+                    <div className="mb-4 p-3 bg-rose-50 text-rose-700 text-xs font-semibold rounded-sm border border-rose-200 flex items-start gap-2">
+                      <ShieldCheck className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                      One or more items in your cart do not support Cash on Delivery. Please pay online via UPI or Scanner.
+                    </div>
+                  )}
+
+                  <label className={`flex items-center gap-3 p-3 border-2 transition-all rounded-sm ${hasCodDisabledItem ? 'opacity-50 cursor-not-allowed bg-gray-50 border-gray-200' : paymentMethod === 'cod' ? 'border-amazon-orange bg-yellow-50 cursor-pointer' : 'border-gray-200 hover:border-gray-300 cursor-pointer'}`}>
+                    <input type="radio" name="payment" value="cod" disabled={hasCodDisabledItem} checked={paymentMethod === 'cod'} onChange={(e) => setPaymentMethod(e.target.value)} className="w-4 h-4 text-amazon-orange focus:ring-amazon-orange" />
                     <div>
-                      <p className="font-semibold text-sm text-gray-800">Cash on Delivery</p>
+                      <p className={`font-semibold text-sm ${hasCodDisabledItem ? 'text-gray-500' : 'text-gray-800'}`}>Cash on Delivery {hasCodDisabledItem && '(Disabled)'}</p>
                       <p className="text-xs text-gray-500">Pay when your order arrives.</p>
                     </div>
                   </label>

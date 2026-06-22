@@ -97,7 +97,6 @@ export function CartProvider({ children }) {
         newItems[existing].quantity += quantity;
         return newItems;
       } else {
-        // Add new item
         return [...prev, {
           id: product.id,
           name: product.productName,
@@ -107,7 +106,8 @@ export function CartProvider({ children }) {
           size: selectedSize,
           color: selectedColor,
           quantity: quantity,
-          maxStock: maxStock
+          maxStock: maxStock,
+          isCodAvailable: product.isCodAvailable !== undefined ? product.isCodAvailable : true
         }];
       }
     });

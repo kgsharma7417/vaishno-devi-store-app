@@ -69,6 +69,7 @@ const buildInitialForm = () => ({
   occasionTags: [],
   // --- Extras ---
   isFeatured: false,
+  isCodAvailable: true,
   isReturnable: true,
   externalImageUrls: "",
   videoUrl: "",
@@ -168,6 +169,7 @@ export default function ProductForm({ editId }) {
           materialType: data.materialType || "",
           occasionTags: data.occasionTags || [],
           isFeatured: data.isFeatured || false,
+          isCodAvailable: data.isCodAvailable !== undefined ? data.isCodAvailable : true,
           isReturnable: data.isReturnable !== undefined ? data.isReturnable : true,
           externalImageUrls: "",
           videoUrl: data.videoUrl || "",
@@ -393,6 +395,7 @@ export default function ProductForm({ editId }) {
         materialType: form.materialType,
         occasionTags: form.occasionTags,
         isFeatured: form.isFeatured,
+        isCodAvailable: form.isCodAvailable,
         isReturnable: form.isReturnable,
         videoUrl: form.videoUrl.trim(),
         imageUrls,
@@ -919,6 +922,16 @@ export default function ProductForm({ editId }) {
                     onChange={(v) => set("isFeatured", v)}
                     label="⭐ Featured Product"
                     sub='Homepage "Trending Now" section mein dikhao'
+                  />
+                </div>
+                {/* COD Availability */}
+                <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                  <Toggle
+                    id="pf-cod"
+                    checked={form.isCodAvailable}
+                    onChange={(v) => set("isCodAvailable", v)}
+                    label="💵 Cash on Delivery Available"
+                    sub="Agar band kiya, toh customer ko pehle online pay karna padega"
                   />
                 </div>
               </div>
