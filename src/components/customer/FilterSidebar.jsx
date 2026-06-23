@@ -72,7 +72,11 @@ export default function FilterSidebar({ filters, setFilters, isOpen, setIsOpen }
               {CATEGORIES.map(category => {
                 const isActive = filters.categories.includes(category);
                 return (
-                  <label key={category} className="flex items-center gap-3 cursor-pointer group">
+                  <div 
+                    key={category} 
+                    onClick={() => toggleFilter("categories", category)}
+                    className="flex items-center gap-3 cursor-pointer group select-none"
+                  >
                     <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all shadow-sm
                       ${isActive ? "bg-violet-600 border-violet-600" : "border-slate-300 bg-white group-hover:border-violet-400"}`}>
                       {isActive && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
@@ -80,7 +84,7 @@ export default function FilterSidebar({ filters, setFilters, isOpen, setIsOpen }
                     <span className={`text-sm transition-colors ${isActive ? "text-violet-700 font-bold" : "text-slate-600 group-hover:text-slate-900 font-medium"}`}>
                       {category}
                     </span>
-                  </label>
+                  </div>
                 );
               })}
             </div>
