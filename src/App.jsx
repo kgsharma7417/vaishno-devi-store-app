@@ -20,8 +20,10 @@ import OrdersPage from "./pages/admin/OrdersPage";
 import HeroSettingsPage from "./pages/admin/HeroSettingsPage";
 import InventoryPage from "./pages/admin/InventoryPage";
 import UsersPage from "./pages/admin/UsersPage";
+import ReviewsPage from "./pages/admin/ReviewsPage";
 import NotFoundPage from "./pages/customer/NotFoundPage";
 import CartDrawer from "./components/customer/CartDrawer";
+import WishlistDrawer from "./components/customer/WishlistDrawer";
 import TrackOrderPage from "./pages/customer/TrackOrderPage";
 import MyOrdersPage from "./pages/customer/MyOrdersPage";
 
@@ -97,6 +99,7 @@ function AppRoutes() {
         <Route path="orders" element={<OrdersPage />} />
         <Route path="inventory" element={<InventoryPage />} />
         <Route path="users" element={<UsersPage />} />
+        <Route path="reviews" element={<ReviewsPage />} />
         <Route path="settings" element={<HeroSettingsPage />} />
       </Route>
 
@@ -113,6 +116,7 @@ function AppRoutes() {
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
     <CartDrawer />
+    <WishlistDrawer />
     </>
   );
 }

@@ -22,7 +22,7 @@ export default function ProductPage() {
   const { id } = useParams();
   const { addToast } = useToast();
   const { addToCart, cartCount, setIsCartOpen } = useCart();
-  const { isWishlisted, toggleWishlist } = useWishlist();
+  const { isWishlisted, toggleWishlist, wishlistItems, setIsWishlistOpen } = useWishlist();
   const { addRecentlyViewed } = useRecentlyViewed();
   const navigate = useNavigate();
   
@@ -169,6 +169,14 @@ export default function ProductPage() {
             <div className="flex items-center gap-2">
               <button onClick={handleShare} className="p-2 text-slate-500 hover:text-violet-600 hover:bg-violet-50 rounded-full transition-colors">
                 <Share2 className="w-5 h-5" />
+              </button>
+              <button onClick={() => setIsWishlistOpen(true)} className="p-2 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-full transition-colors relative">
+                <Heart className="w-5 h-5" />
+                {wishlistItems.length > 0 && (
+                  <span className="absolute top-0 right-0 bg-rose-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full border-2 border-white shadow-sm">
+                    {wishlistItems.length}
+                  </span>
+                )}
               </button>
               <button onClick={() => setIsCartOpen(true)} className="p-2 text-slate-500 hover:text-violet-600 hover:bg-violet-50 rounded-full transition-colors relative">
                 <ShoppingCart className="w-5 h-5" />

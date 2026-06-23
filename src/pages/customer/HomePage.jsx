@@ -10,10 +10,12 @@ import {
 } from "lucide-react";
 import ShopSection from "../../components/customer/ShopSection";
 import { useCart } from "../../contexts/CartContext";
+import { useWishlist } from "../../contexts/WishlistContext";
 import { useAuth } from "../../hooks/useAuth";
 import { useRecentlyViewed } from "../../contexts/RecentlyViewedContext";
 import { CATEGORIES } from "../../utils/constants";
 import UserLoginModal from "../../components/customer/UserLoginModal";
+import DeveloperModal from "../../components/customer/DeveloperModal";
 import { formatPrice } from "../../utils/helpers";
 
 const DEFAULT_SLIDES = [
@@ -84,6 +86,7 @@ const CATEGORY_COLORS = [
 
 export default function HomePage() {
   const { cartCount, setIsCartOpen } = useCart();
+  const { wishlistItems, setIsWishlistOpen } = useWishlist();
   const { currentUser, userProfile } = useAuth();
   const { recentItems } = useRecentlyViewed();
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -92,6 +95,7 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeNav, setActiveNav] = useState("home");
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isDevModalOpen, setIsDevModalOpen] = useState(false);
   const shopSectionRef = useRef(null);
 
   // Countdown timer — loops every 24h (resets at midnight)
@@ -165,10 +169,38 @@ export default function HomePage() {
                 <span className="text-violet-900 font-black text-xl md:text-2xl tracking-tight leading-none group-hover:text-violet-700 transition-colors">
                   Maa Vaishno Devi
                 </span>
-                <span className="text-violet-500 text-xs font-bold tracking-widest leading-none mt-1 uppercase">
+                <span className="text-violet-500 text-[10px] md:text-xs font-bold tracking-widest leading-none mt-1 uppercase">
                   Ladies Corner
                 </span>
               </Link>
+
+              {/* Mobile Right Icons */}
+              <div className="flex md:hidden items-center gap-3 text-slate-700">
+                <button 
+                  onClick={() => setIsWishlistOpen(true)}
+                  className="p-2 hover:bg-slate-100 hover:text-rose-500 rounded-full transition-all relative animate-fade-in"
+                  aria-label="Wishlist"
+                >
+                  <Heart className="w-5 h-5" />
+                  {wishlistItems.length > 0 && (
+                    <span className="absolute top-0.5 right-0.5 bg-rose-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center border border-white shadow-sm">
+                      {wishlistItems.length}
+                    </span>
+                  )}
+                </button>
+                <button 
+                  onClick={() => setIsCartOpen(true)}
+                  className="p-2 hover:bg-slate-100 hover:text-violet-600 rounded-full transition-all relative animate-fade-in"
+                  aria-label="Cart"
+                >
+                  <ShoppingCart className="w-5 h-5" />
+                  {cartCount > 0 && (
+                    <span className="absolute top-0.5 right-0.5 bg-rose-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center border border-white shadow-sm">
+                      {cartCount}
+                    </span>
+                  )}
+                </button>
+              </div>
             </div>
 
             {/* Search Bar */}
@@ -220,6 +252,21 @@ export default function HomePage() {
                 </div>
               </Link>
               
+              <button 
+                onClick={() => setIsWishlistOpen(true)}
+                className="flex items-center gap-2 hover:text-rose-600 transition-colors group relative"
+              >
+                <div className="w-10 h-10 rounded-full bg-slate-50 text-slate-600 border border-slate-200 shadow-sm flex items-center justify-center group-hover:text-rose-500 group-hover:bg-rose-50/50 group-hover:border-rose-200 transition-all group-hover:scale-105 group-active:scale-95">
+                  <Heart className="w-5 h-5 group-hover:fill-rose-500" />
+                  {wishlistItems.length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full min-w-[20px] text-center border-2 border-white shadow-sm">
+                      {wishlistItems.length}
+                    </span>
+                  )}
+                </div>
+                <span className="text-sm font-bold text-slate-800 group-hover:text-rose-600">Wishlist</span>
+              </button>
+
               <button 
                 onClick={() => setIsCartOpen(true)}
                 className="flex items-center gap-2 hover:text-violet-700 transition-colors group relative"
@@ -459,7 +506,14 @@ export default function HomePage() {
                     {currentUser ? "My Account" : "Sign In"}
                   </button>
                 </li>
-
+                <li>
+                  <button
+                    onClick={() => setIsDevModalOpen(true)}
+                    className="hover:text-white text-left text-violet-400 font-bold"
+                  >
+                    🚀 Developer Info
+                  </button>
+                </li>
               </ul>
             </div>
             <div>
@@ -561,8 +615,18 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-          <div className="border-t border-gray-700 mt-6 pt-4 text-center text-xs text-gray-500">
-            © {new Date().getFullYear()} Maa Vaishno Devi Ladies Corner & Gift Center. All rights reserved.
+          <div className="border-t border-gray-700 mt-6 pt-4 text-center text-xs text-gray-500 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <span>© {new Date().getFullYear()} Maa Vaishno Devi Ladies Corner & Gift Center. All rights reserved.</span>
+            <span className="text-slate-400 font-medium">
+              Designed & Developed with ❤️ by{" "}
+              <button 
+                type="button"
+                onClick={() => setIsDevModalOpen(true)} 
+                className="text-violet-400 hover:text-violet-300 font-bold underline transition-colors focus:outline-none"
+              >
+                Krishna Gopal Sharma
+              </button>
+            </span>
           </div>
         </div>
       </footer>
@@ -624,6 +688,12 @@ export default function HomePage() {
       <UserLoginModal
         isOpen={isLoginModalOpen}
         onClose={() => setIsLoginModalOpen(false)}
+      />
+
+      {/* Developer Profile Modal */}
+      <DeveloperModal
+        isOpen={isDevModalOpen}
+        onClose={() => setIsDevModalOpen(false)}
       />
 
     </div>

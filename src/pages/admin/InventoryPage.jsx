@@ -4,7 +4,8 @@ import { db } from "../../config/firebase";
 import { useToast } from "../../components/shared/Toast";
 import { formatPrice } from "../../utils/helpers";
 import { Link } from "react-router-dom";
-import { PackageOpen, Edit, Trash2, Loader2, Search, CheckCircle2, XCircle } from "lucide-react";
+import { PackageOpen, Edit, Trash2, Loader2, Search, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
+import { LOW_STOCK_THRESHOLD } from "../../utils/constants";
 
 export default function InventoryPage() {
   const { addToast } = useToast();
@@ -70,6 +71,39 @@ export default function InventoryPage() {
     }
   };
 
+  const handleQuickStockChange = async (productId, size, newStock) => {
+    if (newStock < 0) return;
+    setUpdatingId(productId);
+    try {
+      const product = products.find(p => p.id === productId);
+      if (!product) return;
+      
+      const updatedSizesAndStock = {
+        ...product.sizesAndStock,
+        [size]: newStock
+      };
+
+      const totalStock = Object.values(updatedSizesAndStock).reduce((a, b) => a + b, 0);
+      const isOutOfStock = totalStock === 0;
+
+      await updateDoc(doc(db, "products", productId), {
+        sizesAndStock: updatedSizesAndStock,
+        isOutOfStock: isOutOfStock
+      });
+
+      setProducts(prev => prev.map(p => 
+        p.id === productId ? { ...p, sizesAndStock: updatedSizesAndStock, isOutOfStock: isOutOfStock } : p
+      ));
+
+      addToast({ type: "success", message: `Stock for size ${size} updated to ${newStock}.` });
+    } catch (error) {
+      console.error("Error updating quick stock:", error);
+      addToast({ type: "error", message: "Failed to update stock." });
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   const filteredProducts = products.filter(p => 
     p.productName.toLowerCase().includes(searchQuery.toLowerCase()) ||
     p.category.toLowerCase().includes(searchQuery.toLowerCase())
@@ -119,6 +153,7 @@ export default function InventoryPage() {
                 <th className="px-6 py-4 font-semibold">Product</th>
                 <th className="px-6 py-4 font-semibold">Category</th>
                 <th className="px-6 py-4 font-semibold">Price</th>
+                <th className="px-6 py-4 font-semibold text-left">Stock / Sizes</th>
                 <th className="px-6 py-4 font-semibold text-center">Status</th>
                 <th className="px-6 py-4 font-semibold text-right">Actions</th>
               </tr>
@@ -126,7 +161,7 @@ export default function InventoryPage() {
             <tbody className="divide-y divide-slate-100">
               {filteredProducts.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="px-6 py-12 text-center text-slate-500">
+                  <td colSpan="6" className="px-6 py-12 text-center text-slate-500">
                     <PackageOpen className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                     <p>No products found.</p>
                   </td>
@@ -160,6 +195,36 @@ export default function InventoryPage() {
                       <p className="font-bold text-slate-800">{formatPrice(product.finalPrice)}</p>
                       {product.discountPercentage > 0 && (
                         <p className="text-xs text-slate-400 line-through">{formatPrice(product.mrp)}</p>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-left">
+                      {Object.keys(product.sizesAndStock || {}).length === 0 ? (
+                        <span className="text-xs text-slate-400 font-medium">No sizes defined</span>
+                      ) : (
+                        <div className="flex flex-wrap gap-1.5 items-center max-w-[260px] sm:max-w-sm">
+                          {Object.entries(product.sizesAndStock || {}).map(([size, stock]) => (
+                            <div key={size} className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 pl-2 pr-1.5 py-1 rounded-lg text-xs font-semibold">
+                              <span className="text-slate-550 mr-1">{size}:</span>
+                              <button 
+                                disabled={updatingId === product.id}
+                                onClick={() => handleQuickStockChange(product.id, size, stock - 1)}
+                                className="w-4 h-4 rounded bg-slate-200 hover:bg-slate-300 active:bg-slate-400 text-slate-700 flex items-center justify-center font-bold"
+                              >
+                                -
+                              </button>
+                              <span className={`w-5 text-center font-bold ${stock <= LOW_STOCK_THRESHOLD ? 'text-amber-600 font-bold' : 'text-slate-850'}`}>
+                                {stock}
+                              </span>
+                              <button 
+                                disabled={updatingId === product.id}
+                                onClick={() => handleQuickStockChange(product.id, size, stock + 1)}
+                                className="w-4 h-4 rounded bg-slate-200 hover:bg-slate-300 active:bg-slate-400 text-slate-700 flex items-center justify-center font-bold"
+                              >
+                                +
+                              </button>
+                            </div>
+                          ))}
+                        </div>
                       )}
                     </td>
                     <td className="px-6 py-4 text-center">

@@ -18,6 +18,8 @@ export function WishlistProvider({ children }) {
     }
   });
 
+  const [isWishlistOpen, setIsWishlistOpen] = useState(false);
+
   useEffect(() => {
     localStorage.setItem("vaishno_wishlist", JSON.stringify(wishlistItems));
   }, [wishlistItems]);
@@ -51,7 +53,7 @@ export function WishlistProvider({ children }) {
 
   return (
     <WishlistContext.Provider
-      value={{ wishlistItems, isWishlisted, toggleWishlist, clearWishlist }}
+      value={{ wishlistItems, isWishlisted, toggleWishlist, clearWishlist, isWishlistOpen, setIsWishlistOpen }}
     >
       {children}
     </WishlistContext.Provider>

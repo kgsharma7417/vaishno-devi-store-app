@@ -10,9 +10,15 @@ import {
   X,
   Settings,
   ShoppingBag,
-  Users
+  Users,
+  Bell,
+  MessageSquare,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "../../config/firebase";
+import { LOW_STOCK_THRESHOLD } from "../../utils/constants";
+import { getLowStockSizes, getOutOfStockSizes } from "../../utils/helpers";
 
 const NAV_ITEMS = [
   {
@@ -36,6 +42,11 @@ const NAV_ITEMS = [
     label: "Inventory",
   },
   {
+    to: "/admin/reviews",
+    icon: MessageSquare,
+    label: "Reviews",
+  },
+  {
     to: "/admin/users",
     icon: Users,
     label: "Users",
@@ -51,6 +62,75 @@ export default function AdminLayout() {
   const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
+  
+  const notifRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (notifRef.current && !notifRef.current.contains(event.target)) {
+        setNotifDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    async function fetchAlerts() {
+      try {
+        const prodSnapshot = await getDocs(collection(db, "products"));
+        const products = prodSnapshot.docs.map(doc => doc.data());
+
+        const ordersSnapshot = await getDocs(collection(db, "orders"));
+        const orders = ordersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        const activeNotifs = [];
+
+        products.forEach(p => {
+          const outSizes = getOutOfStockSizes(p.sizesAndStock || {});
+          if (outSizes.length > 0) {
+            activeNotifs.push({
+              id: `out-${p.productName}`,
+              type: 'outOfStock',
+              message: `⚠️ ${p.productName} is out of stock! (स्टॉक ख़त्म)`,
+              link: '/admin/inventory'
+            });
+          } else {
+            const lowSizes = getLowStockSizes(p.sizesAndStock || {}, LOW_STOCK_THRESHOLD);
+            if (lowSizes.length > 0) {
+              activeNotifs.push({
+                id: `low-${p.productName}`,
+                type: 'stock',
+                message: `📉 ${p.productName} (Size ${lowSizes.join(', ')}) running low! (स्टॉक कम है)`,
+                link: '/admin/inventory'
+              });
+            }
+          }
+        });
+
+        orders.forEach(o => {
+          if (o.orderStatus === 'Pending') {
+            activeNotifs.push({
+              id: `order-${o.id}`,
+              type: 'order',
+              message: `📦 New order #${o.id.slice(-8)} is pending! (नया आर्डर)`,
+              link: '/admin/orders'
+            });
+          }
+        });
+
+        setNotifications(activeNotifs);
+      } catch (err) {
+        console.error("Error fetching admin notifications:", err);
+      }
+    }
+
+    fetchAlerts();
+    const interval = setInterval(fetchAlerts, 45000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleLogout = async () => {
     await logout();
@@ -156,6 +236,54 @@ export default function AdminLayout() {
               <Menu className="w-5 h-5" />
             </button>
             <div className="flex-1" />
+            
+            {/* Notification Bell & Dropdown */}
+            <div className="relative" ref={notifRef}>
+              <button
+                onClick={() => setNotifDropdownOpen(!notifDropdownOpen)}
+                className="p-2 text-slate-500 hover:text-blue-600 hover:bg-slate-50 rounded-xl transition-all relative"
+              >
+                <Bell className="w-5 h-5" />
+                {notifications.length > 0 && (
+                  <span className="absolute top-1 right-1 w-4 h-4 bg-rose-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center animate-bounce">
+                    {notifications.length}
+                  </span>
+                )}
+              </button>
+
+              {/* Dropdown Panel */}
+              {notifDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-72 max-h-80 overflow-y-auto bg-white border border-slate-200 shadow-xl rounded-xl z-50 p-2 py-3 animate-fade-in">
+                  <div className="px-3 pb-2 border-b border-slate-100 mb-2 flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-800">Alert Center</span>
+                    <span className="text-[10px] bg-blue-50 text-blue-600 font-bold px-2 py-0.5 rounded-full">{notifications.length} Alerts</span>
+                  </div>
+
+                  {notifications.length === 0 ? (
+                    <div className="py-8 text-center text-xs text-slate-400 font-semibold">
+                      ✓ No alerts or pending tasks.<br/>
+                      (कोई सूचना नहीं है)
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      {notifications.map((notif, idx) => (
+                        <NavLink
+                          key={idx}
+                          to={notif.link}
+                          onClick={() => setNotifDropdownOpen(false)}
+                          className="flex items-start gap-2 p-2 rounded-lg hover:bg-slate-50 transition-colors text-left"
+                        >
+                          <div className="text-xs text-slate-700 leading-relaxed font-medium">
+                            {notif.message}
+                          </div>
+                        </NavLink>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
             <div className="flex items-center gap-2 text-sm text-slate-400">
               <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
               Online

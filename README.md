@@ -7,7 +7,6 @@ A modern, fast, and responsive e-commerce web application built to provide a sea
 - **🛍️ Seamless Shopping Experience:** Browse products with "Quick View" modals for faster decision-making.
 - **🛒 Dynamic Cart Management:** Real-time cart updates and state management using React Context.
 - **📱 Progressive Web App (PWA):** Installable on mobile and desktop for a native-like app experience and offline fallback.
-- **💳 Coupon & Discount System:** Integrated coupon code section for promotional discounts.
 - **💬 WhatsApp Integration:** Floating WhatsApp widget for instant customer support.
 - **🔍 SEO Optimized:** Custom SEO hooks for better search engine visibility.
 - **📦 Order Tracking:** Dedicated pages for customers to view and track their orders.

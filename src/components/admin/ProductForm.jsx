@@ -44,6 +44,7 @@ import {
   Layers,
   ArrowLeft,
   ChevronRight,
+  Wand2,
 } from "lucide-react";
 
 // ─── Initial State ─────────────────────────────────────────────────────────────
@@ -137,6 +138,7 @@ export default function ProductForm({ editId }) {
   const [loadingInitial, setLoadingInitial] = useState(!!editId);
   const [isDuplicate, setIsDuplicate] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
+  const [useAiBgRemoval, setUseAiBgRemoval] = useState(false);
   const fileInputRef = useRef(null);
   const printRef = useRef(null);
   const { addToast } = useToast();
@@ -276,6 +278,8 @@ export default function ProductForm({ editId }) {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+
+
   // ─── Image handlers ────────────────────────────────────────────────────────
   const handleImageSelect = (e) => {
     const files = Array.from(e.target.files);
@@ -311,6 +315,9 @@ export default function ProductForm({ editId }) {
             fd.append("file", img.file);
             fd.append("upload_preset", "maa vaishno devi");
             fd.append("cloud_name", "dvzyaivr7");
+            if (useAiBgRemoval) {
+              fd.append("background_removal", "cloudinary_ai");
+            }
             setImages((p) => { const u = [...p]; if (u[idx]) u[idx] = { ...u[idx], progress: 50 }; return u; });
             const res = await fetch("https://api.cloudinary.com/v1_1/dvzyaivr7/image/upload", { method: "POST", body: fd });
             if (!res.ok) throw new Error("Cloudinary upload failed");
@@ -558,7 +565,7 @@ export default function ProductForm({ editId }) {
                     value={form.description}
                     onChange={(e) => set("description", e.target.value)}
                     placeholder="Product ki details likhein — material, design, occasion..."
-                    rows={3}
+                    rows={4}
                     className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 transition resize-none"
                   />
                 </div>
@@ -794,6 +801,17 @@ export default function ProductForm({ editId }) {
                 <p className="text-xs text-slate-400 mb-4">
                   Max {MAX_IMAGES} images — pehli photo main thumbnail hogi (JPG, PNG, WebP — 5MB each)
                 </p>
+
+                {/* AI Polish Toggle */}
+                <div className="mb-4 p-4 bg-gradient-to-r from-violet-50 to-fuchsia-50 rounded-xl border border-violet-100">
+                  <Toggle
+                    id="pf-ai-bg"
+                    checked={useAiBgRemoval}
+                    onChange={setUseAiBgRemoval}
+                    label={<span className="flex items-center gap-1.5"><Wand2 className="w-4 h-4 text-fuchsia-500" /> ✨ Auto-Remove Background</span>}
+                    sub="Cloudinary AI ka use karke photo ka background automatically transparent ho jayega. (Requires Add-on in Cloudinary)"
+                  />
+                </div>
 
                 {/* Upload zone */}
                 <div
