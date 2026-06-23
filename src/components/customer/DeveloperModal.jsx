@@ -7,13 +7,13 @@ export default function DeveloperModal({ isOpen, onClose }) {
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in">
       {/* Modal Card */}
       <div className="relative bg-gradient-to-br from-slate-900 via-slate-850 to-slate-900 text-white rounded-3xl border border-white/10 w-full max-w-md overflow-hidden shadow-2xl p-6 sm:p-8 animate-scale-in">
-        
+
         {/* Glow effect in background */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-violet-600/30 rounded-full blur-3xl -z-10" />
         <div className="absolute bottom-0 left-0 w-32 h-32 bg-fuchsia-600/20 rounded-full blur-3xl -z-10" />
 
         {/* Close Button */}
-        <button 
+        <button
           onClick={onClose}
           className="absolute top-4 right-4 p-2 bg-white/5 hover:bg-white/10 rounded-full transition-all text-slate-350 hover:text-white"
         >
@@ -64,7 +64,7 @@ export default function DeveloperModal({ isOpen, onClose }) {
           <p className="text-center text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">
             Let's build something amazing together!
           </p>
-          
+
           {/* WhatsApp Button */}
           <a
             href="https://wa.me/917500298701?text=Hello Krishna Gopal! I saw your developer profile on Vaishno Devi Store. Let's connect."
