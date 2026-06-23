@@ -254,9 +254,9 @@ export default function HomePage() {
               
               <button 
                 onClick={() => setIsWishlistOpen(true)}
-                className="flex items-center gap-2 hover:text-rose-600 transition-colors group relative"
+                className="flex items-center gap-2 hover:text-rose-600 transition-colors group"
               >
-                <div className="w-10 h-10 rounded-full bg-slate-50 text-slate-600 border border-slate-200 shadow-sm flex items-center justify-center group-hover:text-rose-500 group-hover:bg-rose-50/50 group-hover:border-rose-200 transition-all group-hover:scale-105 group-active:scale-95">
+                <div className="relative w-10 h-10 rounded-full bg-slate-50 text-slate-600 border border-slate-200 shadow-sm flex items-center justify-center group-hover:text-rose-500 group-hover:bg-rose-50/50 group-hover:border-rose-200 transition-all group-hover:scale-105 group-active:scale-95">
                   <Heart className="w-5 h-5 group-hover:fill-rose-500" />
                   {wishlistItems.length > 0 && (
                     <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full min-w-[20px] text-center border-2 border-white shadow-sm">
@@ -269,9 +269,9 @@ export default function HomePage() {
 
               <button 
                 onClick={() => setIsCartOpen(true)}
-                className="flex items-center gap-2 hover:text-violet-700 transition-colors group relative"
+                className="flex items-center gap-2 hover:text-violet-700 transition-colors group"
               >
-                <div className="w-10 h-10 rounded-full bg-violet-600 text-white shadow-md shadow-violet-200 flex items-center justify-center group-hover:bg-violet-700 transition-all group-hover:scale-105 group-active:scale-95">
+                <div className="relative w-10 h-10 rounded-full bg-violet-600 text-white shadow-md shadow-violet-200 flex items-center justify-center group-hover:bg-violet-700 transition-all group-hover:scale-105 group-active:scale-95">
                   <ShoppingCart className="w-5 h-5" />
                   {cartCount > 0 && (
                     <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full min-w-[20px] text-center border-2 border-white shadow-sm">
